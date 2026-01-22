@@ -1,10 +1,10 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-The repository currently contains planning documents under `.trae/documents/` and no application code yet. The intended structure (per the existing plan) is a Next.js 14 App Router app with routes in `app/` (including `app/(marketing)/`, `app/blog/`, `app/labs/`, `app/tracker/`), shared UI in `components/`, MDX content in `content/`, JSON data in `data/`, and utilities in `lib/`. Add static assets to `public/` once the app is scaffolded.
+Frontend code lives under `frontend/` as a Next.js 14 App Router project. Routes live in `frontend/app/` (home, `/enter`, `/blog`, `/labs`, `/tracker`), shared UI in `frontend/components/`, and assets in `frontend/public/`. Backend planning/docs live under `backend/`. Project specs and planning notes are at repo root (e.g., `FRONTEND_HOME_SPEC.md`, `BLOG_SPEC.md`).
 
 ## Build, Test, and Development Commands
-After the Next.js app is initialized and a `package.json` exists, use the standard scripts:
+Run these from `frontend/`:
 - `npm install` to install dependencies.
 - `npm run dev` to start the local dev server.
 - `npm run build` to produce a production build.
