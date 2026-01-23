@@ -12,7 +12,7 @@ export default function Page() {
         <p className="text-sm text-slate-400" lang="en">About</p>
         <h1 className="mt-2 text-3xl font-semibold">关于我</h1>
         <p className="mt-4 text-sm text-slate-400">一些关于背景、经验与价值观的说明。</p>
-        <p className="mt-1 text-xs text-slate-500" lang="en">Background, experience, and values.</p>
+        <p className="mt-1 text-xs text-slate-400" lang="en">Background, experience, and values.</p>
         <div className="mt-6 flex gap-4 text-sm">
           <Link href="/enter" className="text-blue-300 hover:text-blue-200">
             ← 返回入口

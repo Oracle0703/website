@@ -12,7 +12,7 @@ export default function Page() {
         <p className="text-sm text-slate-400" lang="en">Contact</p>
         <h1 className="mt-2 text-3xl font-semibold">联系我</h1>
         <p className="mt-4 text-sm text-slate-400">欢迎通过邮箱或社交媒体联系。</p>
-        <p className="mt-1 text-xs text-slate-500" lang="en">Reach out via email or social links.</p>
+        <p className="mt-1 text-xs text-slate-400" lang="en">Reach out via email or social links.</p>
         <div className="mt-6 flex gap-4 text-sm">
           <Link href="/enter" className="text-blue-300 hover:text-blue-200">
             ← 返回入口

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SiteFooter } from "../components/site-footer";
-import { SiteHeader } from "../components/site-header";
+import { LayoutShell } from "../components/layout-shell";
 
 export const metadata: Metadata = {
   title: {
@@ -25,11 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="zh-CN">
       <body>
-        <div className="min-h-screen bg-base">
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-        </div>
+        <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
   );

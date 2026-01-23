@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 const navItems = [
@@ -20,7 +22,7 @@ export function SiteHeader() {
           {navItems.map((item) => (
             <Link key={item.href} href={item.href} className="hover:text-white">
               {item.label}
-              <span className="ml-1 text-[10px] text-slate-500" lang="en">
+              <span className="ml-1 text-[10px] text-slate-400" lang="en">
                 {item.en}
               </span>
             </Link>
@@ -30,7 +32,7 @@ export function SiteHeader() {
           href="/enter"
           className="text-xs font-semibold text-blue-300 hover:text-blue-200"
         >
-          Enter
+          进入 <span className="text-[10px] text-blue-200" lang="en">Enter</span>
         </Link>
       </div>
     </header>
