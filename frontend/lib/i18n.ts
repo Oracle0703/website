@@ -17,6 +17,8 @@ export const messages = {
         { href: "/contact", label: "联系" }
       ],
       enter: "进入",
+      openMenu: "打开菜单",
+      closeMenu: "关闭菜单",
       switchToEnglish: "切换到英文",
       switchToChinese: "切换到中文"
     },
@@ -152,7 +154,18 @@ export const messages = {
       blog: {
         eyebrow: "博客",
         title: "博客",
-        description: "记录技术、产品与思考的内容专区。"
+        description: "记录技术、产品与思考的内容专区。",
+        listTitle: "最新文章",
+        listDescription: "持续输出开发实践与思考笔记。",
+        emptyTitle: "暂无文章",
+        emptyDescription: "已发布的文章会在这里展示。",
+        readMore: "阅读全文",
+        tagsLabel: "标签",
+        publishedAt: "发布于",
+        updatedAt: "更新于",
+        readingTime: "阅读时长",
+        minute: "分钟",
+        invalidContent: "内容不可用"
       },
       labs: {
         eyebrow: "实验室",
@@ -211,6 +224,8 @@ export const messages = {
         { href: "/contact", label: "Contact" }
       ],
       enter: "Enter",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
       switchToEnglish: "Switch to English",
       switchToChinese: "Switch to Chinese"
     },
@@ -347,7 +362,18 @@ export const messages = {
       blog: {
         eyebrow: "Blog",
         title: "Blog",
-        description: "Writing about engineering, products, and ideas."
+        description: "Writing about engineering, products, and ideas.",
+        listTitle: "Latest posts",
+        listDescription: "Notes and stories on building products.",
+        emptyTitle: "No posts yet",
+        emptyDescription: "Published posts will appear here.",
+        readMore: "Read more",
+        tagsLabel: "Tags",
+        publishedAt: "Published",
+        updatedAt: "Updated",
+        readingTime: "Reading time",
+        minute: "min",
+        invalidContent: "Content unavailable"
       },
       labs: {
         eyebrow: "Labs",

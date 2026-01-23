@@ -20,10 +20,10 @@ export default function Page() {
   const common = pages.common;
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-6 py-16">
-      <div className="rounded-2xl border border-edge bg-surface/70 p-8">
+    <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 md:py-16">
+      <div className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-8">
         <p className="text-sm text-muted">{copy.eyebrow}</p>
-        <h1 className="mt-2 text-3xl font-semibold">{copy.title}</h1>
+        <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">{copy.title}</h1>
         <p className="mt-4 text-sm text-muted">{copy.description}</p>
         <div className="mt-6 flex gap-4 text-sm">
           <Link href="/enter" className="text-accent hover:text-accent-strong">

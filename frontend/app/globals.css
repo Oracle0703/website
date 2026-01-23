@@ -57,12 +57,20 @@ body {
 
 .ticker::before {
   left: 0;
-  background: linear-gradient(to right, rgba(11, 15, 26, 1), rgba(11, 15, 26, 0));
+  background: linear-gradient(
+    to right,
+    rgb(var(--color-base) / 1),
+    rgb(var(--color-base) / 0)
+  );
 }
 
 .ticker::after {
   right: 0;
-  background: linear-gradient(to left, rgba(11, 15, 26, 1), rgba(11, 15, 26, 0));
+  background: linear-gradient(
+    to left,
+    rgb(var(--color-base) / 1),
+    rgb(var(--color-base) / 0)
+  );
 }
 
 .ticker-track {

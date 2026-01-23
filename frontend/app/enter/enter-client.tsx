@@ -125,7 +125,7 @@ export function EnterClient() {
   const containerDuration = isExiting ? "duration-300" : "duration-700";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center px-6 py-16">
+    <main className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 md:py-16">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(91,140,255,0.12),_transparent_55%)]"
         aria-hidden="true"
@@ -134,7 +134,7 @@ export function EnterClient() {
         <div className="h-full w-full animate-pulse bg-[radial-gradient(circle,_rgba(91,140,255,0.12)_1px,_transparent_1px)] [background-size:24px_24px] motion-reduce:animate-none" />
       </div>
       <div
-        className={`relative w-full max-w-5xl space-y-10 transition-all ease-out ${containerDuration} ${containerState} motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100`}
+        className={`relative w-full max-w-5xl space-y-8 transition-all ease-out ${containerDuration} ${containerState} motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100 md:space-y-10`}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
@@ -144,7 +144,7 @@ export function EnterClient() {
           >
             {messages.nav.brand}
           </Link>
-          <div className="flex items-center gap-4 text-sm text-muted">
+          <div className="flex items-center gap-3 text-xs text-muted sm:text-sm">
             <p>{copy.prompt}</p>
             <button
               type="button"
@@ -166,13 +166,13 @@ export function EnterClient() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold">
+          <h1 className="text-2xl font-semibold sm:text-3xl">
             {copy.heading}
           </h1>
           <p className="text-sm text-muted">{copy.hint}</p>
         </div>
 
-        <div className={`grid gap-6 md:grid-cols-3 ${isNavigating ? "pointer-events-none" : ""}`}>
+        <div className={`grid gap-4 sm:gap-6 md:grid-cols-3 ${isNavigating ? "pointer-events-none" : ""}`}>
           {entries.map((entry) => {
             const isActive = activeHref === entry.href;
             const isDimmed = activeHref !== null && !isActive;
@@ -184,7 +184,7 @@ export function EnterClient() {
                 onClick={(event) => handleNavigate(event, entry.href)}
                 aria-disabled={isNavigating ? true : undefined}
                 className={[
-                  "group flex h-full flex-col justify-between rounded-2xl border border-edge bg-surface/70 p-6 transition duration-300",
+                  "group flex h-full flex-col justify-between rounded-2xl border border-edge bg-surface/70 p-5 transition duration-300 sm:p-6",
                   "hover:-translate-y-1 hover:border-blue-400/60 hover:shadow-lg hover:shadow-blue-500/10",
                   "motion-reduce:transform-none motion-reduce:transition-none",
                   isDimmed ? "opacity-40 scale-95" : "",
@@ -195,7 +195,7 @@ export function EnterClient() {
               >
                 <div className="space-y-3">
                   <entry.Icon className="h-6 w-6 text-accent" />
-                  <h2 className="text-xl font-semibold">{entry.title}</h2>
+                  <h2 className="text-lg font-semibold sm:text-xl">{entry.title}</h2>
                   <p className="text-sm text-muted">{entry.subtitle}</p>
                 </div>
                 <span className="mt-6 text-sm text-muted group-hover:text-accent-strong">

@@ -14,7 +14,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-edge/70 bg-base/80">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 text-xs text-muted md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 text-xs text-muted sm:gap-6 sm:px-6 sm:py-8 md:flex-row md:items-center md:justify-between">
         <div className="space-y-2">
           <span>{messages.footer.copyright}</span>
           <p className="text-[11px] text-muted">{messages.footer.tagline}</p>
