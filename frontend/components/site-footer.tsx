@@ -1,15 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-const siteMap = [
-  { href: "/", label: "\u9996\u9875" },
-  { href: "/blog", label: "\u535a\u5ba2" },
-  { href: "/labs", label: "Labs" },
-  { href: "/tracker", label: "\u6253\u5361" },
-  { href: "/about", label: "\u5173\u4e8e" },
-  { href: "/contact", label: "\u8054\u7cfb" }
-];
+import { useI18n } from "./language-provider";
 
 const socialLinks = [
   { href: "https://github.com", label: "GitHub" },
@@ -18,19 +10,19 @@ const socialLinks = [
 ];
 
 export function SiteFooter() {
+  const { messages } = useI18n();
+
   return (
-    <footer className="border-t border-slate-900/70 bg-base/80">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
+    <footer className="border-t border-edge/70 bg-base/80">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 text-xs text-muted md:flex-row md:items-center md:justify-between">
         <div className="space-y-2">
-          <span>{"\u00a9 2026 Developer Studio"}</span>
-          <p className="text-[11px] text-slate-400" lang="en">
-            Developer Portfolio \u00b7 Blog \u00b7 Labs \u00b7 Tracker
-          </p>
+          <span>{messages.footer.copyright}</span>
+          <p className="text-[11px] text-muted">{messages.footer.tagline}</p>
         </div>
         <div className="space-y-3 text-[11px] md:text-right">
           <div className="flex flex-wrap gap-3">
-            {siteMap.map((item) => (
-              <Link key={item.href} href={item.href} className="hover:text-white">
+            {messages.nav.items.map((item) => (
+              <Link key={item.href} href={item.href} className="hover:text-primary">
                 {item.label}
               </Link>
             ))}
@@ -42,7 +34,7 @@ export function SiteFooter() {
                 href={item.href}
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-white"
+                className="hover:text-primary"
               >
                 {item.label}
               </a>

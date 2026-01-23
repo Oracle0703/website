@@ -1,24 +1,36 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getLocale } from "../../lib/i18n-server";
+import { getMessages } from "../../lib/i18n";
 
-export const metadata = {
-  title: "关于我 | About",
-  description: "一些关于背景、经验与价值观的说明。"
+export const generateMetadata = (): Metadata => {
+  const locale = getLocale();
+  const { seo } = getMessages(locale);
+
+  return {
+    title: seo.aboutTitle,
+    description: seo.aboutDescription
+  };
 };
 
 export default function Page() {
+  const locale = getLocale();
+  const { pages } = getMessages(locale);
+  const copy = pages.about;
+  const common = pages.common;
+
   return (
     <main className="mx-auto w-full max-w-4xl px-6 py-16">
-      <div className="rounded-2xl border border-slate-800 bg-surface/70 p-8">
-        <p className="text-sm text-slate-400" lang="en">About</p>
-        <h1 className="mt-2 text-3xl font-semibold">关于我</h1>
-        <p className="mt-4 text-sm text-slate-400">一些关于背景、经验与价值观的说明。</p>
-        <p className="mt-1 text-xs text-slate-400" lang="en">Background, experience, and values.</p>
+      <div className="rounded-2xl border border-edge bg-surface/70 p-8">
+        <p className="text-sm text-muted">{copy.eyebrow}</p>
+        <h1 className="mt-2 text-3xl font-semibold">{copy.title}</h1>
+        <p className="mt-4 text-sm text-muted">{copy.description}</p>
         <div className="mt-6 flex gap-4 text-sm">
-          <Link href="/enter" className="text-blue-300 hover:text-blue-200">
-            ← 返回入口
+          <Link href="/enter" className="text-accent hover:text-accent-strong">
+            {common.backToEnter}
           </Link>
-          <Link href="/" className="text-slate-400 hover:text-white">
-            返回首页
+          <Link href="/" className="text-muted hover:text-primary">
+            {common.backToHome}
           </Link>
         </div>
       </div>

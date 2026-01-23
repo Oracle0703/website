@@ -4,8 +4,36 @@
 
 :root {
   color-scheme: dark;
+  --color-base: 11 15 26;
+  --color-surface: 16 24 39;
+  --color-edge: 30 41 59;
+  --color-edge-strong: 51 65 85;
+  --color-text-primary: 241 245 249;
+  --color-text-secondary: 203 213 225;
+  --color-text-muted: 148 163 184;
+  --color-text-subtle: 226 232 240;
+  --color-accent: 91 140 255;
+  --color-accent-strong: 147 197 253;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --color-base: 248 250 252;
+  --color-surface: 255 255 255;
+  --color-edge: 226 232 240;
+  --color-edge-strong: 203 213 225;
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 51 65 85;
+  --color-text-muted: 100 116 139;
+  --color-text-subtle: 71 85 105;
+  --color-accent: 37 99 235;
+  --color-accent-strong: 29 78 216;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 body {
-  @apply bg-base text-slate-100 antialiased;
+  @apply bg-base text-primary antialiased;
 }

@@ -4,9 +4,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        base: "#0b0f1a",
-        surface: "#101827",
-        accent: "#5b8cff"
+        base: "rgb(var(--color-base) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        accent: "rgb(var(--color-accent) / <alpha-value>)",
+        "accent-strong": "rgb(var(--color-accent-strong) / <alpha-value>)",
+        primary: "rgb(var(--color-text-primary) / <alpha-value>)",
+        secondary: "rgb(var(--color-text-secondary) / <alpha-value>)",
+        muted: "rgb(var(--color-text-muted) / <alpha-value>)",
+        subtle: "rgb(var(--color-text-subtle) / <alpha-value>)",
+        edge: "rgb(var(--color-edge) / <alpha-value>)",
+        "edge-strong": "rgb(var(--color-edge-strong) / <alpha-value>)"
       }
     }
   },

@@ -1,4 +1,4 @@
-﻿# 主页主入口规格（开发者主题 + 双语）
+﻿# 主页主入口规格（开发者主题 + i18n）
 
 ## 目标
 - 作为全站入口，清晰承载“我是谁 + 我做什么 + 去哪里看”
@@ -6,7 +6,7 @@
 - 通过动效入口引导用户进入 Blog / Labs / 打卡平台
 
 ## 信息架构（主页结构）
-- 顶部导航：Logo + Home / Blog / Labs / Tracker / About / Contact
+- 顶部导航：Logo + Home / Blog / Labs / Tracker / About / Contact + 语言/主题切换
 - Hero：主标题 + 副标题 + 主 CTA
 - 入口卡片区：Blog / Labs / Tracker 三个入口卡片
 - 最新博客：3–5 篇摘要 + “查看全部”
@@ -40,21 +40,28 @@
 - 色彩建议：低饱和背景 + 单色强调（蓝/紫系）
 - 入口页风格：偏科技感与动态感，强调“进入”体验
 
+## 主题策略（亮/暗）
+- 提供亮色 / 暗色主题切换，默认暗色
+- 切换入口：顶部导航与 `/enter` 入口页
+- 持久化：使用 cookie 记录 `theme`，刷新与跨页保持一致
+- 色彩实现：通过 CSS 变量驱动 `base` / `surface` / `accent` / `text` / `border`
+- 可访问性：同步 `color-scheme`，保证对比度与可读性
+
 ## Hero 区排版与留白
-- 内容结构：H1（中文）+ 英文副标题 + 一行简介 + CTA
-- 文案层级：H1 最大，英文副标题小一号，简介为正文大小
+- 内容结构：H1 + 副标题 + 一行简介 + CTA（随当前语言切换）
+- 文案层级：H1 最大，副标题小一号，简介为正文大小
 - 留白规则：首屏上下留白充足，CTA 与文案间距 ≥ 24px
 - 视觉平衡：文本区占 60–70%，留出空白或抽象图形区
 - 移动端：文本居中，CTA 置于文案下方，避免拥挤
 
-## 双语策略
-- 展示方式：中文主标题 + 英文副标题（小一号）
-- 文案顺序：中文在上，英文在下
-- 可选增强：提供语言切换，但不强制（保持单页双语即可）
-- SEO 语义：页面主语言为中文，英文用行内 `lang="en"` 标注
+## i18n 策略
+- 展示方式：根据当前语言仅展示一种语言文案
+- 语言切换：顶部导航与 `/enter` 入口页提供切换（中文 / English）
+- 语言持久化：使用 cookie 记录 `locale`，刷新与跨页保持一致
+- SEO 语义：`html lang` 与页面元信息随语言切换
 
 ## 主 CTA 动效入口
-- CTA 文案：`进入站点 / Enter Site`
+- CTA 文案：随语言切换（中文 `进入站点` / 英文 `Enter Site`）
 - 交互流程：点击 CTA → 进入全屏动效入口页 → 选择 Blog / Labs / Tracker
 - 入口页形式：
   - 采用独立路由：`/enter`
@@ -63,25 +70,26 @@
 - 可访问性：支持键盘导航、ESC 关闭、`prefers-reduced-motion` 降级
 
 ## SEO 规范（主页）
-- Title：`开发者主页 | Developer Portfolio`
-- Description：`展示博客、实验室与打卡平台的个人开发者网站。`
-- H1：仅一个，使用“全栈开发者 / Full‑Stack Developer”
+- Title：按语言切换（中文 `开发者主页` / 英文 `Developer Portfolio`）
+- Description：按语言切换（中文 `展示博客、实验室与打卡平台的个人开发者网站。` / 英文 `Showcasing blog, labs, and tracker for a personal developer site.`）
+- H1：仅一个，随语言使用 `全栈开发者` / `Full‑Stack Developer`
 - 内链：显式链接到 `/blog`、`/labs`、`/tracker`
 - Open Graph：`og:title`、`og:description`、`og:image`
 - 结构化数据：`WebSite` + `Person`（JSON-LD）
 - Canonical：`/`
 
-## 文案示例（双语）
-- H1：全栈开发者 / Full‑Stack Developer
-- 副标题：构建内容与体验的数字空间 / Building content‑driven experiences
-- CTA：进入站点 / Enter Site
-- Blog 卡片：阅读技术与思考 / Read my writing
-- Labs 卡片：探索实验与原型 / Explore experiments
-- Tracker 卡片：追踪习惯与进度 / Track learning
+## 文案示例（中/英）
+- H1：中文 `全栈开发者`；英文 `Full‑Stack Developer`
+- 副标题：中文 `构建内容与体验的数字空间`；英文 `Building content‑driven experiences`
+- CTA：中文 `进入站点`；英文 `Enter Site`
+- Blog 卡片：中文 `阅读技术与思考`；英文 `Read my writing`
+- Labs 卡片：中文 `探索实验与原型`；英文 `Explore experiments`
+- Tracker 卡片：中文 `追踪习惯与进度`；英文 `Track learning`
 
 ## 验收标准（DoD）
 - 主入口清晰可见且 2 次点击内到达核心模块
-- 双语文案完整且层级清晰
+- i18n 文案完整且层级清晰
+- 亮色 / 暗色主题切换可用，且对比度与可读性良好
 - CTA 动效可用，并具备降级策略
 - SEO 基础元信息齐全且可分享
 
@@ -91,9 +99,9 @@
 提供具有仪式感的内容入口选择页，强化“进入站点”的体验与模块分流。
 
 ### 页面结构
-- 顶部：站点 Logo + 简短提示文案（双语）
+- 顶部：站点 Logo + 简短提示文案 + 语言/主题切换
 - 主区域：三张入口卡片（Blog / Labs / Tracker）
-- 底部：返回主页入口（`← 返回首页 / Back`）
+- 底部：返回主页入口（随语言切换）
 
 ### 动效与交互
 - 页面进入：淡入 + 轻微缩放（0.6–0.8s）
@@ -120,12 +128,12 @@
 - 768–1023px：两列 + 一行单列
 - ≤ 767px：单列纵向排列，间距加大便于触控
 
-### 文案示例（双语）
-- 提示文案：选择你的入口 / Choose your path
-- Blog：博客 / Blog — 阅读与思考 / Read & Reflect
-- Labs：实验室 / Labs — 实验与原型 / Experiments & Prototypes
-- Tracker：打卡 / Tracker — 习惯与进度 / Habits & Progress
-- 返回：返回首页 / Back
+### 文案示例（中/英）
+- 提示文案：中文 `选择你的入口`；英文 `Choose your path`
+- Blog：中文 `博客 — 阅读与思考`；英文 `Blog — Read & Reflect`
+- Labs：中文 `实验室 — 实验与原型`；英文 `Labs — Experiments & Prototypes`
+- Tracker：中文 `打卡 — 习惯与进度`；英文 `Tracker — Habits & Progress`
+- 返回：中文 `返回首页`；英文 `Back`
 
 ### 可访问性与降级
 - 支持键盘导航（Tab / Enter）
@@ -144,11 +152,13 @@
 - 返回首页：整体淡出（0.3–0.4s）后切换
 
 ### SEO 与分享
-- Title：`进入站点 | Enter`
-- Description：`选择进入博客、实验室或打卡平台。`
+- Title：按语言切换（中文 `进入站点` / 英文 `Enter`）
+- Description：按语言切换（中文 `选择进入博客、实验室或打卡平台。` / 英文 `Choose to enter the blog, labs, or tracker.`）
 - 允许索引并纳入站点地图（便于入口页被发现）
 
 ### 验收标准（DoD）
 - 动效顺畅且不会干扰选择
 - 三个入口可在 1 次点击内进入对应模块
 - 键盘导航与降级策略有效
+- 语言与主题切换入口可用且状态同步
+

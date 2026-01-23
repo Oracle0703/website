@@ -1,39 +1,56 @@
 "use client";
 
 import Link from "next/link";
-
-const navItems = [
-  { href: "/", label: "\u9996\u9875", en: "Home" },
-  { href: "/blog", label: "\u535a\u5ba2", en: "Blog" },
-  { href: "/labs", label: "Labs", en: "Labs" },
-  { href: "/tracker", label: "\u6253\u5361", en: "Tracker" },
-  { href: "/about", label: "\u5173\u4e8e", en: "About" },
-  { href: "/contact", label: "\u8054\u7cfb", en: "Contact" }
-];
+import { useI18n } from "./language-provider";
+import { useTheme } from "./theme-provider";
 
 export function SiteHeader() {
+  const { locale, messages, toggleLocale } = useI18n();
+  const { theme, toggleTheme } = useTheme();
+  const toggleLabel = locale === "zh" ? "EN" : "\u4e2d\u6587";
+  const toggleAriaLabel =
+    locale === "zh" ? messages.nav.switchToEnglish : messages.nav.switchToChinese;
+  const themeLabel = theme === "dark" ? messages.theme.light : messages.theme.dark;
+  const themeAriaLabel =
+    theme === "dark" ? messages.theme.switchToLight : messages.theme.switchToDark;
+
   return (
-    <header className="border-b border-slate-900/70 bg-base/80 backdrop-blur">
+    <header className="border-b border-edge/70 bg-base/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-sm font-semibold tracking-wide">
-          Developer Studio
+          {messages.nav.brand}
         </Link>
-        <nav className="hidden items-center gap-6 text-xs text-slate-300 md:flex">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-white">
+        <nav className="hidden items-center gap-6 text-xs text-secondary md:flex">
+          {messages.nav.items.map((item) => (
+            <Link key={item.href} href={item.href} className="hover:text-primary">
               {item.label}
-              <span className="ml-1 text-[10px] text-slate-400" lang="en">
-                {item.en}
-              </span>
             </Link>
           ))}
         </nav>
-        <Link
-          href="/enter"
-          className="text-xs font-semibold text-blue-300 hover:text-blue-200"
-        >
-          进入 <span className="text-[10px] text-blue-200" lang="en">Enter</span>
-        </Link>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={themeAriaLabel}
+            className="text-xs font-semibold text-secondary transition hover:text-primary"
+          >
+            {themeLabel}
+          </button>
+          <button
+            type="button"
+            onClick={toggleLocale}
+            aria-label={toggleAriaLabel}
+            className="text-xs font-semibold text-secondary transition hover:text-primary"
+          >
+            {toggleLabel}
+          </button>
+          <Link
+            href="/enter"
+            className="text-xs font-semibold text-accent hover:text-accent-strong"
+          >
+            {messages.nav.enter}
+          </Link>
+        </div>
       </div>
     </header>
   );
