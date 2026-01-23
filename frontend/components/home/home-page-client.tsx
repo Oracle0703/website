@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AnnouncementTicker } from "../announcement-ticker";
 import { RevealSection } from "../reveal-section";
 
 const copy = {
@@ -100,6 +101,14 @@ const skillTags = [
   "Cloud"
 ];
 
+const announcements = [
+  "林远晋升至金丹境 · 连续修行 30 日",
+  "苏璃触发深修任务 · 完成 120 分钟专注",
+  "陆行完成三连签 · 获得灵石奖励",
+  "青禾达成周度全勤 · 修为大幅提升",
+  "星河提交功法总结 · 获得功德 +1"
+];
+
 export function HomePageClient() {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -195,7 +204,11 @@ export function HomePageClient() {
         </div>
       </section>
 
-      <section className={`mt-16 grid gap-6 md:grid-cols-3 ${heroMotion("delay-500")}`}>
+      <section className={`mt-12 ${heroMotion("delay-400")}`}>
+        <AnnouncementTicker items={announcements} />
+      </section>
+
+      <section className={`mt-12 grid gap-6 md:grid-cols-3 ${heroMotion("delay-500")}`}>
         {copy.entryCards.map((card) => (
           <Link
             key={card.title}

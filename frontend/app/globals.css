@@ -9,3 +9,61 @@
 body {
   @apply bg-base text-slate-100 antialiased;
 }
+
+.ticker {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.ticker::before,
+.ticker::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ticker::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(11, 15, 26, 1), rgba(11, 15, 26, 0));
+}
+
+.ticker::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(11, 15, 26, 1), rgba(11, 15, 26, 0));
+}
+
+.ticker-track {
+  display: flex;
+  gap: 24px;
+  width: max-content;
+  animation: ticker-scroll 22s linear infinite;
+}
+
+.ticker-group {
+  display: flex;
+  gap: 24px;
+  padding-right: 24px;
+  align-items: center;
+  width: max-content;
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+    transform: none;
+  }
+}
