@@ -5,26 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "../../components/use-prefers-reduced-motion";
+import { useI18n } from "../../components/language-provider";
+import { useTheme } from "../../components/theme-provider";
+
+type EntryId = "blog" | "labs" | "tracker";
 
 type Entry = {
+  id: EntryId;
   title: string;
-  titleEn: string;
   subtitle: string;
-  subtitleEn: string;
   href: string;
   Icon: (props: SVGProps<SVGSVGElement>) => JSX.Element;
-};
-
-const copy = {
-  heading: "\u8fdb\u5165\u7ad9\u70b9",
-  headingEn: "Enter Site",
-  prompt: "\u9009\u62e9\u4f60\u7684\u5165\u53e3",
-  promptEn: "Choose your path",
-  back: "\u8fd4\u56de\u9996\u9875",
-  backEn: "Back",
-  hint:
-    "\u652f\u6301\u952e\u76d8\u5bfc\u822a\uff0c\u51cf\u5c11\u52a8\u6548\u53ef\u5728\u7cfb\u7edf\u8bbe\u7f6e\u4e2d\u542f\u7528\u3002",
-  enter: "\u8fdb\u5165"
 };
 
 const BlogIcon = (props: SVGProps<SVGSVGElement>) => (
@@ -48,34 +39,26 @@ const TrackerIcon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const entries: Entry[] = [
-  {
-    title: "\u535a\u5ba2",
-    titleEn: "Blog",
-    subtitle: "\u9605\u8bfb\u4e0e\u601d\u8003",
-    subtitleEn: "Read & Reflect",
-    href: "/blog",
-    Icon: BlogIcon
-  },
-  {
-    title: "\u5b9e\u9a8c\u5ba4",
-    titleEn: "Labs",
-    subtitle: "\u5b9e\u9a8c\u4e0e\u539f\u578b",
-    subtitleEn: "Experiments & Prototypes",
-    href: "/labs",
-    Icon: LabsIcon
-  },
-  {
-    title: "\u6253\u5361",
-    titleEn: "Tracker",
-    subtitle: "\u4e60\u60ef\u4e0e\u8fdb\u5ea6",
-    subtitleEn: "Habits & Progress",
-    href: "/tracker",
-    Icon: TrackerIcon
-  }
-];
+const entryIcons: Record<EntryId, Entry["Icon"]> = {
+  blog: BlogIcon,
+  labs: LabsIcon,
+  tracker: TrackerIcon
+};
 
 export function EnterClient() {
+  const { locale, messages, toggleLocale } = useI18n();
+  const { theme, toggleTheme } = useTheme();
+  const copy = messages.enter;
+  const toggleLabel = locale === "zh" ? "EN" : "\u4e2d\u6587";
+  const toggleAriaLabel =
+    locale === "zh" ? messages.nav.switchToEnglish : messages.nav.switchToChinese;
+  const themeLabel = theme === "dark" ? messages.theme.light : messages.theme.dark;
+  const themeAriaLabel =
+    theme === "dark" ? messages.theme.switchToLight : messages.theme.switchToDark;
+  const entries: Entry[] = copy.entries.map((entry) => ({
+    ...entry,
+    Icon: entryIcons[entry.id as EntryId]
+  }));
   const router = useRouter();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [isMounted, setIsMounted] = useState(false);
@@ -157,20 +140,36 @@ export function EnterClient() {
           <Link
             href="/"
             onClick={handleBack}
-            className="text-sm font-semibold tracking-wide text-slate-100 hover:text-white"
+            className="text-sm font-semibold tracking-wide text-primary hover:text-primary"
           >
-            Developer Studio
+            {messages.nav.brand}
           </Link>
-          <p className="text-sm text-slate-400">
-            {copy.prompt} <span lang="en">/ {copy.promptEn}</span>
-          </p>
+          <div className="flex items-center gap-4 text-sm text-muted">
+            <p>{copy.prompt}</p>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={themeAriaLabel}
+              className="text-xs font-semibold text-secondary transition hover:text-primary"
+            >
+              {themeLabel}
+            </button>
+            <button
+              type="button"
+              onClick={toggleLocale}
+              aria-label={toggleAriaLabel}
+              className="text-xs font-semibold text-secondary transition hover:text-primary"
+            >
+              {toggleLabel}
+            </button>
+          </div>
         </div>
 
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold">
-            {copy.heading} <span className="text-lg text-slate-400" lang="en">/ {copy.headingEn}</span>
+            {copy.heading}
           </h1>
-          <p className="text-sm text-slate-400">{copy.hint}</p>
+          <p className="text-sm text-muted">{copy.hint}</p>
         </div>
 
         <div className={`grid gap-6 md:grid-cols-3 ${isNavigating ? "pointer-events-none" : ""}`}>
@@ -185,7 +184,7 @@ export function EnterClient() {
                 onClick={(event) => handleNavigate(event, entry.href)}
                 aria-disabled={isNavigating ? true : undefined}
                 className={[
-                  "group flex h-full flex-col justify-between rounded-2xl border border-slate-800 bg-surface/70 p-6 transition duration-300",
+                  "group flex h-full flex-col justify-between rounded-2xl border border-edge bg-surface/70 p-6 transition duration-300",
                   "hover:-translate-y-1 hover:border-blue-400/60 hover:shadow-lg hover:shadow-blue-500/10",
                   "motion-reduce:transform-none motion-reduce:transition-none",
                   isDimmed ? "opacity-40 scale-95" : "",
@@ -195,33 +194,25 @@ export function EnterClient() {
                   .join(" ")}
               >
                 <div className="space-y-3">
-                  <entry.Icon className="h-6 w-6 text-blue-300" />
-                  <h2 className="text-xl font-semibold">
-                    {entry.title}{" "}
-                    <span className="text-xs text-slate-400" lang="en">
-                      / {entry.titleEn}
-                    </span>
-                  </h2>
-                  <p className="text-sm text-slate-400">{entry.subtitle}</p>
-                  <p className="text-xs text-slate-400" lang="en">
-                    {entry.subtitleEn}
-                  </p>
+                  <entry.Icon className="h-6 w-6 text-accent" />
+                  <h2 className="text-xl font-semibold">{entry.title}</h2>
+                  <p className="text-sm text-muted">{entry.subtitle}</p>
                 </div>
-                <span className="mt-6 text-sm text-slate-400 group-hover:text-blue-200">
-                  {copy.enter} \u2192
+                <span className="mt-6 text-sm text-muted group-hover:text-accent-strong">
+                  {copy.enterAction} \u2192
                 </span>
               </Link>
             );
           })}
         </div>
 
-        <div className="flex flex-col items-center gap-3 text-xs text-slate-400">
+        <div className="flex flex-col items-center gap-3 text-xs text-muted">
           <Link
             href="/"
             onClick={handleBack}
-            className="text-sm text-slate-400 hover:text-white"
+            className="text-sm text-muted hover:text-primary"
           >
-            \u2190 {copy.back} <span lang="en">/ {copy.backEn}</span>
+            \u2190 {copy.back}
           </Link>
         </div>
       </div>

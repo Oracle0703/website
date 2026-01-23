@@ -1,30 +1,43 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LayoutShell } from "../components/layout-shell";
+import { getLocale } from "../lib/i18n-server";
+import { getHtmlLang, getMessages } from "../lib/i18n";
+import { getTheme } from "../lib/theme-server";
 
-export const metadata: Metadata = {
-  title: {
-    default: "\u5f00\u53d1\u8005\u4e3b\u9875 | Developer Portfolio",
-    template: "%s | Developer Portfolio"
-  },
-  description: "\u5c55\u793a\u535a\u5ba2\u3001\u5b9e\u9a8c\u5ba4\u4e0e\u6253\u5361\u5e73\u53f0\u7684\u4e2a\u4eba\u5f00\u53d1\u8005\u7f51\u7ad9\u3002",
-  openGraph: {
-    title: "\u5f00\u53d1\u8005\u4e3b\u9875",
-    description: "\u5c55\u793a\u535a\u5ba2\u3001\u5b9e\u9a8c\u5ba4\u4e0e\u6253\u5361\u5e73\u53f0\u7684\u4e2a\u4eba\u5f00\u53d1\u8005\u7f51\u7ad9\u3002",
-    type: "website",
-    url: "/",
-    images: ["/og.png"]
-  },
-  alternates: {
-    canonical: "/"
-  }
+export const generateMetadata = (): Metadata => {
+  const locale = getLocale();
+  const { seo } = getMessages(locale);
+
+  return {
+    title: {
+      default: seo.defaultTitle,
+      template: `%s | ${seo.siteName}`
+    },
+    description: seo.defaultDescription,
+    openGraph: {
+      title: seo.defaultTitle,
+      description: seo.defaultDescription,
+      type: "website",
+      url: "/",
+      images: ["/og.png"]
+    },
+    alternates: {
+      canonical: "/"
+    }
+  };
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = getLocale();
+  const theme = getTheme();
+
   return (
-    <html lang="zh-CN">
+    <html lang={getHtmlLang(locale)} data-theme={theme}>
       <body>
-        <LayoutShell>{children}</LayoutShell>
+        <LayoutShell initialLocale={locale} initialTheme={theme}>
+          {children}
+        </LayoutShell>
       </body>
     </html>
   );

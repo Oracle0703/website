@@ -1,30 +1,40 @@
+import type { Metadata } from "next";
 import { HomePageClient } from "../components/home/home-page-client";
+import { getLocale } from "../lib/i18n-server";
+import { getHtmlLang, getMessages } from "../lib/i18n";
 
-export const metadata = {
-  title: "\u5f00\u53d1\u8005\u4e3b\u9875 | Developer Portfolio",
-  description: "\u5c55\u793a\u535a\u5ba2\u3001\u5b9e\u9a8c\u5ba4\u4e0e\u6253\u5361\u5e73\u53f0\u7684\u4e2a\u4eba\u5f00\u53d1\u8005\u7f51\u7ad9\u3002"
-};
+export const generateMetadata = (): Metadata => {
+  const locale = getLocale();
+  const { seo } = getMessages(locale);
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      name: "Developer Studio",
-      url: "/",
-      description: "\u5c55\u793a\u535a\u5ba2\u3001\u5b9e\u9a8c\u5ba4\u4e0e\u6253\u5361\u5e73\u53f0\u7684\u4e2a\u4eba\u5f00\u53d1\u8005\u7f51\u7ad9\u3002",
-      inLanguage: "zh-CN"
-    },
-    {
-      "@type": "Person",
-      name: "Developer Studio",
-      jobTitle: "Full-Stack Developer",
-      url: "/"
-    }
-  ]
+  return {
+    title: seo.homeTitle,
+    description: seo.homeDescription
+  };
 };
 
 export default function HomePage() {
+  const locale = getLocale();
+  const { seo } = getMessages(locale);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        name: seo.siteName,
+        url: "/",
+        description: seo.jsonLd.siteDescription,
+        inLanguage: getHtmlLang(locale)
+      },
+      {
+        "@type": "Person",
+        name: seo.siteName,
+        jobTitle: seo.jsonLd.jobTitle,
+        url: "/"
+      }
+    ]
+  };
+
   return (
     <>
       <HomePageClient />
