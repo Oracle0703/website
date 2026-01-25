@@ -21,7 +21,7 @@ export default function Page() {
   const common = pages.common;
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-12 sm:px-6 md:py-16">
+    <main className="mx-auto w-full max-w-6xl space-y-8 px-4 py-12 sm:px-6 md:py-16">
       <div className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-8">
         <p className="text-sm text-muted">{copy.eyebrow}</p>
         <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">{copy.title}</h1>

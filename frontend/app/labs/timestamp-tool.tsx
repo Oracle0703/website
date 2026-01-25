@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Locale } from "../../lib/i18n";
 
 type TimestampUnit = "seconds" | "milliseconds";
@@ -9,6 +9,16 @@ type Copy = {
   eyebrow: string;
   title: string;
   description: string;
+  timeLabel: string;
+  timezoneLabel: string;
+  localLabel: string;
+  utcLabel: string;
+  showUtcLabel: string;
+  hideUtcLabel: string;
+  showLocalLabel: string;
+  hideLocalLabel: string;
+  copyLabel: string;
+  copiedLabel: string;
   timeToTimestamp: string;
   timeInputLabel: string;
   secondsLabel: string;
@@ -20,7 +30,6 @@ type Copy = {
   unitLabel: string;
   resultLabel: string;
   currentTitle: string;
-  currentTimeLabel: string;
   empty: string;
 };
 
@@ -29,6 +38,16 @@ const copyMap: Record<Locale, Copy> = {
     eyebrow: "实验室工具",
     title: "时间戳转换工具",
     description: "支持时间与时间戳互转，秒级/毫秒级自由切换。",
+    timeLabel: "时间",
+    timezoneLabel: "时区切换",
+    localLabel: "本地",
+    utcLabel: "UTC",
+    showUtcLabel: "UTC 显示",
+    hideUtcLabel: "隐藏 UTC",
+    showLocalLabel: "本地显示",
+    hideLocalLabel: "隐藏本地",
+    copyLabel: "复制",
+    copiedLabel: "已复制",
     timeToTimestamp: "时间 → 时间戳",
     timeInputLabel: "输入时间",
     secondsLabel: "秒级时间戳",
@@ -40,13 +59,22 @@ const copyMap: Record<Locale, Copy> = {
     unitLabel: "单位",
     resultLabel: "转换结果",
     currentTitle: "当前时间戳",
-    currentTimeLabel: "本地时间",
     empty: "—"
   },
   en: {
     eyebrow: "Labs Tool",
     title: "Timestamp Converter",
     description: "Convert between time and timestamps with seconds/milliseconds precision.",
+    timeLabel: "Time",
+    timezoneLabel: "Timezone",
+    localLabel: "Local",
+    utcLabel: "UTC",
+    showUtcLabel: "Show UTC",
+    hideUtcLabel: "Hide UTC",
+    showLocalLabel: "Show local",
+    hideLocalLabel: "Hide local",
+    copyLabel: "Copy",
+    copiedLabel: "Copied",
     timeToTimestamp: "Time → Timestamp",
     timeInputLabel: "Input time",
     secondsLabel: "Seconds timestamp",
@@ -58,20 +86,19 @@ const copyMap: Record<Locale, Copy> = {
     unitLabel: "Unit",
     resultLabel: "Result",
     currentTitle: "Current timestamp",
-    currentTimeLabel: "Local time",
     empty: "—"
   }
 };
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
-const formatDateTime = (date: Date) => {
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hour = pad(date.getHours());
-  const minute = pad(date.getMinutes());
-  const second = pad(date.getSeconds());
+const formatDateTime = (date: Date, useUtc: boolean) => {
+  const year = useUtc ? date.getUTCFullYear() : date.getFullYear();
+  const month = pad((useUtc ? date.getUTCMonth() : date.getMonth()) + 1);
+  const day = pad(useUtc ? date.getUTCDate() : date.getDate());
+  const hour = pad(useUtc ? date.getUTCHours() : date.getHours());
+  const minute = pad(useUtc ? date.getUTCMinutes() : date.getMinutes());
+  const second = pad(useUtc ? date.getUTCSeconds() : date.getSeconds());
 
   return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 };
@@ -94,6 +121,10 @@ export function TimestampTool({ locale }: { locale: Locale }) {
   const [timestampInput, setTimestampInput] = useState("");
   const [timestampUnit, setTimestampUnit] = useState<TimestampUnit>("milliseconds");
   const [now, setNow] = useState<Date | null>(null);
+  const [timeZoneMode, setTimeZoneMode] = useState<"local" | "utc">("local");
+  const [showUtc, setShowUtc] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const copyTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const current = new Date();
@@ -106,6 +137,60 @@ export function TimestampTool({ locale }: { locale: Locale }) {
 
     return () => window.clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopy = async (value: string | number | null, key: string) => {
+    if (value === null || value === undefined || value === "") {
+      return;
+    }
+
+    const text = String(value);
+    const setCopied = () => {
+      setCopiedKey(key);
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setCopiedKey(null);
+      }, 1500);
+    };
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCopied();
+        return;
+      }
+    } catch {
+      // Fallback below.
+    }
+
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "true");
+      textarea.style.position = "absolute";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied();
+    } catch {
+      // Ignore copy failures.
+    }
+  };
+
+  const handleTimeZoneChange = (mode: "local" | "utc") => {
+    setTimeZoneMode(mode);
+  };
 
   const dateTimestamp = useMemo(() => {
     if (!dateInput) {
@@ -147,6 +232,22 @@ export function TimestampTool({ locale }: { locale: Locale }) {
 
   const currentSeconds = now ? Math.floor(now.getTime() / 1000) : null;
   const currentMilliseconds = now ? now.getTime() : null;
+  const isUtc = timeZoneMode === "utc";
+  const primaryTimeLabel = isUtc ? copy.utcLabel : copy.localLabel;
+  const secondaryTimeLabel = isUtc ? copy.localLabel : copy.utcLabel;
+  const showSecondaryLine = showUtc;
+  const primaryTimestampText = timestampResult ? formatDateTime(timestampResult, isUtc) : null;
+  const secondaryTimestampText = timestampResult ? formatDateTime(timestampResult, !isUtc) : null;
+  const currentTimeText = now ? formatDateTime(now, isUtc) : null;
+  const currentSecondaryTimeText = now ? formatDateTime(now, !isUtc) : null;
+  const copyLabelFor = (key: string) => (copiedKey === key ? copy.copiedLabel : copy.copyLabel);
+  const toggleSecondaryLabel = isUtc
+    ? showUtc
+      ? copy.hideLocalLabel
+      : copy.showLocalLabel
+    : showUtc
+      ? copy.hideUtcLabel
+      : copy.showUtcLabel;
 
   return (
     <section className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-8">
@@ -154,6 +255,41 @@ export function TimestampTool({ locale }: { locale: Locale }) {
         <p className="text-xs uppercase tracking-[0.2em] text-accent">{copy.eyebrow}</p>
         <h2 className="text-xl font-semibold text-primary">{copy.title}</h2>
         <p className="text-sm text-muted">{copy.description}</p>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
+          <span>{copy.timezoneLabel}</span>
+          <div className="flex rounded-full border border-edge bg-base/60 p-1">
+            <button
+              type="button"
+              onClick={() => handleTimeZoneChange("local")}
+              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                !isUtc ? "bg-accent text-white" : "text-muted hover:text-primary"
+              }`}
+            >
+              {copy.localLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTimeZoneChange("utc")}
+              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                isUtc ? "bg-accent text-white" : "text-muted hover:text-primary"
+              }`}
+            >
+              {copy.utcLabel}
+            </button>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowUtc((prev) => !prev)}
+          className={`rounded-full border border-edge bg-base/60 px-3 py-1 text-xs font-semibold transition ${
+            "text-muted hover:text-primary"
+          }`}
+        >
+          {toggleSecondaryLabel}
+        </button>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -171,15 +307,33 @@ export function TimestampTool({ locale }: { locale: Locale }) {
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex items-center justify-between text-muted">
               <span>{copy.secondsLabel}</span>
-              <span className="font-mono text-primary">
-                {timestampFromDate.seconds ?? copy.empty}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-primary">
+                  {timestampFromDate.seconds ?? copy.empty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(timestampFromDate.seconds, "time-seconds")}
+                  className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                >
+                  {copyLabelFor("time-seconds")}
+                </button>
+              </div>
             </div>
             <div className="flex items-center justify-between text-muted">
               <span>{copy.millisecondsLabel}</span>
-              <span className="font-mono text-primary">
-                {timestampFromDate.milliseconds ?? copy.empty}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-primary">
+                  {timestampFromDate.milliseconds ?? copy.empty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(timestampFromDate.milliseconds, "time-milliseconds")}
+                  className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                >
+                  {copyLabelFor("time-milliseconds")}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -212,42 +366,112 @@ export function TimestampTool({ locale }: { locale: Locale }) {
           </div>
           <div className="mt-4 space-y-2 text-sm text-muted">
             <div className="flex items-center justify-between">
-              <span>{copy.resultLabel}</span>
-              <span className="font-mono text-primary">
-                {timestampResult ? formatDateTime(timestampResult) : copy.empty}
+              <span>
+                {copy.resultLabel} ({primaryTimeLabel})
               </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-primary">
+                  {primaryTimestampText ?? copy.empty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(primaryTimestampText, "timestamp-primary")}
+                  className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                >
+                  {copyLabelFor("timestamp-primary")}
+                </button>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span>{copy.currentTimeLabel}</span>
-              <span className="font-mono text-primary">
-                {timestampResult ? timestampResult.toLocaleString() : copy.empty}
-              </span>
-            </div>
+            {showSecondaryLine ? (
+              <div className="flex items-center justify-between text-xs">
+                <span>{secondaryTimeLabel}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-primary">
+                    {secondaryTimestampText ?? copy.empty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(secondaryTimestampText, "timestamp-secondary")}
+                    className="rounded-full border border-edge bg-base/60 px-2 py-1 text-[11px] font-semibold text-muted transition hover:text-primary"
+                  >
+                    {copyLabelFor("timestamp-secondary")}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
 
       <div className="mt-6 rounded-xl border border-edge bg-base/40 p-4">
         <p className="text-sm font-semibold text-primary">{copy.currentTitle}</p>
-        <div className="mt-3 grid gap-2 text-sm text-muted sm:grid-cols-3">
+        <div className="mt-3 grid gap-2 text-sm text-muted sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex items-center justify-between gap-3">
             <span>{copy.secondsLabel}</span>
-            <span className="font-mono text-primary">
-              {currentSeconds ?? copy.empty}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-primary">
+                {currentSeconds ?? copy.empty}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopy(currentSeconds, "current-seconds")}
+                className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+              >
+                {copyLabelFor("current-seconds")}
+              </button>
+            </div>
           </div>
           <div className="flex items-center justify-between gap-3">
             <span>{copy.millisecondsLabel}</span>
-            <span className="font-mono text-primary">
-              {currentMilliseconds ?? copy.empty}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-primary">
+                {currentMilliseconds ?? copy.empty}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopy(currentMilliseconds, "current-milliseconds")}
+                className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+              >
+                {copyLabelFor("current-milliseconds")}
+              </button>
+            </div>
           </div>
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span>{copy.currentTimeLabel}</span>
-            <span className="font-mono text-primary">
-              {now ? formatDateTime(now) : copy.empty}
+            <span>
+              {copy.timeLabel} ({primaryTimeLabel})
             </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-primary">
+                {currentTimeText ?? copy.empty}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopy(currentTimeText, "current-time-primary")}
+                className="rounded-full border border-edge bg-base/60 px-2 py-1 text-[11px] font-semibold text-muted transition hover:text-primary"
+              >
+                {copyLabelFor("current-time-primary")}
+              </button>
+            </div>
           </div>
+          {showSecondaryLine ? (
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span>
+                {copy.timeLabel} ({secondaryTimeLabel})
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-primary">
+                  {currentSecondaryTimeText ?? copy.empty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(currentSecondaryTimeText, "current-time-secondary")}
+                  className="rounded-full border border-edge bg-base/60 px-2 py-1 text-[11px] font-semibold text-muted transition hover:text-primary"
+                >
+                  {copyLabelFor("current-time-secondary")}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
