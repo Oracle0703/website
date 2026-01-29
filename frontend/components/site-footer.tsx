@@ -18,6 +18,17 @@ export function SiteFooter() {
         <div className="space-y-2">
           <span>{messages.footer.copyright}</span>
           <p className="text-[11px] text-muted">{messages.footer.tagline}</p>
+          <p className="text-[11px] text-muted">
+            2026{" "}
+            <a
+              href="https://beian.miit.gov.cn/"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-primary"
+            >
+              蜀ICP备2023005978号-1
+            </a>
+          </p>
         </div>
         <div className="space-y-3 text-[11px] md:text-right">
           <div className="flex flex-wrap gap-3">
