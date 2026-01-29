@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RevealSection } from "../reveal-section";
 import { useI18n } from "../language-provider";
+import { ParticleTime } from "./particle-time";
 
 export function HomePageClient() {
   const { messages } = useI18n();
   const copy = messages.home;
+  const common = messages.pages.common;
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -55,10 +57,11 @@ export function HomePageClient() {
         <div
           className={`${heroMotion(
             "delay-200"
-          )} relative rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6`}
+          )} relative min-w-0 rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6`}
         >
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
           <div className="relative space-y-4">
+            <ParticleTime />
             <p className="text-sm text-muted">
               {copy.primarySectionsLabel}
             </p>
@@ -70,7 +73,9 @@ export function HomePageClient() {
                   className="group flex items-center justify-between rounded-xl border border-edge bg-base/40 px-4 py-3 text-sm transition hover:-translate-y-0.5 hover:border-edge-strong motion-reduce:transform-none"
                 >
                   <span>{item.label}</span>
-                  <span className="text-xs text-muted">\u2192</span>
+                  <span className="text-xs text-muted">
+                    {common.arrowRight}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -83,9 +88,11 @@ export function HomePageClient() {
           <Link
             key={card.title}
             href={card.href}
-            className="group rounded-2xl border border-edge bg-surface/60 p-5 transition duration-200 hover:-translate-y-1 hover:border-edge-strong hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6"
+            className="group rounded-2xl border border-edge bg-surface/60 p-5 transition duration-200 hover:-translate-y-1 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6"
           >
-            <h3 className="text-base font-semibold sm:text-lg">{card.title}</h3>
+            <h3 className="text-base font-semibold text-primary sm:text-lg">
+              {card.title}
+            </h3>
             <p className="mt-2 text-sm text-muted">{card.subtitle}</p>
           </Link>
         ))}
@@ -102,11 +109,17 @@ export function HomePageClient() {
           {copy.blogItems.map((item) => (
             <article
               key={item.title}
-              className="rounded-xl border border-edge bg-surface/60 p-4 sm:p-5"
+              className="group rounded-xl border border-edge bg-surface/60 p-4 transition hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 motion-reduce:transform-none sm:p-5"
             >
-              <p className="text-xs text-muted">{item.date}</p>
-              <h3 className="mt-2 text-base font-semibold">{item.title}</h3>
-              <p className="mt-1 text-sm text-muted">{item.subtitle}</p>
+              <p className="text-xs text-muted group-hover:text-secondary">
+                {item.date}
+              </p>
+              <h3 className="mt-2 text-base font-semibold text-primary">
+                {item.title}
+              </h3>
+              <p className="mt-1 text-sm text-muted group-hover:text-secondary">
+                {item.subtitle}
+              </p>
             </article>
           ))}
         </div>
@@ -123,10 +136,14 @@ export function HomePageClient() {
           {copy.labItems.map((item) => (
             <div
               key={item.title}
-              className="rounded-xl border border-edge bg-surface/60 p-4 sm:p-5"
+              className="group rounded-xl border border-edge bg-surface/60 p-4 transition hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 motion-reduce:transform-none sm:p-5"
             >
-              <h3 className="text-base font-semibold">{item.title}</h3>
-              <p className="mt-1 text-sm text-muted">{item.subtitle}</p>
+              <h3 className="text-base font-semibold text-primary">
+                {item.title}
+              </h3>
+              <p className="mt-1 text-sm text-muted group-hover:text-secondary">
+                {item.subtitle}
+              </p>
             </div>
           ))}
         </div>
@@ -149,7 +166,7 @@ export function HomePageClient() {
             className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent-strong"
           >
             {copy.trackerEnter}
-            <span aria-hidden>\u2192</span>
+            <span aria-hidden>{common.arrowRight}</span>
           </Link>
         </div>
         <div className="rounded-2xl border border-edge bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/20 p-5 sm:p-6">

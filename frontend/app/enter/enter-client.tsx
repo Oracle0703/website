@@ -49,6 +49,7 @@ export function EnterClient() {
   const { locale, messages, toggleLocale } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const copy = messages.enter;
+  const common = messages.pages.common;
   const toggleLabel = locale === "zh" ? "EN" : "\u4e2d\u6587";
   const toggleAriaLabel =
     locale === "zh" ? messages.nav.switchToEnglish : messages.nav.switchToChinese;
@@ -166,7 +167,7 @@ export function EnterClient() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold sm:text-3xl">
+          <h1 className="text-2xl font-semibold text-primary sm:text-3xl">
             {copy.heading}
           </h1>
           <p className="text-sm text-muted">{copy.hint}</p>
@@ -195,11 +196,13 @@ export function EnterClient() {
               >
                 <div className="space-y-3">
                   <entry.Icon className="h-6 w-6 text-accent" />
-                  <h2 className="text-lg font-semibold sm:text-xl">{entry.title}</h2>
+                  <h2 className="text-lg font-semibold text-primary sm:text-xl">
+                    {entry.title}
+                  </h2>
                   <p className="text-sm text-muted">{entry.subtitle}</p>
                 </div>
                 <span className="mt-6 text-sm text-muted group-hover:text-accent-strong">
-                  {copy.enterAction} \u2192
+                  {copy.enterAction} {common.arrowRight}
                 </span>
               </Link>
             );
@@ -212,7 +215,7 @@ export function EnterClient() {
             onClick={handleBack}
             className="text-sm text-muted hover:text-primary"
           >
-            \u2190 {copy.back}
+            {common.arrowLeft} {copy.back}
           </Link>
         </div>
       </div>

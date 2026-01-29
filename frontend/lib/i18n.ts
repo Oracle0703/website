@@ -149,7 +149,9 @@ export const messages = {
     pages: {
       common: {
         backToEnter: "← 返回入口",
-        backToHome: "返回首页"
+        backToHome: "返回首页",
+        arrowLeft: "←",
+        arrowRight: "→"
       },
       blog: {
         eyebrow: "博客",
@@ -357,7 +359,9 @@ export const messages = {
     pages: {
       common: {
         backToEnter: "← Back to Enter",
-        backToHome: "Back home"
+        backToHome: "Back home",
+        arrowLeft: "←",
+        arrowRight: "→"
       },
       blog: {
         eyebrow: "Blog",

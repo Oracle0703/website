@@ -340,7 +340,7 @@ function Card({
   return (
     <div className={`rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6 ${className}`}>
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="text-lg font-semibold text-primary">{title}</h2>
         {description ? <p className="text-sm text-muted">{description}</p> : null}
       </div>
       <div className="mt-4">{children}</div>
@@ -376,7 +376,7 @@ export default function Page() {
     <main className="mx-auto w-full max-w-6xl space-y-10 px-4 py-12 sm:px-6 md:space-y-12 md:py-16">
       <header className="space-y-3">
         <p className="text-sm text-muted">{copy.eyebrow}</p>
-        <h1 className="text-2xl font-semibold sm:text-3xl">{copy.title}</h1>
+        <h1 className="text-2xl font-semibold text-primary sm:text-3xl">{copy.title}</h1>
         <p className="text-sm text-muted">{copy.description}</p>
       </header>
 
@@ -389,7 +389,7 @@ export default function Page() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.2em] text-accent">{content.panel.eyebrow}</p>
-              <h2 className="text-xl font-semibold">{content.panel.title}</h2>
+              <h2 className="text-xl font-semibold text-primary">{content.panel.title}</h2>
               <p className="text-sm text-muted">{content.panel.description}</p>
             </div>
             <button

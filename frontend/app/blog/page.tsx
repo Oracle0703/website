@@ -40,14 +40,14 @@ export default function Page() {
     <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-12 sm:px-6 md:space-y-12 md:py-16">
       <header className="space-y-3">
         <p className="text-sm text-muted">{copy.eyebrow}</p>
-        <h1 className="text-3xl font-semibold">{copy.title}</h1>
+        <h1 className="text-3xl font-semibold text-primary">{copy.title}</h1>
         <p className="text-sm text-muted">{copy.description}</p>
       </header>
 
       <section className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold">{copy.listTitle}</h2>
+            <h2 className="text-lg font-semibold text-primary">{copy.listTitle}</h2>
             <p className="mt-1 text-sm text-muted">{copy.listDescription}</p>
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function Page() {
                         href={`/blog/${encodeURIComponent(post.slug)}`}
                         className="text-sm font-semibold text-accent hover:text-accent-strong"
                       >
-                        {copy.readMore} →
+                        {copy.readMore} {common.arrowRight}
                       </Link>
                     </div>
 

@@ -106,7 +106,7 @@ export default async function Page({ params }: PageProps) {
           )}
           <span>{copy.readingTime} · {post.readingTime} {copy.minute}</span>
         </div>
-        <h1 className="text-2xl font-semibold sm:text-3xl">{post.title}</h1>
+        <h1 className="text-2xl font-semibold text-primary sm:text-3xl">{post.title}</h1>
         <p className="text-sm text-muted">{post.summary}</p>
         <div className="flex flex-wrap gap-3 text-xs text-secondary">
           <span className="text-muted">{post.author}</span>
