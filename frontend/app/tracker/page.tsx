@@ -5,6 +5,15 @@ import { AnnouncementTicker } from "../../components/announcement-ticker";
 import { getLocale } from "../../lib/i18n-server";
 import { getMessages } from "../../lib/i18n";
 import type { Locale } from "../../lib/i18n";
+import {
+  EYEBROW_ACCENT,
+  TEXT_SM_MUTED,
+  TEXT_XS_MUTED,
+  TEXT_SM_SEMIBOLD_PRIMARY,
+  TITLE_2XL,
+  TITLE_LG,
+  TITLE_XL
+} from "../../lib/typography";
 
 export const generateMetadata = (): Metadata => {
   const locale = getLocale();
@@ -338,10 +347,12 @@ function Card({
   className?: string;
 }) {
   return (
-    <div className={`rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6 ${className}`}>
+    <div
+      className={`rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6 ${className}`}
+    >
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-primary">{title}</h2>
-        {description ? <p className="text-sm text-muted">{description}</p> : null}
+        <h2 className={TITLE_LG}>{title}</h2>
+        {description ? <p className={TEXT_SM_MUTED}>{description}</p> : null}
       </div>
       <div className="mt-4">{children}</div>
     </div>
@@ -350,7 +361,7 @@ function Card({
 
 function BulletList({ items }: { items: string[] }) {
   return (
-    <ul className="space-y-2 text-sm text-muted">
+    <ul className={`space-y-2 ${TEXT_SM_MUTED}`}>
       {items.map((item, index) => (
         <li key={`${item}-${index}`} className="flex items-start gap-2">
           <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent/70" aria-hidden />
@@ -375,9 +386,9 @@ export default function Page() {
   return (
     <main className="mx-auto w-full max-w-6xl space-y-10 px-4 py-12 sm:px-6 md:space-y-12 md:py-16">
       <header className="space-y-3">
-        <p className="text-sm text-muted">{copy.eyebrow}</p>
-        <h1 className="text-2xl font-semibold text-primary sm:text-3xl">{copy.title}</h1>
-        <p className="text-sm text-muted">{copy.description}</p>
+        <p className={TEXT_SM_MUTED}>{copy.eyebrow}</p>
+        <h1 className={TITLE_2XL}>{copy.title}</h1>
+        <p className={TEXT_SM_MUTED}>{copy.description}</p>
       </header>
 
       <section className="mt-4">
@@ -385,12 +396,12 @@ export default function Page() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6">
+        <div className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
-              <p className="text-xs uppercase tracking-[0.2em] text-accent">{content.panel.eyebrow}</p>
-              <h2 className="text-xl font-semibold text-primary">{content.panel.title}</h2>
-              <p className="text-sm text-muted">{content.panel.description}</p>
+              <p className={EYEBROW_ACCENT}>{content.panel.eyebrow}</p>
+              <h2 className={TITLE_XL}>{content.panel.title}</h2>
+              <p className={TEXT_SM_MUTED}>{content.panel.description}</p>
             </div>
             <button
               type="button"
@@ -403,17 +414,17 @@ export default function Page() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {content.stats.map((stat) => (
               <div key={stat.label} className="rounded-xl border border-edge bg-base/40 p-4">
-                <p className="text-xs text-muted">{stat.label}</p>
-                <p className="mt-2 text-lg font-semibold text-primary">{stat.value}</p>
-                <p className="mt-1 text-xs text-muted">{stat.helper}</p>
+                <p className={TEXT_XS_MUTED}>{stat.label}</p>
+                <p className={`mt-2 ${TITLE_LG}`}>{stat.value}</p>
+                <p className={`mt-1 ${TEXT_XS_MUTED}`}>{stat.helper}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-xs text-muted">{content.panel.note}</p>
+          <p className={`mt-4 ${TEXT_XS_MUTED}`}>{content.panel.note}</p>
         </div>
 
         <Card title={content.progress.title} description={content.progress.note}>
-          <div className="flex items-center justify-between text-sm text-muted">
+          <div className={`flex items-center justify-between ${TEXT_SM_MUTED}`}>
             <span>{content.progress.currentLabel}</span>
             <span>
               {content.progress.current} / {content.progress.next}
@@ -426,8 +437,8 @@ export default function Page() {
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <div className="mt-6 space-y-2 text-sm text-muted">
-            <p className="text-xs uppercase tracking-[0.2em] text-accent">
+          <div className={`mt-6 space-y-2 ${TEXT_SM_MUTED}`}>
+            <p className={EYEBROW_ACCENT}>
               {content.streakRewards.title}
             </p>
             {content.streakRewards.items.map((item) => (
@@ -456,13 +467,13 @@ export default function Page() {
         <Card title={content.settlement.title}>
           <div className="space-y-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-accent">
+              <p className={EYEBROW_ACCENT}>
                 {content.settlement.weeklyLabel}
               </p>
               <BulletList items={content.settlement.weekly} />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-accent">
+              <p className={EYEBROW_ACCENT}>
                 {content.settlement.monthlyLabel}
               </p>
               <BulletList items={content.settlement.monthly} />
@@ -473,15 +484,15 @@ export default function Page() {
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-primary">{content.tasks.dailyTitle}</p>
-                <span className="text-xs text-muted">{content.tasks.dailyReward}</span>
+                <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{content.tasks.dailyTitle}</p>
+                <span className={TEXT_XS_MUTED}>{content.tasks.dailyReward}</span>
               </div>
               <BulletList items={content.tasks.dailyItems} />
             </div>
             <div>
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-primary">{content.tasks.deepTitle}</p>
-                <span className="text-xs text-muted">{content.tasks.deepReward}</span>
+                <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{content.tasks.deepTitle}</p>
+                <span className={TEXT_XS_MUTED}>{content.tasks.deepReward}</span>
               </div>
               <BulletList items={content.tasks.deepItems} />
             </div>
@@ -492,7 +503,7 @@ export default function Page() {
       <section>
         <Card title={content.realms.title}>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-muted">
+            <table className={`w-full text-left ${TEXT_SM_MUTED}`}>
               <thead>
                 <tr className="border-b border-edge">
                   {content.realms.columns.map((col) => (
@@ -529,9 +540,9 @@ export default function Page() {
         <Card title={content.exchange.title}>
           <BulletList items={content.exchange.items} />
         </Card>
-        <div className="rounded-2xl border border-edge bg-base/60 p-6">
-          <p className="text-sm text-muted">{content.footerNote}</p>
-          <div className="mt-4 flex gap-4 text-sm">
+        <div className="rounded-2xl border border-edge bg-base/60 p-6 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+          <p className={TEXT_SM_MUTED}>{content.footerNote}</p>
+          <div className={`mt-4 flex gap-4 ${TEXT_SM_MUTED}`}>
             <Link href="/enter" className="text-accent hover:text-accent-strong">
               {common.backToEnter}
             </Link>

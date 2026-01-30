@@ -7,6 +7,13 @@ import { useCallback, useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "../../components/use-prefers-reduced-motion";
 import { useI18n } from "../../components/language-provider";
 import { useTheme } from "../../components/theme-provider";
+import {
+  TEXT_SM_MUTED,
+  TEXT_XS_MUTED,
+  TEXT_XS_SEMIBOLD_SECONDARY,
+  TITLE_2XL,
+  TITLE_LG_SM_XL
+} from "../../lib/typography";
 
 type EntryId = "blog" | "labs" | "tracker";
 
@@ -145,13 +152,13 @@ export function EnterClient() {
           >
             {messages.nav.brand}
           </Link>
-          <div className="flex items-center gap-3 text-xs text-muted sm:text-sm">
+          <div className={`flex items-center gap-3 ${TEXT_XS_MUTED} sm:text-sm`}>
             <p>{copy.prompt}</p>
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={themeAriaLabel}
-              className="text-xs font-semibold text-secondary transition hover:text-primary"
+              className={`${TEXT_XS_SEMIBOLD_SECONDARY} transition hover:text-primary`}
             >
               {themeLabel}
             </button>
@@ -159,7 +166,7 @@ export function EnterClient() {
               type="button"
               onClick={toggleLocale}
               aria-label={toggleAriaLabel}
-              className="text-xs font-semibold text-secondary transition hover:text-primary"
+              className={`${TEXT_XS_SEMIBOLD_SECONDARY} transition hover:text-primary`}
             >
               {toggleLabel}
             </button>
@@ -167,10 +174,8 @@ export function EnterClient() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-primary sm:text-3xl">
-            {copy.heading}
-          </h1>
-          <p className="text-sm text-muted">{copy.hint}</p>
+          <h1 className={TITLE_2XL}>{copy.heading}</h1>
+          <p className={TEXT_SM_MUTED}>{copy.hint}</p>
         </div>
 
         <div className={`grid gap-4 sm:gap-6 md:grid-cols-3 ${isNavigating ? "pointer-events-none" : ""}`}>
@@ -196,12 +201,10 @@ export function EnterClient() {
               >
                 <div className="space-y-3">
                   <entry.Icon className="h-6 w-6 text-accent" />
-                  <h2 className="text-lg font-semibold text-primary sm:text-xl">
-                    {entry.title}
-                  </h2>
-                  <p className="text-sm text-muted">{entry.subtitle}</p>
+                  <h2 className={TITLE_LG_SM_XL}>{entry.title}</h2>
+                  <p className={TEXT_SM_MUTED}>{entry.subtitle}</p>
                 </div>
-                <span className="mt-6 text-sm text-muted group-hover:text-accent-strong">
+                <span className={`mt-6 ${TEXT_SM_MUTED} group-hover:text-accent-strong`}>
                   {copy.enterAction} {common.arrowRight}
                 </span>
               </Link>
@@ -209,11 +212,11 @@ export function EnterClient() {
           })}
         </div>
 
-        <div className="flex flex-col items-center gap-3 text-xs text-muted">
+        <div className={`flex flex-col items-center gap-3 ${TEXT_XS_MUTED}`}>
           <Link
             href="/"
             onClick={handleBack}
-            className="text-sm text-muted hover:text-primary"
+            className={`${TEXT_SM_MUTED} hover:text-primary`}
           >
             {common.arrowLeft} {copy.back}
           </Link>

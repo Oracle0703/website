@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "./language-provider";
 import { useTheme } from "./theme-provider";
+import {
+  TEXT_XS_SECONDARY,
+  TEXT_XS_SEMIBOLD_SECONDARY
+} from "../lib/typography";
 
 export function SiteHeader() {
   const { locale, messages, toggleLocale } = useI18n();
@@ -23,7 +27,7 @@ export function SiteHeader() {
         <Link href="/" className="text-sm font-semibold tracking-wide">
           {messages.nav.brand}
         </Link>
-        <nav className="hidden items-center gap-6 text-xs text-secondary md:flex">
+        <nav className={`hidden items-center gap-6 ${TEXT_XS_SECONDARY} md:flex`}>
           {messages.nav.items.map((item) => (
             <Link key={item.href} href={item.href} className="hover:text-primary">
               {item.label}
@@ -35,7 +39,7 @@ export function SiteHeader() {
             type="button"
             onClick={toggleTheme}
             aria-label={themeAriaLabel}
-            className="text-xs font-semibold text-secondary transition hover:text-primary"
+            className={`${TEXT_XS_SEMIBOLD_SECONDARY} transition hover:text-primary`}
           >
             {themeLabel}
           </button>
@@ -43,7 +47,7 @@ export function SiteHeader() {
             type="button"
             onClick={toggleLocale}
             aria-label={toggleAriaLabel}
-            className="text-xs font-semibold text-secondary transition hover:text-primary"
+            className={`${TEXT_XS_SEMIBOLD_SECONDARY} transition hover:text-primary`}
           >
             {toggleLabel}
           </button>
@@ -93,7 +97,7 @@ export function SiteHeader() {
       {menuOpen && (
         <div className="border-t border-edge/70 bg-base/95 backdrop-blur md:hidden">
           <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-4 sm:px-6">
-            <nav className="flex flex-col gap-3 text-sm text-secondary">
+            <nav className={`flex flex-col gap-3 text-sm text-secondary`}>
               {messages.nav.items.map((item) => (
                 <Link
                   key={item.href}
@@ -105,7 +109,7 @@ export function SiteHeader() {
                 </Link>
               ))}
             </nav>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-secondary">
+            <div className={`flex flex-wrap items-center gap-4 ${TEXT_XS_SECONDARY}`}>
               <button
                 type="button"
                 onClick={toggleTheme}

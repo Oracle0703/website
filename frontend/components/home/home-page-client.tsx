@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RevealSection } from "../reveal-section";
 import { useI18n } from "../language-provider";
+import {
+  TEXT_BASE_SECONDARY,
+  TEXT_SM_MUTED,
+  TEXT_XS_MUTED,
+  TEXT_XS_SUBTLE,
+  TITLE_BASE_SM_LG,
+  TITLE_XL
+} from "../../lib/typography";
 import { ParticleTime } from "./particle-time";
 
 export function HomePageClient() {
@@ -32,10 +40,10 @@ export function HomePageClient() {
             <h1 className={`${heroMotion("delay-0")} text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl`}>
               {copy.heroTitle}
             </h1>
-            <p className={`${heroMotion("delay-100")} text-base text-secondary sm:text-lg`}>
+            <p className={`${heroMotion("delay-100")} ${TEXT_BASE_SECONDARY} sm:text-lg`}>
               {copy.heroSubtitle}
             </p>
-            <p className={`${heroMotion("delay-200")} text-sm text-muted sm:text-base`}>
+            <p className={`${heroMotion("delay-200")} ${TEXT_SM_MUTED} sm:text-base`}>
               {copy.heroIntro}
             </p>
           </div>
@@ -62,7 +70,7 @@ export function HomePageClient() {
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
           <div className="relative space-y-4">
             <ParticleTime />
-            <p className="text-sm text-muted">
+            <p className={TEXT_SM_MUTED}>
               {copy.primarySectionsLabel}
             </p>
             <div className="grid gap-3">
@@ -70,10 +78,10 @@ export function HomePageClient() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group flex items-center justify-between rounded-xl border border-edge bg-base/40 px-4 py-3 text-sm transition hover:-translate-y-0.5 hover:border-edge-strong motion-reduce:transform-none"
+                  className="group flex items-center justify-between rounded-xl border border-edge bg-base/40 px-4 py-3 text-sm transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none"
                 >
                   <span>{item.label}</span>
-                  <span className="text-xs text-muted">
+                  <span className={TEXT_XS_MUTED}>
                     {common.arrowRight}
                   </span>
                 </Link>
@@ -88,19 +96,19 @@ export function HomePageClient() {
           <Link
             key={card.title}
             href={card.href}
-            className="group rounded-2xl border border-edge bg-surface/60 p-5 transition duration-200 hover:-translate-y-1 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6"
+            className="group rounded-2xl border border-edge bg-surface/60 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6"
           >
-            <h3 className="text-base font-semibold text-primary sm:text-lg">
+            <h3 className={TITLE_BASE_SM_LG}>
               {card.title}
             </h3>
-            <p className="mt-2 text-sm text-muted">{card.subtitle}</p>
+            <p className={`mt-2 ${TEXT_SM_MUTED}`}>{card.subtitle}</p>
           </Link>
         ))}
       </section>
 
       <RevealSection className="mt-16 md:mt-20">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{copy.latestBlog}</h2>
+          <h2 className={TITLE_XL}>{copy.latestBlog}</h2>
           <Link href="/blog" className="text-sm text-muted hover:text-primary">
             {copy.viewAll}
           </Link>
@@ -109,15 +117,15 @@ export function HomePageClient() {
           {copy.blogItems.map((item) => (
             <article
               key={item.title}
-              className="group rounded-xl border border-edge bg-surface/60 p-4 transition hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 motion-reduce:transform-none sm:p-5"
+              className="group rounded-xl border border-edge bg-surface/60 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-5"
             >
-              <p className="text-xs text-muted group-hover:text-secondary">
+              <p className={`${TEXT_XS_MUTED} group-hover:text-secondary`}>
                 {item.date}
               </p>
-              <h3 className="mt-2 text-base font-semibold text-primary">
+              <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>
                 {item.title}
               </h3>
-              <p className="mt-1 text-sm text-muted group-hover:text-secondary">
+              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
                 {item.subtitle}
               </p>
             </article>
@@ -127,7 +135,7 @@ export function HomePageClient() {
 
       <RevealSection className="mt-16 md:mt-20">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{copy.labsTitle}</h2>
+          <h2 className={TITLE_XL}>{copy.labsTitle}</h2>
           <Link href="/labs" className="text-sm text-muted hover:text-primary">
             {copy.viewAll}
           </Link>
@@ -136,12 +144,12 @@ export function HomePageClient() {
           {copy.labItems.map((item) => (
             <div
               key={item.title}
-              className="group rounded-xl border border-edge bg-surface/60 p-4 transition hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 motion-reduce:transform-none sm:p-5"
+              className="group rounded-xl border border-edge bg-surface/60 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-5"
             >
-              <h3 className="text-base font-semibold text-primary">
+              <h3 className={TITLE_BASE_SM_LG}>
                 {item.title}
               </h3>
-              <p className="mt-1 text-sm text-muted group-hover:text-secondary">
+              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
                 {item.subtitle}
               </p>
             </div>
@@ -151,8 +159,8 @@ export function HomePageClient() {
 
       <RevealSection className="mt-16 grid gap-6 md:mt-20 md:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-2xl border border-edge bg-surface/60 p-5 sm:p-6">
-          <h2 className="text-xl font-semibold">{copy.trackerTitle}</h2>
-          <p className="mt-2 text-sm text-muted">{copy.trackerDesc}</p>
+          <h2 className={TITLE_XL}>{copy.trackerTitle}</h2>
+          <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.trackerDesc}</p>
           <ul className="mt-4 space-y-2 text-sm text-secondary">
             {copy.trackerPoints.map((point) => (
               <li key={point} className="flex items-center gap-2">
@@ -170,9 +178,9 @@ export function HomePageClient() {
           </Link>
         </div>
         <div className="rounded-2xl border border-edge bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/20 p-5 sm:p-6">
-          <h2 className="text-xl font-semibold">{copy.aboutTitle}</h2>
-          <p className="mt-2 text-sm text-muted">{copy.aboutDesc}</p>
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-subtle">
+          <h2 className={TITLE_XL}>{copy.aboutTitle}</h2>
+          <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.aboutDesc}</p>
+          <div className={`mt-4 flex flex-wrap gap-2 ${TEXT_XS_SUBTLE}`}>
             {copy.skillTags.map((skill) => (
               <span key={skill} className="rounded-full border border-edge-strong px-3 py-1">
                 {skill}

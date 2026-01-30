@@ -8,6 +8,12 @@ import { getLocale } from "../../../lib/i18n-server";
 import { getMessages } from "../../../lib/i18n";
 import { getPostBySlug, getPublishedPosts, isPublished } from "../../../lib/blog";
 import { mdxComponents } from "../../../components/mdx-components";
+import {
+  TEXT_SM_MUTED,
+  TEXT_XS_MUTED,
+  TEXT_XS_SECONDARY,
+  TITLE_2XL
+} from "../../../lib/typography";
 
 type PageProps = {
   params: { slug: string };
@@ -99,16 +105,16 @@ export default async function Page({ params }: PageProps) {
   return (
     <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-12 sm:px-6 md:space-y-10 md:py-16">
       <header className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
+        <div className={`flex flex-wrap items-center gap-3 ${TEXT_XS_MUTED}`}>
           <span>{copy.publishedAt} · {formatDate(post.date, locale)}</span>
           {showUpdated && (
             <span>{copy.updatedAt} · {formatDate(post.updatedAt, locale)}</span>
           )}
           <span>{copy.readingTime} · {post.readingTime} {copy.minute}</span>
         </div>
-        <h1 className="text-2xl font-semibold text-primary sm:text-3xl">{post.title}</h1>
-        <p className="text-sm text-muted">{post.summary}</p>
-        <div className="flex flex-wrap gap-3 text-xs text-secondary">
+        <h1 className={TITLE_2XL}>{post.title}</h1>
+        <p className={TEXT_SM_MUTED}>{post.summary}</p>
+        <div className={`flex flex-wrap gap-3 ${TEXT_XS_SECONDARY}`}>
           <span className="text-muted">{post.author}</span>
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -131,7 +137,7 @@ export default async function Page({ params }: PageProps) {
 
       <article className="space-y-6">
         {mdxError ? (
-          <div className="rounded-xl border border-dashed border-edge p-6 text-sm text-muted">
+          <div className={`rounded-xl border border-dashed border-edge p-6 ${TEXT_SM_MUTED}`}>
             {copy.invalidContent}
           </div>
         ) : (
@@ -139,7 +145,7 @@ export default async function Page({ params }: PageProps) {
         )}
       </article>
 
-      <div className="flex gap-4 text-sm">
+      <div className={`flex gap-4 ${TEXT_SM_MUTED}`}>
         <Link href="/blog" className="text-accent hover:text-accent-strong">
           {copy.title}
         </Link>

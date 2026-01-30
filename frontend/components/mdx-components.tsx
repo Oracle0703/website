@@ -1,5 +1,13 @@
 import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
+import {
+  TEXT_SM_MUTED,
+  TEXT_SM_SECONDARY,
+  TEXT_SM_SEMIBOLD_PRIMARY,
+  TEXT_XS_MUTED,
+  TITLE_LG,
+  TITLE_XL
+} from "../lib/typography";
 
 type CalloutProps = {
   tone?: "info" | "warning" | "success";
@@ -16,7 +24,7 @@ const CALLOUT_STYLES: Record<NonNullable<CalloutProps["tone"]>, string> = {
 export function Callout({ tone = "info", title, children }: CalloutProps) {
   return (
     <div className={`rounded-xl border px-4 py-3 ${CALLOUT_STYLES[tone]}`}>
-      {title ? <p className="text-sm font-semibold text-primary">{title}</p> : null}
+      {title ? <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{title}</p> : null}
       <div className="mt-2 text-sm">{children}</div>
     </div>
   );
@@ -30,7 +38,7 @@ type CodeBlockProps = {
 export function CodeBlock({ children, language }: CodeBlockProps) {
   return (
     <pre className="overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-sm text-primary">
-      {language ? <span className="mb-2 block text-xs text-muted">{language}</span> : null}
+      {language ? <span className={`mb-2 block ${TEXT_XS_MUTED}`}>{language}</span> : null}
       <code>{children}</code>
     </pre>
   );
@@ -93,21 +101,21 @@ export const mdxComponents = {
   a: MDXLink,
   img: Image,
   h2: (props: ComponentProps<"h2">) => (
-    <h2 className="mt-8 text-xl font-semibold text-primary" {...props} />
+    <h2 className={`mt-8 ${TITLE_XL}`} {...props} />
   ),
   h3: (props: ComponentProps<"h3">) => (
-    <h3 className="mt-6 text-lg font-semibold text-primary" {...props} />
+    <h3 className={`mt-6 ${TITLE_LG}`} {...props} />
   ),
-  p: (props: ComponentProps<"p">) => <p className="mt-4 text-sm text-secondary" {...props} />,
+  p: (props: ComponentProps<"p">) => <p className={`mt-4 ${TEXT_SM_SECONDARY}`} {...props} />,
   ul: (props: ComponentProps<"ul">) => (
-    <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-secondary" {...props} />
+    <ul className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_SM_SECONDARY}`} {...props} />
   ),
   ol: (props: ComponentProps<"ol">) => (
-    <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-secondary" {...props} />
+    <ol className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_SM_SECONDARY}`} {...props} />
   ),
-  li: (props: ComponentProps<"li">) => <li className="text-sm text-secondary" {...props} />,
+  li: (props: ComponentProps<"li">) => <li className={TEXT_SM_SECONDARY} {...props} />,
   blockquote: (props: ComponentProps<"blockquote">) => (
-    <blockquote className="mt-4 border-l-2 border-edge-strong pl-4 text-sm text-muted" {...props} />
+    <blockquote className={`mt-4 border-l-2 border-edge-strong pl-4 ${TEXT_SM_MUTED}`} {...props} />
   ),
   code: (props: ComponentProps<"code">) => {
     const { className = "", ...rest } = props;

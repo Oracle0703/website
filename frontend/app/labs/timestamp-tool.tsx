@@ -2,6 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Locale } from "../../lib/i18n";
+import {
+  EYEBROW_ACCENT,
+  EYEBROW_SECONDARY,
+  TEXT_SM_MUTED,
+  TEXT_SM_SEMIBOLD_PRIMARY,
+  TEXT_XS_SEMIBOLD_MUTED,
+  TITLE_XL
+} from "../../lib/typography";
 
 type TimestampUnit = "seconds" | "milliseconds";
 
@@ -250,15 +258,15 @@ export function TimestampTool({ locale }: { locale: Locale }) {
       : copy.showUtcLabel;
 
   return (
-    <section className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-8">
+    <section className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-8">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-accent">{copy.eyebrow}</p>
-        <h2 className="text-xl font-semibold text-primary">{copy.title}</h2>
-        <p className="text-sm text-muted">{copy.description}</p>
+        <p className={EYEBROW_ACCENT}>{copy.eyebrow}</p>
+        <h2 className={TITLE_XL}>{copy.title}</h2>
+        <p className={TEXT_SM_MUTED}>{copy.description}</p>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
+        <div className={`flex items-center gap-3 ${EYEBROW_SECONDARY}`}>
           <span>{copy.timezoneLabel}</span>
           <div className="flex rounded-full border border-edge bg-base/60 p-1">
             <button
@@ -293,9 +301,9 @@ export function TimestampTool({ locale }: { locale: Locale }) {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-edge bg-base/40 p-4">
-          <p className="text-sm font-semibold text-primary">{copy.timeToTimestamp}</p>
-          <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
+        <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+          <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.timeToTimestamp}</p>
+          <label className={`mt-4 block ${EYEBROW_SECONDARY}`}>
             {copy.timeInputLabel}
           </label>
           <input
@@ -314,7 +322,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
                 <button
                   type="button"
                   onClick={() => handleCopy(timestampFromDate.seconds, "time-seconds")}
-                  className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                  className={`rounded-full border border-edge bg-base/60 px-2.5 py-1 ${TEXT_XS_SEMIBOLD_MUTED} transition hover:text-primary`}
                 >
                   {copyLabelFor("time-seconds")}
                 </button>
@@ -329,7 +337,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
                 <button
                   type="button"
                   onClick={() => handleCopy(timestampFromDate.milliseconds, "time-milliseconds")}
-                  className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                  className={`rounded-full border border-edge bg-base/60 px-2.5 py-1 ${TEXT_XS_SEMIBOLD_MUTED} transition hover:text-primary`}
                 >
                   {copyLabelFor("time-milliseconds")}
                 </button>
@@ -338,9 +346,9 @@ export function TimestampTool({ locale }: { locale: Locale }) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-edge bg-base/40 p-4">
-          <p className="text-sm font-semibold text-primary">{copy.timestampToTime}</p>
-          <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
+        <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+          <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.timestampToTime}</p>
+          <label className={`mt-4 block ${EYEBROW_SECONDARY}`}>
             {copy.timestampInputLabel}
           </label>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
@@ -352,7 +360,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
               className="w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
               placeholder="1700000000"
             />
-            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
+            <label className={`flex items-center gap-2 ${EYEBROW_SECONDARY}`}>
               {copy.unitLabel}
               <select
                 value={timestampUnit}
@@ -376,7 +384,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
                 <button
                   type="button"
                   onClick={() => handleCopy(primaryTimestampText, "timestamp-primary")}
-                  className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                  className={`rounded-full border border-edge bg-base/60 px-2.5 py-1 ${TEXT_XS_SEMIBOLD_MUTED} transition hover:text-primary`}
                 >
                   {copyLabelFor("timestamp-primary")}
                 </button>
@@ -403,9 +411,9 @@ export function TimestampTool({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-edge bg-base/40 p-4">
-        <p className="text-sm font-semibold text-primary">{copy.currentTitle}</p>
-        <div className="mt-3 grid gap-2 text-sm text-muted sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+        <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.currentTitle}</p>
+        <div className={`mt-3 grid gap-2 ${TEXT_SM_MUTED} sm:grid-cols-2 lg:grid-cols-3`}>
           <div className="flex items-center justify-between gap-3">
             <span>{copy.secondsLabel}</span>
             <div className="flex items-center gap-2">
@@ -415,7 +423,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
               <button
                 type="button"
                 onClick={() => handleCopy(currentSeconds, "current-seconds")}
-                className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                className={`rounded-full border border-edge bg-base/60 px-2.5 py-1 ${TEXT_XS_SEMIBOLD_MUTED} transition hover:text-primary`}
               >
                 {copyLabelFor("current-seconds")}
               </button>
@@ -430,7 +438,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
               <button
                 type="button"
                 onClick={() => handleCopy(currentMilliseconds, "current-milliseconds")}
-                className="rounded-full border border-edge bg-base/60 px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-primary"
+                className={`rounded-full border border-edge bg-base/60 px-2.5 py-1 ${TEXT_XS_SEMIBOLD_MUTED} transition hover:text-primary`}
               >
                 {copyLabelFor("current-milliseconds")}
               </button>

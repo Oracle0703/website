@@ -1,5 +1,7 @@
 "use client";
 
+import { TEXT_XS_SECONDARY } from "../lib/typography";
+
 type AnnouncementTickerProps = {
   items: string[];
   label?: string;
@@ -13,7 +15,7 @@ export function AnnouncementTicker({
 
   return (
     <div className="rounded-2xl border border-edge bg-surface/60 px-3 py-3 sm:px-4">
-      <div className="flex items-center gap-2 text-xs text-secondary sm:gap-3 sm:text-sm">
+      <div className={`flex items-center gap-2 ${TEXT_XS_SECONDARY} sm:gap-3 sm:text-sm`}>
         <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent sm:text-xs">
           天机
         </span>

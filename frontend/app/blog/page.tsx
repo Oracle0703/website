@@ -3,6 +3,15 @@ import Link from "next/link";
 import { getLocale } from "../../lib/i18n-server";
 import { getMessages } from "../../lib/i18n";
 import { getPublishedPosts } from "../../lib/blog";
+import {
+  TEXT_SM_MUTED,
+  TEXT_XS_MUTED,
+  TEXT_XS_SECONDARY,
+  TEXT_SM_SEMIBOLD_PRIMARY,
+  TEXT_SM_SEMIBOLD_ACCENT,
+  TITLE_3XL,
+  TITLE_LG
+} from "../../lib/typography";
 
 export const generateMetadata = (): Metadata => {
   const locale = getLocale();
@@ -39,23 +48,23 @@ export default function Page() {
   return (
     <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-12 sm:px-6 md:space-y-12 md:py-16">
       <header className="space-y-3">
-        <p className="text-sm text-muted">{copy.eyebrow}</p>
-        <h1 className="text-3xl font-semibold text-primary">{copy.title}</h1>
-        <p className="text-sm text-muted">{copy.description}</p>
+        <p className={TEXT_SM_MUTED}>{copy.eyebrow}</p>
+        <h1 className={TITLE_3XL}>{copy.title}</h1>
+        <p className={TEXT_SM_MUTED}>{copy.description}</p>
       </header>
 
       <section className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-primary">{copy.listTitle}</h2>
-            <p className="mt-1 text-sm text-muted">{copy.listDescription}</p>
+            <h2 className={TITLE_LG}>{copy.listTitle}</h2>
+            <p className={`mt-1 ${TEXT_SM_MUTED}`}>{copy.listDescription}</p>
           </div>
         </div>
 
         {posts.length === 0 ? (
           <div className="mt-6 rounded-xl border border-dashed border-edge p-6 text-center">
-            <p className="text-sm font-semibold text-primary">{copy.emptyTitle}</p>
-            <p className="mt-2 text-xs text-muted">{copy.emptyDescription}</p>
+            <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.emptyTitle}</p>
+            <p className={`mt-2 ${TEXT_XS_MUTED}`}>{copy.emptyDescription}</p>
           </div>
         ) : (
           <div className="mt-6 space-y-4">
@@ -66,21 +75,21 @@ export default function Page() {
               return (
                 <article
                   key={post.slug}
-                  className="rounded-2xl border border-edge bg-base/40 p-5"
+                  className="group rounded-2xl border border-edge bg-base/40 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/60 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none"
                 >
                   <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-center">
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <Link
                           href={`/blog/${encodeURIComponent(post.slug)}`}
-                          className="text-lg font-semibold text-primary hover:text-accent"
+                          className={`${TITLE_LG} hover:text-accent`}
                         >
                           {post.title}
                         </Link>
-                        <p className="text-sm text-muted">{post.summary}</p>
+                        <p className={TEXT_SM_MUTED}>{post.summary}</p>
                       </div>
 
-                      <div className="flex flex-wrap gap-3 text-xs text-muted">
+                      <div className={`flex flex-wrap gap-3 ${TEXT_XS_MUTED}`}>
                         <span>
                           {copy.publishedAt} · {formatDate(post.date, locale)}
                         </span>
@@ -95,7 +104,7 @@ export default function Page() {
                       </div>
 
                       {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 text-xs text-secondary">
+                        <div className={`flex flex-wrap gap-2 ${TEXT_XS_SECONDARY}`}>
                           <span className="text-muted">{copy.tagsLabel}:</span>
                           {post.tags.map((tag) => (
                             <span
@@ -110,7 +119,7 @@ export default function Page() {
 
                       <Link
                         href={`/blog/${encodeURIComponent(post.slug)}`}
-                        className="text-sm font-semibold text-accent hover:text-accent-strong"
+                        className={`${TEXT_SM_SEMIBOLD_ACCENT} hover:text-accent-strong`}
                       >
                         {copy.readMore} {common.arrowRight}
                       </Link>
@@ -134,7 +143,7 @@ export default function Page() {
         )}
       </section>
 
-      <div className="flex gap-4 text-sm">
+      <div className={`flex gap-4 ${TEXT_SM_MUTED}`}>
         <Link href="/enter" className="text-accent hover:text-accent-strong">
           {common.backToEnter}
         </Link>
