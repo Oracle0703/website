@@ -1,10 +1,10 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Frontend code lives under `frontend/` as a Next.js 14 App Router project. Routes live in `frontend/app/` (home, `/enter`, `/blog`, `/labs`, `/tracker`), shared UI in `frontend/components/`, and assets in `frontend/public/`. Backend planning/docs live under `backend/`. Project specs and planning notes are at repo root (e.g., `FRONTEND_HOME_SPEC.md`, `BLOG_SPEC.md`).
+Frontend code lives under `apps/website/` as a Next.js 14 App Router project. Routes live in `apps/website/app/` (home, `/enter`, `/blog`, `/labs`, `/tracker`), shared UI in `apps/website/components/`, and assets in `apps/website/public/`. Backend planning/docs live under `backend/`. Project specs and planning notes are at repo root (e.g., `FRONTEND_HOME_SPEC.md`, `BLOG_SPEC.md`).
 
 ## Build, Test, and Development Commands
-Run these from `frontend/`:
+Run these from `apps/website/`:
 - `npm install` to install dependencies.
 - `npm run dev` to start the local dev server.
 - `npm run build` to produce a production build.

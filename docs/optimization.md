@@ -1,7 +1,7 @@
 # 全站优化建议（Remotion Best Practices 视角）
 
 ## 0. 范围与结论
-- 扫描 `frontend` 下的代码，未发现 Remotion 相关使用（`remotion` / `useCurrentFrame` / `useVideoConfig` / `interpolate` 等）。
+- 扫描 `apps/website` 下的代码，未发现 Remotion 相关使用（`remotion` / `useCurrentFrame` / `useVideoConfig` / `interpolate` 等）。
 - 当前是 Next.js + Tailwind 的常规站点结构，因此 **Remotion 规则不会影响现有页面渲染**。
 - 如果未来要引入 Remotion（做视频/动画导出），需要对现有“基于 CSS 过渡的动画写法”进行调整。
 
