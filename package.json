@@ -1,0 +1,15 @@
+{
+  "name": "meaningful-ink-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/website",
+    "build": "npm run build -w apps/website",
+    "start": "npm run start -w apps/website",
+    "lint": "npm run lint -w apps/website",
+    "test": "node --test"
+  }
+}
