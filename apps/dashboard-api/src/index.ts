@@ -25,7 +25,7 @@ const auth = {
 
 const app = createApp({ store, auth });
 
-app.listen(port, () => {
+app.listen(port, "127.0.0.1", () => {
   // Keep startup log minimal; don't print sensitive env.
   console.log(`dashboard-api listening on http://127.0.0.1:${port}`);
 });
