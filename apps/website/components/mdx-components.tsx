@@ -62,13 +62,11 @@ export function Image({ src, alt = "", className, ...props }: ImageProps) {
   );
 }
 
-type LinkProps = ComponentProps<typeof Link> & {
-  href: string;
-};
+type AnchorProps = ComponentProps<"a">;
 
-export function MDXLink({ href, children, ...props }: LinkProps) {
-  const isExternal = href.startsWith("http");
-  const { className, ...rest } = props;
+export function MDXLink({ href, children, className, ...rest }: AnchorProps) {
+  const safeHref = href ?? "";
+  const isExternal = /^https?:\/\//i.test(safeHref);
   const mergedClassName = ["text-accent hover:text-accent-strong", className]
     .filter(Boolean)
     .join(" ");
@@ -76,18 +74,30 @@ export function MDXLink({ href, children, ...props }: LinkProps) {
   if (isExternal) {
     return (
       <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
+        href={safeHref}
+        target={rest.target ?? "_blank"}
+        rel={rest.rel ?? "noreferrer"}
         className={mergedClassName}
+        {...rest}
       >
         {children}
       </a>
     );
   }
 
+  // For internal links, MDX usually gives a string href.
+  // Fallback to <a> if href is missing.
+  if (!safeHref) {
+    return (
+      <a className={mergedClassName} {...rest}>
+        {children}
+      </a>
+    );
+  }
+
+  // next/link accepts anchor props; keep it simple for MDX usage.
   return (
-    <Link href={href} className={mergedClassName} {...rest}>
+    <Link href={safeHref} className={mergedClassName} {...rest}>
       {children}
     </Link>
   );
