@@ -8,9 +8,6 @@ out/
 # production
 build/
 
-# dashboard-api build output (tsc)
-apps/dashboard-api/dist/
-
 # misc
 .DS_Store
 *.pem
@@ -29,4 +26,6 @@ pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# Keep this file tracked (root .gitignore ignores it by default).
+!next-env.d.ts
