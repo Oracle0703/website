@@ -49,22 +49,22 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
 
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
-  app.post("/api/auth/login", (req, res) => {
+  app.post("/auth/login", (req, res) => {
     const password = String(req.body?.password ?? "");
     if (!password) return res.status(400).json({ error: "missing_password" });
     if (password !== auth.adminPassword) return res.status(401).json({ error: "wrong_password" });
     return res.json({ token: signAdminToken(auth) });
   });
 
-  app.use("/api", requireAuth(auth));
+  app.use(requireAuth(auth));
 
   // Tasks
-  app.get("/api/tasks", async (_req, res) => {
+  app.get("/tasks", async (_req, res) => {
     const doc = await safeGet<TasksDoc>(store, "tasks.json", { tasks: [] });
     return res.json(doc);
   });
 
-  app.post("/api/tasks", async (req, res) => {
+  app.post("/tasks", async (req, res) => {
     const title = String(req.body?.title ?? "").trim();
     if (!title) return res.status(400).json({ error: "missing_title" });
 
@@ -88,7 +88,7 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
     }
   });
 
-  app.patch("/api/tasks/:id", async (req, res) => {
+  app.patch("/tasks/:id", async (req, res) => {
     const id = String(req.params.id);
     const status = req.body?.status as Task["status"] | undefined;
     if (!status || !["todo", "doing", "done"].includes(status)) {
@@ -110,7 +110,7 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
   });
 
   // Logs: append-only in daily partitions
-  app.post("/api/logs", async (req, res) => {
+  app.post("/logs", async (req, res) => {
     const message = String(req.body?.message ?? "").trim();
     if (!message) return res.status(400).json({ error: "missing_message" });
 
@@ -127,7 +127,7 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
     return res.status(201).json({ ok: true });
   });
 
-  app.get("/api/logs", async (req, res) => {
+  app.get("/logs", async (req, res) => {
     const days = Math.min(Math.max(Number(req.query.days ?? 7), 1), 31);
     const limit = Math.min(Math.max(Number(req.query.limit ?? 200), 1), 1000);
 
@@ -145,12 +145,12 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
   });
 
   // Status
-  app.get("/api/status", async (_req, res) => {
+  app.get("/status", async (_req, res) => {
     const doc = await safeGet<StatusDoc>(store, "status.json", { updatedAt: new Date(0).toISOString(), text: "" });
     return res.json(doc.value);
   });
 
-  app.post("/api/status", async (req, res) => {
+  app.post("/status", async (req, res) => {
     const text = String(req.body?.text ?? "");
     const doc: StatusDoc = { updatedAt: new Date().toISOString(), text };
     await store.putJson("status.json", doc);

@@ -37,7 +37,7 @@ async function startServer() {
 }
 
 async function login(base: string, password = "pw") {
-  const res = await fetch(`${base}/api/auth/login`, {
+  const res = await fetch(`${base}/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ password })
@@ -53,10 +53,10 @@ test("login success and auth required", async () => {
     assert.equal(res.status, 200);
     assert.ok(body.token);
 
-    const res2 = await fetch(`${base}/api/tasks`);
+    const res2 = await fetch(`${base}/tasks`);
     assert.equal(res2.status, 401);
 
-    const res3 = await fetch(`${base}/api/tasks`, {
+    const res3 = await fetch(`${base}/tasks`, {
       headers: { authorization: `Bearer ${body.token}` }
     });
     assert.equal(res3.status, 200);
@@ -71,7 +71,7 @@ test("tasks CRUD happy path", async () => {
     const { body } = await login(base);
     const token = body.token as string;
 
-    const create = await fetch(`${base}/api/tasks`, {
+    const create = await fetch(`${base}/tasks`, {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ title: "t1" })
@@ -80,12 +80,12 @@ test("tasks CRUD happy path", async () => {
     const created = await create.json();
     assert.ok(created.task?.id);
 
-    const list = await fetch(`${base}/api/tasks`, { headers: { authorization: `Bearer ${token}` } });
+    const list = await fetch(`${base}/tasks`, { headers: { authorization: `Bearer ${token}` } });
     assert.equal(list.status, 200);
     const listed = await list.json();
     assert.equal(listed.value.tasks.length, 1);
 
-    const patch = await fetch(`${base}/api/tasks/${created.task.id}`, {
+    const patch = await fetch(`${base}/tasks/${created.task.id}`, {
       method: "PATCH",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ status: "done" })
@@ -102,14 +102,14 @@ test("logs append then read contains entry", async () => {
     const { body } = await login(base);
     const token = body.token as string;
 
-    const add = await fetch(`${base}/api/logs`, {
+    const add = await fetch(`${base}/logs`, {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ message: "m" })
     });
     assert.equal(add.status, 201);
 
-    const get = await fetch(`${base}/api/logs?days=1&limit=10`, { headers: { authorization: `Bearer ${token}` } });
+    const get = await fetch(`${base}/logs?days=1&limit=10`, { headers: { authorization: `Bearer ${token}` } });
     assert.equal(get.status, 200);
     const data = await get.json();
     assert.equal(data.entries.length, 1);
