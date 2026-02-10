@@ -130,7 +130,7 @@ export default async function Page({ params }: PageProps) {
       </header>
 
       {coverSrc ? (
-        <div className="aspect-[16/9] overflow-hidden rounded-2xl border border-edge bg-base/40 md:aspect-auto">
+        <div className="aspect-video overflow-hidden rounded-2xl border border-edge bg-base/40 md:aspect-auto">
           <img src={coverSrc} alt={coverAlt} className="h-full w-full object-cover" />
         </div>
       ) : null}

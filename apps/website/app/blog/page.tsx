@@ -126,7 +126,7 @@ export default function Page() {
                     </div>
 
                     {cover?.src && (
-                      <div className="aspect-[16/9] overflow-hidden rounded-xl border border-edge bg-base/40 md:aspect-auto md:h-full">
+                      <div className="aspect-video overflow-hidden rounded-xl border border-edge bg-base/40 md:aspect-auto md:h-full">
                         <img
                           src={cover.src}
                           alt={cover.alt}

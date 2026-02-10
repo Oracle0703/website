@@ -130,7 +130,7 @@ export const mdxComponents = {
   code: (props: ComponentProps<"code">) => {
     const { className = "", ...rest } = props;
     const isBlock = className.includes("language-");
-    const inlineClasses = "rounded bg-base/60 px-1 py-0.5 text-xs text-primary";
+    const inlineClasses = "rounded-sm bg-base/60 px-1 py-0.5 text-xs text-primary";
     return <code className={isBlock ? className : inlineClasses} {...rest} />;
   },
   pre: (props: ComponentProps<"pre">) => (

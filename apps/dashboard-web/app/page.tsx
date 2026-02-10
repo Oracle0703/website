@@ -23,12 +23,12 @@ export default function LoginPage() {
 
       <h1 className="mb-2 text-xl font-semibold text-primary">Login</h1>
       <p className="mb-6 text-sm text-secondary">
-        Enter <code className="rounded bg-surface px-1 py-0.5">ADMIN_PASSWORD</code> to get an admin token.
+        Enter <code className="rounded-sm bg-surface px-1 py-0.5">ADMIN_PASSWORD</code> to get an admin token.
       </p>
 
       {existingToken ? (
         <div className="mb-4 rounded-md border border-edge bg-surface px-4 py-3 text-sm text-secondary">
-          You already have a token in <code className="rounded bg-base px-1 py-0.5">localStorage</code>. You can go to{" "}
+          You already have a token in <code className="rounded-sm bg-base px-1 py-0.5">localStorage</code>. You can go to{" "}
           <Link href="/tasks">/tasks</Link>.
         </div>
       ) : null}
@@ -69,7 +69,7 @@ export default function LoginPage() {
       </form>
 
       <div className="mt-8 text-xs text-muted">
-        Tip: configure API base via <code className="rounded bg-surface px-1 py-0.5">NEXT_PUBLIC_DASHBOARD_API_BASE</code>.
+        Tip: configure API base via <code className="rounded-sm bg-surface px-1 py-0.5">NEXT_PUBLIC_DASHBOARD_API_BASE</code>.
       </div>
     </div>
   );

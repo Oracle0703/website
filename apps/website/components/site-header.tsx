@@ -22,7 +22,7 @@ export function SiteHeader() {
   const menuLabel = menuOpen ? messages.nav.closeMenu : messages.nav.openMenu;
 
   return (
-    <header className="border-b border-edge/70 bg-base/80 backdrop-blur">
+    <header className="border-b border-edge/70 bg-base/80 backdrop-blur-sm">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <Link href="/" className="text-sm font-semibold tracking-wide">
           {messages.nav.brand}
@@ -95,7 +95,7 @@ export function SiteHeader() {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-edge/70 bg-base/95 backdrop-blur md:hidden">
+        <div className="border-t border-edge/70 bg-base/95 backdrop-blur-sm md:hidden">
           <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-4 sm:px-6">
             <nav className={`flex flex-col gap-3 text-sm text-secondary`}>
               {messages.nav.items.map((item) => (

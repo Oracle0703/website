@@ -310,7 +310,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
             type="datetime-local"
             value={dateInput}
             onChange={(event) => setDateInput(event.target.value)}
-            className="mt-2 w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+            className="mt-2 w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-hidden transition focus:border-accent focus:ring-2 focus:ring-accent/20"
           />
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex items-center justify-between text-muted">
@@ -357,7 +357,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
               inputMode="numeric"
               value={timestampInput}
               onChange={(event) => setTimestampInput(event.target.value)}
-              className="w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+              className="w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-hidden transition focus:border-accent focus:ring-2 focus:ring-accent/20"
               placeholder="1700000000"
             />
             <label className={`flex items-center gap-2 ${EYEBROW_SECONDARY}`}>
@@ -365,7 +365,7 @@ export function TimestampTool({ locale }: { locale: Locale }) {
               <select
                 value={timestampUnit}
                 onChange={(event) => setTimestampUnit(event.target.value as TimestampUnit)}
-                className="rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className="rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-hidden transition focus:border-accent focus:ring-2 focus:ring-accent/20"
               >
                 <option value="seconds">{copy.secondsUnit}</option>
                 <option value="milliseconds">{copy.millisecondsUnit}</option>
