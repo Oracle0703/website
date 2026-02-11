@@ -1,0 +1,49 @@
+---
+title: "个人网站搭建：从规划到落地"
+slug: "个人网站搭建"
+date: "2026-01-22"
+updatedAt: "2026-01-22"
+summary: "记录个人网站的技术选型与搭建流程，从规划到上线的关键节点。"
+cover:
+  src: "/og.png"
+  alt: "个人网站结构示意图"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["nextjs", "个人站", "规划"]
+status: "published"
+seo:
+  description: "记录个人网站的技术选型与搭建流程，涵盖 Next.js 与 Tailwind CSS。"
+---
+
+## 目标与范围
+
+搭建一个可持续维护的个人网站，需要先明确内容结构与技术边界。核心目标是：清晰表达“我是谁、我做什么、我输出什么”。
+
+## 技术选型
+
+这次选择 **Next.js + Tailwind CSS**，主要考虑：
+
+- 组件化开发效率高
+- SEO 与性能控制更稳定
+- 可逐步扩展到 MDX 内容体系
+
+```ts
+type Stack = {
+  framework: "Next.js";
+  styling: "Tailwind CSS";
+  content: "MDX";
+};
+```
+
+## 结构规划
+
+- 首页：介绍定位与入口
+- 博客：输出内容与思考
+- Labs：实验与原型
+
+<Image src="/og.png" alt="示例封面" width={1200} height={630} />
+
+## 小结
+
+完成基础结构后，再逐步打磨内容与交互细节。

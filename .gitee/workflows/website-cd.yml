@@ -1,0 +1,73 @@
+name: website-cd-prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: "Optional build id (default: commit sha)"
+        required: false
+        default: ""
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Prepare build id
+        id: vars
+        run: |
+          if [ -n "${{ inputs.build_id }}" ]; then
+            echo "build_id=${{ inputs.build_id }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "build_id=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create source bundle
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          # Keep it simple: ship repo files; Windows will run npm ci + build.
+          # Use zip for native PowerShell Expand-Archive.
+          zip -r "dist/website-src-${{ steps.vars.outputs.build_id }}.zip" . \
+            -x "**/node_modules/**" \
+            -x "**/.next/**" \
+            -x ".git/**"
+
+      - name: Install ssh client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client
+
+      - name: Add SSH key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Trust host key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload bundle
+        run: |
+          set -euo pipefail
+          scp -P "${{ secrets.DEPLOY_PORT }}" \
+            "dist/website-src-${{ steps.vars.outputs.build_id }}.zip" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_INCOMING_DIR }}/website-src-${{ steps.vars.outputs.build_id }}.zip"
+
+      - name: Remote deploy (PowerShell)
+        run: |
+          set -euo pipefail
+          ssh -p "${{ secrets.DEPLOY_PORT }}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "powershell -ExecutionPolicy Bypass -File '${{ secrets.DEPLOY_PS1 }}' -BuildId '${{ steps.vars.outputs.build_id }}' -ZipPath '${{ secrets.DEPLOY_INCOMING_DIR }}\\website-src-${{ steps.vars.outputs.build_id }}.zip'"

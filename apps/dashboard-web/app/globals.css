@@ -1,0 +1,85 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-base: rgb(var(--color-base));
+  --color-surface: rgb(var(--color-surface));
+  --color-accent: rgb(var(--color-accent));
+  --color-accent-strong: rgb(var(--color-accent-strong));
+  --color-primary: rgb(var(--color-text-primary));
+  --color-secondary: rgb(var(--color-text-secondary));
+  --color-muted: rgb(var(--color-text-muted));
+  --color-subtle: rgb(var(--color-text-subtle));
+  --color-edge: rgb(var(--color-edge));
+  --color-edge-strong: rgb(var(--color-edge-strong));
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+:root {
+  color-scheme: dark;
+  --color-base: 11 15 26;
+  --color-surface: 16 24 39;
+  --color-edge: 30 41 59;
+  --color-edge-strong: 51 65 85;
+  --color-text-primary: 241 245 249;
+  --color-text-secondary: 203 213 225;
+  --color-text-muted: 148 163 184;
+  --color-text-subtle: 226 232 240;
+  --color-accent: 91 140 255;
+  --color-accent-strong: 147 197 253;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --color-base: 248 250 252;
+  --color-surface: 255 255 255;
+  --color-edge: 226 232 240;
+  --color-edge-strong: 203 213 225;
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 51 65 85;
+  --color-text-muted: 100 116 139;
+  --color-text-subtle: 71 85 105;
+  --color-accent: 37 99 235;
+  --color-accent-strong: 29 78 216;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-base text-primary antialiased;
+}
+
+/* Minimal form styling so the dashboard is usable without a component library. */
+input, textarea, select {
+  @apply bg-surface text-primary border border-edge rounded-md px-3 py-2;
+}
+
+button {
+  @apply bg-accent text-base font-medium rounded-md px-3 py-2;
+}
+
+button:disabled {
+  @apply opacity-60;
+}
+
+a {
+  @apply text-accent-strong hover:underline;
+}

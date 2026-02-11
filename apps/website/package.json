@@ -1,0 +1,30 @@
+{
+  "name": "website",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^3.0.0",
+    "framer-motion": "^11.0.0",
+    "gray-matter": "^4.0.3",
+    "next": "^14.2.5",
+    "next-mdx-remote": "^5.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "remark-gfm": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/react": "^18.2.64",
+    "@tailwindcss/postcss": "^4.1.18",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.5",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.4.3"
+  }
+}
