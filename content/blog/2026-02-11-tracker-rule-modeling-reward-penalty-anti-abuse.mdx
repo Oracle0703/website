@@ -1,0 +1,83 @@
+---
+title: "Tracker Rule Modeling: Reward, Penalty, and Anti-abuse"
+slug: "tracker-rule-modeling-reward-penalty-anti-abuse"
+date: "2026-02-11"
+updatedAt: "2026-02-11"
+summary: "A system design walkthrough for balancing motivation and fairness in a habit tracker reward model."
+cover:
+  src: "/og.png"
+  alt: "Tracker rule system overview"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["product-design", "rule-system", "gamification", "anti-abuse"]
+category: "product"
+status: "draft"
+type: "article"
+relatedPosts:
+  - "blog-content-model-state-machine"
+  - "timestamp-tool-retrospective-timezone-precision-ux"
+seo:
+  description: "A practical framework for designing rewards, penalties, and anti-abuse logic in check-in systems."
+  keywords: ["tracker", "incentives", "anti-abuse", "product-rules"]
+comments:
+  enabled: false
+---
+
+## Core objective
+
+A check-in feature should optimize for long-term behavior quality, not just daily button clicks.
+
+The design challenge is to balance:
+
+- accessibility: low barrier for daily participation
+- aspiration: meaningful long-term progression
+- fairness: abuse-resistant scoring and transparent penalties
+
+## Rule layers
+
+A practical layering strategy:
+
+1. daily baseline reward
+2. streak milestone bonuses (3/7/14/30/etc.)
+3. high-effort tasks with higher-value rewards
+4. anti-abuse thresholds and cooldown windows
+
+## Reward strategy
+
+Use a dual-curve model:
+
+- predictable daily rewards to maintain continuity
+- milestone and deep-task rewards to encourage investment
+
+This avoids both flat boredom and over-gamified spikes.
+
+## Anti-abuse strategy
+
+Anti-abuse should be explainable and reversible:
+
+- trigger freeze before hard punishment
+- define numeric thresholds in advance
+- apply cooldowns to high-risk actions
+- keep an audit trail for major adjustments
+
+## Suggested metrics
+
+Track these weekly:
+
+- 7-day retention
+- streak break rate
+- deep-task completion rate
+- anti-abuse trigger rate
+- post-penalty recovery rate
+
+## Next step
+
+Follow-up article can focus on telemetry design and event schema for this rule system.
+
+---
+
+Read next:
+
+- `/blog/blog-content-model-state-machine`
+- `/blog/timestamp-tool-retrospective-timezone-precision-ux`

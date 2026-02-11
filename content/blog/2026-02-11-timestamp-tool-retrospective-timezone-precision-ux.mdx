@@ -1,0 +1,79 @@
+---
+title: "Timestamp Tool Retrospective: Timezone, Precision, and UX"
+slug: "timestamp-tool-retrospective-timezone-precision-ux"
+date: "2026-02-11"
+updatedAt: "2026-02-11"
+summary: "A practical retrospective on building a timestamp converter with timezone clarity, precision controls, and low-friction UX."
+cover:
+  src: "/og.png"
+  alt: "Timestamp converter interface"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["timestamp", "utc", "frontend-tools", "ux"]
+category: "labs"
+status: "draft"
+type: "tutorial"
+relatedPosts:
+  - "blog-content-model-state-machine"
+  - "tracker-rule-modeling-reward-penalty-anti-abuse"
+seo:
+  description: "Lessons learned from implementing a timestamp conversion tool with robust timezone and precision handling."
+  keywords: ["timestamp", "utc", "javascript-date", "tooling"]
+comments:
+  enabled: false
+---
+
+## Problem context
+
+During development, we often move between human-readable datetime and machine-readable timestamps. External tools are useful, but an in-project tool improves speed and consistency.
+
+## Feature scope
+
+Current capabilities:
+
+- datetime -> seconds/milliseconds timestamp
+- timestamp -> local and UTC datetime
+- copy-to-clipboard with immediate feedback
+
+## Three design decisions
+
+### 1) Separate calculation from display
+
+- calculation logic remains stable
+- display layer allows local/UTC switch
+- avoids confusion caused by implicit timezone assumptions
+
+### 2) Make precision explicit
+
+10-digit and 13-digit confusion is common. The unit should always be explicit, and both outputs should be visible for verification.
+
+### 3) Keep interaction close to intent
+
+- results near inputs
+- copy action adjacent to each result
+- clear success state for copied values
+
+## Input edge cases to handle
+
+- empty input
+- non-numeric input
+- out-of-range values
+- second/millisecond mismatch
+
+## Possible next iteration
+
+1. custom format templates
+2. batch conversion mode
+3. URL-state sharing for reproducibility
+
+## Next step
+
+This tool can be extracted into a reusable utility block for dashboard pages later.
+
+---
+
+Read next:
+
+- `/blog/blog-content-model-state-machine`
+- `/blog/tracker-rule-modeling-reward-penalty-anti-abuse`

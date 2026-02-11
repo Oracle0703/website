@@ -1,0 +1,85 @@
+---
+title: "Blog Content Model: From Frontmatter to State Machine"
+slug: "blog-content-model-state-machine"
+date: "2026-02-11"
+updatedAt: "2026-02-11"
+summary: "A practical model for evolving an MDX blog from simple metadata to a maintainable publishing workflow."
+cover:
+  src: "/og.png"
+  alt: "Blog content model diagram"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["mdx", "frontmatter", "content-system", "nextjs"]
+category: "engineering"
+status: "draft"
+type: "tutorial"
+relatedPosts:
+  - "tracker-rule-modeling-reward-penalty-anti-abuse"
+  - "timestamp-tool-retrospective-timezone-precision-ux"
+seo:
+  description: "Designing a robust blog content model with frontmatter fields, state transitions, and validation rules."
+  keywords: ["frontmatter", "mdx", "blog", "state-machine"]
+comments:
+  enabled: false
+---
+
+## Why this matters
+
+A lightweight blog usually starts with `title`, `date`, and content body. As the volume grows, you'll hit real-world problems:
+
+- drafts mixed with public posts
+- no support for scheduled publishing
+- weak SEO metadata consistency
+- no way to build related-content discovery
+
+This article shows how to transition to a durable model without introducing a full CMS.
+
+## Current foundation in this repo
+
+The current model already includes strong primitives:
+
+- `status`: draft, published, archived, scheduled
+- taxonomy: tags + category
+- `type`: article/tutorial/note/announcement
+- `seo`: description, keywords, noindex, canonical, ogImage
+- `relatedPosts` for explicit post linking
+
+That means the repo is ready for content scale-up.
+
+## Suggested state transitions
+
+```text
+Draft -> Published
+Draft -> Scheduled -> Published
+Published -> Archived
+```
+
+Operational rule suggestions:
+
+- `scheduled` requires a valid `publishDate`
+- `archived` is excluded from public list and sitemap
+
+## Minimal implementation checklist
+
+1. Backfill metadata for existing posts (`type`, `category`, `relatedPosts`)
+2. Standardize author template for all new articles
+3. Add a publish checklist before switching `status` to `published`
+
+## Common failure patterns
+
+- changed slug but stale `relatedPosts`
+- missing `updatedAt` maintenance
+- tag-only strategy without category boundaries
+- generic cover image without meaningful alt text
+
+## Next step
+
+In the next article, we can extend this model to discovery pages (tags/categories/search/pagination).
+
+---
+
+Read next:
+
+- `/blog/tracker-rule-modeling-reward-penalty-anti-abuse`
+- `/blog/timestamp-tool-retrospective-timezone-precision-ux`
