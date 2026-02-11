@@ -1,62 +1,44 @@
 @import 'tailwindcss';
 
-@theme {
-  --color-base: rgb(var(--color-base));
-  --color-surface: rgb(var(--color-surface));
-  --color-accent: rgb(var(--color-accent));
-  --color-accent-strong: rgb(var(--color-accent-strong));
-  --color-primary: rgb(var(--color-text-primary));
-  --color-secondary: rgb(var(--color-text-secondary));
-  --color-muted: rgb(var(--color-text-muted));
-  --color-subtle: rgb(var(--color-text-subtle));
-  --color-edge: rgb(var(--color-edge));
-  --color-edge-strong: rgb(var(--color-edge-strong));
-}
-
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+@theme inline {
+  --color-base: rgb(var(--ui-base-rgb));
+  --color-surface: rgb(var(--ui-surface-rgb));
+  --color-accent: rgb(var(--ui-accent-rgb));
+  --color-accent-strong: rgb(var(--ui-accent-strong-rgb));
+  --color-primary: rgb(var(--ui-text-primary-rgb));
+  --color-secondary: rgb(var(--ui-text-secondary-rgb));
+  --color-muted: rgb(var(--ui-text-muted-rgb));
+  --color-subtle: rgb(var(--ui-text-subtle-rgb));
+  --color-edge: rgb(var(--ui-edge-rgb));
+  --color-edge-strong: rgb(var(--ui-edge-strong-rgb));
 }
 
 :root {
   color-scheme: dark;
-  --color-base: 11 15 26;
-  --color-surface: 16 24 39;
-  --color-edge: 30 41 59;
-  --color-edge-strong: 51 65 85;
-  --color-text-primary: 241 245 249;
-  --color-text-secondary: 203 213 225;
-  --color-text-muted: 148 163 184;
-  --color-text-subtle: 226 232 240;
-  --color-accent: 91 140 255;
-  --color-accent-strong: 147 197 253;
+  --ui-base-rgb: 11 15 26;
+  --ui-surface-rgb: 16 24 39;
+  --ui-edge-rgb: 30 41 59;
+  --ui-edge-strong-rgb: 51 65 85;
+  --ui-text-primary-rgb: 241 245 249;
+  --ui-text-secondary-rgb: 203 213 225;
+  --ui-text-muted-rgb: 148 163 184;
+  --ui-text-subtle-rgb: 226 232 240;
+  --ui-accent-rgb: 91 140 255;
+  --ui-accent-strong-rgb: 147 197 253;
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --color-base: 248 250 252;
-  --color-surface: 255 255 255;
-  --color-edge: 226 232 240;
-  --color-edge-strong: 203 213 225;
-  --color-text-primary: 15 23 42;
-  --color-text-secondary: 51 65 85;
-  --color-text-muted: 100 116 139;
-  --color-text-subtle: 71 85 105;
-  --color-accent: 37 99 235;
-  --color-accent-strong: 29 78 216;
+  --ui-base-rgb: 248 250 252;
+  --ui-surface-rgb: 255 255 255;
+  --ui-edge-rgb: 226 232 240;
+  --ui-edge-strong-rgb: 203 213 225;
+  --ui-text-primary-rgb: 15 23 42;
+  --ui-text-secondary-rgb: 51 65 85;
+  --ui-text-muted-rgb: 100 116 139;
+  --ui-text-subtle-rgb: 71 85 105;
+  --ui-accent-rgb: 37 99 235;
+  --ui-accent-strong-rgb: 29 78 216;
 }
 
 [data-theme="dark"] {
@@ -66,8 +48,8 @@
 body {
   @apply bg-base text-primary antialiased;
   background-image:
-    radial-gradient(circle at 15% 10%, rgb(var(--color-accent) / 0.12), transparent 42%),
-    radial-gradient(circle at 85% 0%, rgb(var(--color-accent-strong) / 0.08), transparent 38%);
+    radial-gradient(circle at 15% 10%, rgb(var(--ui-accent-rgb) / 0.12), transparent 42%),
+    radial-gradient(circle at 85% 0%, rgb(var(--ui-accent-strong-rgb) / 0.08), transparent 38%);
 }
 
 a {
@@ -75,8 +57,8 @@ a {
 }
 
 ::selection {
-  background: rgb(var(--color-accent) / 0.28);
-  color: rgb(var(--color-text-primary) / 1);
+  background: rgb(var(--ui-accent-rgb) / 0.28);
+  color: rgb(var(--ui-text-primary-rgb) / 1);
 }
 
 @layer components {
@@ -118,8 +100,8 @@ a {
   left: 0;
   background: linear-gradient(
     to right,
-    rgb(var(--color-base) / 1),
-    rgb(var(--color-base) / 0)
+    rgb(var(--ui-base-rgb) / 1),
+    rgb(var(--ui-base-rgb) / 0)
   );
 }
 
@@ -127,8 +109,8 @@ a {
   right: 0;
   background: linear-gradient(
     to left,
-    rgb(var(--color-base) / 1),
-    rgb(var(--color-base) / 0)
+    rgb(var(--ui-base-rgb) / 1),
+    rgb(var(--ui-base-rgb) / 0)
   );
 }
 
