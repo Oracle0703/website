@@ -14,11 +14,27 @@ import {
 } from "../../lib/typography";
 import { ParticleTime } from "./particle-time";
 
-export function HomePageClient() {
+type HomeLatestBlogItem = {
+  title: string;
+  subtitle: string;
+  date: string;
+  href: string;
+};
+
+export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: HomeLatestBlogItem[] }) {
   const { messages } = useI18n();
   const copy = messages.home;
   const common = messages.pages.common;
   const [isMounted, setIsMounted] = useState(false);
+  const latestBlogSectionItems =
+    latestBlogItems.length > 0
+      ? latestBlogItems
+      : copy.blogItems.map((item) => ({
+          title: item.title,
+          subtitle: item.subtitle,
+          date: item.date,
+          href: "/blog"
+        }));
 
   useEffect(() => {
     setIsMounted(true);
@@ -115,7 +131,7 @@ export function HomePageClient() {
           </Link>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {copy.blogItems.map((item) => (
+          {latestBlogSectionItems.map((item) => (
             <article
               key={item.title}
               className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
@@ -124,7 +140,9 @@ export function HomePageClient() {
                 {item.date}
               </p>
               <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>
-                {item.title}
+                <Link href={item.href} className="transition-colors hover:text-accent">
+                  {item.title}
+                </Link>
               </h3>
               <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
                 {item.subtitle}

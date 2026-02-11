@@ -56,12 +56,14 @@ const DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 const STATUS_VALUES: PostStatus[] = ["draft", "published", "archived", "scheduled"];
 
 function getContentRoot() {
-  const localPath = path.join(process.cwd(), "content", "blog");
-  const rootPath = path.join(process.cwd(), "..", "content", "blog");
-  if (fs.existsSync(localPath)) {
-    return localPath;
-  }
-  return rootPath;
+  const candidates = [
+    path.join(process.cwd(), "content", "blog"),
+    path.join(process.cwd(), "..", "content", "blog"),
+    path.join(process.cwd(), "..", "..", "content", "blog")
+  ];
+
+  const matched = candidates.find((candidate) => fs.existsSync(candidate));
+  return matched ?? candidates[0];
 }
 
 function isValidDate(value: string) {

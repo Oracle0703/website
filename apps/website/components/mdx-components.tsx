@@ -1,13 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
 import Link from "next/link";
-import {
-  TEXT_SM_MUTED,
-  TEXT_SM_SECONDARY,
-  TEXT_SM_SEMIBOLD_PRIMARY,
-  TEXT_XS_MUTED,
-  TITLE_LG,
-  TITLE_XL
-} from "../lib/typography";
 
 type CalloutProps = {
   tone?: "info" | "warning" | "success";
@@ -24,8 +16,8 @@ const CALLOUT_STYLES: Record<NonNullable<CalloutProps["tone"]>, string> = {
 export function Callout({ tone = "info", title, children }: CalloutProps) {
   return (
     <div className={`rounded-xl border px-4 py-3 ${CALLOUT_STYLES[tone]}`}>
-      {title ? <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{title}</p> : null}
-      <div className="mt-2 text-sm">{children}</div>
+      {title ? <p className="text-base font-semibold text-primary">{title}</p> : null}
+      <div className="mt-2 text-lg leading-8">{children}</div>
     </div>
   );
 }
@@ -37,8 +29,8 @@ type CodeBlockProps = {
 
 export function CodeBlock({ children, language }: CodeBlockProps) {
   return (
-    <pre className="overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-sm text-primary">
-      {language ? <span className={`mb-2 block ${TEXT_XS_MUTED}`}>{language}</span> : null}
+    <pre className="overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-base text-primary sm:text-lg">
+      {language ? <span className="mb-2 block text-sm text-muted">{language}</span> : null}
       <code>{children}</code>
     </pre>
   );
@@ -104,31 +96,34 @@ export const mdxComponents = {
   a: MDXLink,
   img: Image,
   h2: (props: ComponentProps<"h2">) => (
-    <h2 className={`mt-8 ${TITLE_XL}`} {...props} />
+    <h2 className="mt-10 text-2xl font-semibold text-primary sm:text-3xl" {...props} />
   ),
   h3: (props: ComponentProps<"h3">) => (
-    <h3 className={`mt-6 ${TITLE_LG}`} {...props} />
+    <h3 className="mt-8 text-xl font-semibold text-primary sm:text-2xl" {...props} />
   ),
   p: (props: ComponentProps<"p">) => (
-    <p className={`mt-4 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
+    <p className="mt-5 text-lg leading-8 text-secondary" {...props} />
   ),
   ul: (props: ComponentProps<"ul">) => (
-    <ul className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
+    <ul className="mt-5 list-disc space-y-2.5 pl-6 text-lg leading-8 text-secondary" {...props} />
   ),
   ol: (props: ComponentProps<"ol">) => (
-    <ol className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
+    <ol className="mt-5 list-decimal space-y-2.5 pl-6 text-lg leading-8 text-secondary" {...props} />
   ),
-  li: (props: ComponentProps<"li">) => <li className={`${TEXT_SM_SECONDARY} leading-7`} {...props} />,
+  li: (props: ComponentProps<"li">) => <li className="text-lg leading-8 text-secondary" {...props} />,
   blockquote: (props: ComponentProps<"blockquote">) => (
-    <blockquote className={`mt-4 border-l-2 border-edge-strong pl-4 ${TEXT_SM_MUTED}`} {...props} />
+    <blockquote
+      className="mt-6 border-l-2 border-edge-strong pl-4 text-lg leading-8 text-muted"
+      {...props}
+    />
   ),
   code: (props: ComponentProps<"code">) => {
     const { className = "", ...rest } = props;
     const isBlock = className.includes("language-");
-    const inlineClasses = "rounded bg-base/60 px-1 py-0.5 text-xs text-primary";
+    const inlineClasses = "rounded bg-base/60 px-1.5 py-0.5 text-base text-primary";
     return <code className={isBlock ? className : inlineClasses} {...rest} />;
   },
   pre: (props: ComponentProps<"pre">) => (
-    <pre className="mt-4 overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-sm text-primary" {...props} />
+    <pre className="mt-5 overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-base text-primary sm:text-lg" {...props} />
   )
 };
