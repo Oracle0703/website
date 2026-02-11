@@ -1,0 +1,104 @@
+---
+title: "博客 SEO 基线：在 Next.js 中稳定落地"
+slug: "blog-seo-baseline-nextjs"
+date: "2026-02-11"
+updatedAt: "2026-02-11"
+summary: "从列表页与详情页出发，梳理博客 SEO 的最小闭环：元信息、索引策略、发布前检查与可持续执行。"
+cover:
+  src: "/og.png"
+  alt: "博客 SEO 基线检查清单"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["seo", "nextjs", "open-graph", "metadata"]
+category: "seo"
+status: "published"
+type: "tutorial"
+relatedPosts:
+  - "mdx-components-in-production"
+  - "个人网站搭建"
+seo:
+  description: "一篇可执行的博客 SEO 基线指南，覆盖 metadata、OG、noindex 与发布流程检查。"
+  keywords: ["SEO", "Next.js", "Open Graph", "博客"]
+comments:
+  enabled: false
+---
+
+## 先解决“稳定性”，再谈“技巧”
+
+多数博客 SEO 效果不稳定，不是因为缺方法，而是缺基线：
+
+- 有的文章有描述，有的没有
+- 草稿状态与公开索引规则脱节
+- 社交分享预览时标题和封面质量不统一
+
+所以先建立一条可重复执行的最小流程，比追热点技巧更重要。
+
+## 一套最小可执行字段
+
+每篇公开文章建议保证：
+
+- `title`：面向读者、可直接传播
+- `summary` 或 `seo.description`：独立可读
+- `cover`：有语义化 `alt`
+- `status`：明确文章生命周期
+
+如果这些字段稳定，90% 的基础 SEO 问题都能被提前避免。
+
+## 与状态绑定的索引策略
+
+建议把索引行为和 `status` 强绑定：
+
+- `draft`：不公开，不进入 sitemap
+- `scheduled`：到发布时间前不索引
+- `archived`：保留访问历史，但默认不参与公开分发
+- `published`：允许进入公开列表与索引
+
+这比“手工记得改 noindex”更可靠。
+
+## 在 Next.js 中的实现思路
+
+详情页元信息建议由文章数据直接生成，避免双维护：
+
+```ts
+return {
+  title: post.title,
+  description: post.seo?.description ?? post.summary,
+  openGraph: {
+    title: post.title,
+    description: post.seo?.description ?? post.summary,
+    type: "article",
+    images: post.seo?.ogImage ? [post.seo.ogImage] : []
+  },
+  robots: post.seo?.noindex ? { index: false, follow: false } : undefined
+};
+```
+
+关键点是“单一数据源”：正文、列表、元信息尽量来自同一份 frontmatter。
+
+## 发布前 5 分钟检查
+
+1. 标题是否能脱离上下文传播
+2. 摘要是否回答“读者能获得什么”
+3. 封面是否匹配主题，`alt` 是否可读
+4. 外链是否安全且可辨识
+5. `updatedAt` 是否反映真实修改
+
+建议把这份清单写进发布流程，而不是依赖记忆。
+
+## 常见坑位
+
+- 关键词堆叠导致标题可读性下降
+- 摘要空泛，无法提升点击率
+- 内容已变更但更新时间未维护，影响可信度
+
+## 小结
+
+SEO 基线不是一次性工程，而是持续执行的内容质量系统。先把基线跑稳，再做标签页、搜索页、结构化数据，收益会更高。
+
+---
+
+相关阅读：
+
+- `/blog/mdx-components-in-production`
+- `/blog/%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%AB%99%E6%90%AD%E5%BB%BA`

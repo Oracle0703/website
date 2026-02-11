@@ -14,11 +14,27 @@ import {
 } from "../../lib/typography";
 import { ParticleTime } from "./particle-time";
 
-export function HomePageClient() {
+type HomeLatestBlogItem = {
+  title: string;
+  subtitle: string;
+  date: string;
+  href: string;
+};
+
+export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: HomeLatestBlogItem[] }) {
   const { messages } = useI18n();
   const copy = messages.home;
   const common = messages.pages.common;
   const [isMounted, setIsMounted] = useState(false);
+  const latestBlogSectionItems =
+    latestBlogItems.length > 0
+      ? latestBlogItems
+      : copy.blogItems.map((item) => ({
+          title: item.title,
+          subtitle: item.subtitle,
+          date: item.date,
+          href: "/blog"
+        }));
 
   useEffect(() => {
     setIsMounted(true);
@@ -37,25 +53,13 @@ export function HomePageClient() {
       <section className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-center md:gap-12">
         <div className="space-y-7">
           <div className="space-y-4">
-            <h1
-              className={`${heroMotion(
-                "delay-0"
-              )} text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl`}
-            >
+            <h1 className={`${heroMotion("delay-0")} text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl`}>
               {copy.heroTitle}
             </h1>
-            <p
-              className={`${heroMotion(
-                "delay-100"
-              )} max-w-2xl ${TEXT_BASE_SECONDARY} leading-relaxed sm:text-lg`}
-            >
+            <p className={`${heroMotion("delay-100")} max-w-2xl ${TEXT_BASE_SECONDARY} leading-relaxed sm:text-lg`}>
               {copy.heroSubtitle}
             </p>
-            <p
-              className={`${heroMotion(
-                "delay-200"
-              )} max-w-2xl ${TEXT_SM_MUTED} leading-relaxed sm:text-base`}
-            >
+            <p className={`${heroMotion("delay-200")} max-w-2xl ${TEXT_SM_MUTED} leading-relaxed sm:text-base`}>
               {copy.heroIntro}
             </p>
           </div>
@@ -80,10 +84,12 @@ export function HomePageClient() {
             "delay-200"
           )} panel-surface relative min-w-0 p-5 sm:p-6`}
         >
-          <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-blue-500/10 via-transparent to-purple-500/10" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
           <div className="relative space-y-4">
             <ParticleTime />
-            <p className={TEXT_SM_MUTED}>{copy.primarySectionsLabel}</p>
+            <p className={TEXT_SM_MUTED}>
+              {copy.primarySectionsLabel}
+            </p>
             <div className="grid gap-3">
               {copy.primarySections.map((item) => (
                 <Link
@@ -92,7 +98,9 @@ export function HomePageClient() {
                   className="group card-interactive flex items-center justify-between rounded-xl border border-edge bg-base/40 px-4 py-3 text-sm"
                 >
                   <span>{item.label}</span>
-                  <span className={TEXT_XS_MUTED}>{common.arrowRight}</span>
+                  <span className={TEXT_XS_MUTED}>
+                    {common.arrowRight}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -100,16 +108,16 @@ export function HomePageClient() {
         </div>
       </section>
 
-      <section
-        className={`mt-14 grid gap-4 sm:gap-6 md:grid-cols-3 ${heroMotion("delay-500")}`}
-      >
+      <section className={`mt-14 grid gap-4 sm:gap-6 md:grid-cols-3 ${heroMotion("delay-500")}`}>
         {copy.entryCards.map((card) => (
           <Link
             key={card.title}
             href={card.href}
             className="group panel-surface card-interactive p-5 sm:p-6"
           >
-            <h3 className={TITLE_BASE_SM_LG}>{card.title}</h3>
+            <h3 className={TITLE_BASE_SM_LG}>
+              {card.title}
+            </h3>
             <p className={`mt-2 ${TEXT_SM_MUTED}`}>{card.subtitle}</p>
           </Link>
         ))}
@@ -123,14 +131,22 @@ export function HomePageClient() {
           </Link>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {copy.blogItems.map((item) => (
+          {latestBlogSectionItems.map((item) => (
             <article
               key={item.title}
               className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
             >
-              <p className={`${TEXT_XS_MUTED} group-hover:text-secondary`}>{item.date}</p>
-              <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>{item.title}</h3>
-              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>{item.subtitle}</p>
+              <p className={`${TEXT_XS_MUTED} group-hover:text-secondary`}>
+                {item.date}
+              </p>
+              <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>
+                <Link href={item.href} className="transition-colors hover:text-accent">
+                  {item.title}
+                </Link>
+              </h3>
+              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
+                {item.subtitle}
+              </p>
             </article>
           ))}
         </div>
@@ -149,8 +165,12 @@ export function HomePageClient() {
               key={item.title}
               className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
             >
-              <h3 className={TITLE_BASE_SM_LG}>{item.title}</h3>
-              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>{item.subtitle}</p>
+              <h3 className={TITLE_BASE_SM_LG}>
+                {item.title}
+              </h3>
+              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
+                {item.subtitle}
+              </p>
             </div>
           ))}
         </div>
@@ -165,10 +185,7 @@ export function HomePageClient() {
             style={{ color: "rgb(var(--color-text-secondary) / 1)" }}
           >
             {copy.trackerPoints.map((point) => (
-              <li
-                key={point}
-                className="flex items-center gap-2 rounded-lg border border-edge/70 bg-surface/60 px-2.5 py-1.5 text-secondary"
-              >
+              <li key={point} className="flex items-center gap-2 rounded-lg border border-edge/70 bg-surface/60 px-2.5 py-1.5 text-secondary">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                 {point}
               </li>
@@ -187,10 +204,7 @@ export function HomePageClient() {
           <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.aboutDesc}</p>
           <div className={`mt-4 flex flex-wrap gap-2 ${TEXT_XS_SUBTLE}`}>
             {copy.skillTags.map((skill) => (
-              <span
-                key={skill}
-                className="rounded-full border border-edge-strong bg-base/35 px-3 py-1"
-              >
+              <span key={skill} className="rounded-full border border-edge-strong bg-base/35 px-3 py-1">
                 {skill}
               </span>
             ))}

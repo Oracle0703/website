@@ -8,12 +8,7 @@ import { getLocale } from "../../../lib/i18n-server";
 import { getMessages } from "../../../lib/i18n";
 import { getPostBySlug, getPublishedPosts, isPublished } from "../../../lib/blog";
 import { mdxComponents } from "../../../components/mdx-components";
-import {
-  TEXT_SM_MUTED,
-  TEXT_XS_MUTED,
-  TEXT_XS_SECONDARY,
-  TITLE_2XL
-} from "../../../lib/typography";
+import { TITLE_2XL } from "../../../lib/typography";
 
 type PageProps = {
   params: { slug: string };
@@ -104,32 +99,23 @@ export default async function Page({ params }: PageProps) {
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-14 sm:px-6 md:space-y-10 md:py-20">
-      <header className="space-y-4">
-        <div className={`flex flex-wrap items-center gap-3 ${TEXT_XS_MUTED}`}>
-          <span>
-            {copy.publishedAt} · {formatDate(post.date, locale)}
-          </span>
+      <header className="space-y-5">
+        <div className="flex flex-wrap items-center gap-4 text-base text-muted">
+          <span>{copy.publishedAt} · {formatDate(post.date, locale)}</span>
           {showUpdated && (
-            <span>
-              {copy.updatedAt} · {formatDate(post.updatedAt, locale)}
-            </span>
+            <span>{copy.updatedAt} · {formatDate(post.updatedAt, locale)}</span>
           )}
-          <span>
-            {copy.readingTime} · {post.readingTime} {copy.minute}
-          </span>
+          <span>{copy.readingTime} · {post.readingTime} {copy.minute}</span>
         </div>
-        <h1 className={TITLE_2XL}>{post.title}</h1>
-        <p className={`max-w-3xl ${TEXT_SM_MUTED} leading-relaxed`}>{post.summary}</p>
-        <div className={`flex flex-wrap items-center gap-3 ${TEXT_XS_SECONDARY}`}>
+        <h1 className={`${TITLE_2XL} text-4xl leading-tight sm:text-5xl`}>{post.title}</h1>
+        <p className="max-w-3xl text-lg leading-8 text-secondary">{post.summary}</p>
+        <div className="flex flex-wrap items-center gap-3 text-base text-secondary">
           <span className="text-muted">{post.author}</span>
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <span className="text-muted">{copy.tagsLabel}:</span>
               {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-edge-strong px-2 py-0.5"
-                >
+                <span key={tag} className="rounded-full border border-edge-strong px-3 py-1">
                   {tag}
                 </span>
               ))}
@@ -144,9 +130,9 @@ export default async function Page({ params }: PageProps) {
         </div>
       ) : null}
 
-      <article className="panel-surface space-y-6 p-6 sm:p-8">
+      <article className="panel-surface space-y-6 p-6 sm:p-10">
         {mdxError ? (
-          <div className={`rounded-xl border border-dashed border-edge p-6 ${TEXT_SM_MUTED}`}>
+          <div className="rounded-xl border border-dashed border-edge p-6 text-lg leading-8 text-muted">
             {copy.invalidContent}
           </div>
         ) : (
@@ -154,7 +140,7 @@ export default async function Page({ params }: PageProps) {
         )}
       </article>
 
-      <div className={`flex flex-wrap items-center gap-5 ${TEXT_SM_MUTED}`}>
+      <div className="flex flex-wrap items-center gap-5 text-lg text-muted">
         <Link href="/blog" className="link-accent font-medium">
           {copy.title}
         </Link>
