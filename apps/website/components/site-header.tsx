@@ -49,7 +49,7 @@ export function SiteHeader() {
               type="button"
               onClick={toggleTheme}
               aria-label={themeAriaLabel}
-              className={`${TEXT_BASE_SEMIBOLD_SECONDARY} transition hover:text-primary`}
+              className={`${TEXT_BASE_SEMIBOLD_SECONDARY} cursor-pointer transition hover:text-primary`}
             >
               {themeLabel}
             </button>
@@ -57,13 +57,13 @@ export function SiteHeader() {
               type="button"
               onClick={toggleLocale}
               aria-label={toggleAriaLabel}
-              className={`${TEXT_BASE_SEMIBOLD_SECONDARY} transition hover:text-primary`}
+              className={`${TEXT_BASE_SEMIBOLD_SECONDARY} cursor-pointer transition hover:text-primary`}
             >
               {toggleLabel}
             </button>
             <Link
               href="/enter"
-              className="text-base font-semibold text-accent hover:text-accent-strong"
+              className="link-accent text-base font-semibold"
             >
               {messages.nav.enter}
             </Link>
@@ -71,7 +71,7 @@ export function SiteHeader() {
           <div className="flex items-center gap-4 md:hidden">
             <Link
               href="/enter"
-              className="text-base font-semibold text-accent hover:text-accent-strong"
+              className="link-accent text-base font-semibold"
             >
               {messages.nav.enter}
             </Link>
@@ -80,7 +80,7 @@ export function SiteHeader() {
               aria-label={menuLabel}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
-              className="rounded-full border border-edge bg-base/80 p-2 text-secondary transition hover:text-primary"
+              className="cursor-pointer rounded-full border border-edge bg-base/80 p-2 text-secondary transition hover:text-primary"
             >
               <span className="sr-only">{menuLabel}</span>
               <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">
@@ -125,7 +125,7 @@ export function SiteHeader() {
                 type="button"
                 onClick={toggleTheme}
                 aria-label={themeAriaLabel}
-                className="rounded-full border border-edge px-3 py-1.5 text-base font-semibold text-secondary hover:text-primary"
+                className="cursor-pointer rounded-full border border-edge px-3 py-1.5 text-base font-semibold text-secondary hover:text-primary"
               >
                 {themeLabel}
               </button>
@@ -133,7 +133,7 @@ export function SiteHeader() {
                 type="button"
                 onClick={toggleLocale}
                 aria-label={toggleAriaLabel}
-                className="rounded-full border border-edge px-3 py-1.5 text-base font-semibold text-secondary hover:text-primary"
+                className="cursor-pointer rounded-full border border-edge px-3 py-1.5 text-base font-semibold text-secondary hover:text-primary"
               >
                 {toggleLabel}
               </button>
@@ -144,5 +144,6 @@ export function SiteHeader() {
     </header>
   );
 }
+
 
 

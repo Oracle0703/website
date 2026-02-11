@@ -71,13 +71,37 @@ a {
   }
 
   .link-muted {
-    @apply text-muted transition-colors hover:text-primary;
+    @apply rounded-sm px-1 -mx-1 text-muted transition-colors hover:bg-primary;
   }
 
   .link-accent {
-    @apply text-accent transition-colors hover:text-accent-strong;
+    @apply rounded-sm px-1 -mx-1 text-accent transition-colors hover:bg-accent hover:text-white;
+  }
+
+  .link-muted:hover,
+  .hover-text-base:hover,
+  .hover-text-base:hover:visited {
+    color: rgb(var(--ui-base-rgb) / 1) !important;
   }
 }
+
+.footer-reverse-link {
+  color: rgb(var(--ui-text-secondary-rgb) / 1) !important;
+  text-decoration-line: underline;
+  text-underline-offset: 4px;
+}
+
+.footer-reverse-link:visited {
+  color: rgb(var(--ui-text-secondary-rgb) / 1) !important;
+}
+
+.footer-reverse-link:hover,
+.footer-reverse-link:focus-visible,
+.footer-reverse-link:hover:visited {
+  background: rgb(var(--ui-text-primary-rgb) / 1);
+  color: rgb(var(--ui-base-rgb) / 1) !important;
+}
+
 
 .ticker {
   position: relative;
@@ -144,3 +168,4 @@ a {
     transform: none;
   }
 }
+

@@ -70,7 +70,7 @@ export function MDXLink({ href, children, className, ...rest }: AnchorProps) {
   const safeHref = href ?? "";
   const isExternal = /^https?:\/\//i.test(safeHref);
   const mergedClassName = [
-    "text-accent underline decoration-accent/40 underline-offset-4 hover:text-accent-strong",
+    "text-accent underline decoration-accent/40 underline-offset-4 rounded-sm px-1 -mx-1 transition-colors hover:bg-accent hover:text-white",
     className
   ]
     .filter(Boolean)
@@ -158,3 +158,4 @@ export const mdxComponents = {
     />
   )
 };
+

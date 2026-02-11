@@ -140,7 +140,7 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
                 {item.date}
               </p>
               <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>
-                <Link href={item.href} className="transition-colors hover:text-accent">
+                <Link href={item.href} className="link-accent font-semibold">
                   {item.title}
                 </Link>
               </h3>
@@ -214,3 +214,4 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
     </main>
   );
 }
+

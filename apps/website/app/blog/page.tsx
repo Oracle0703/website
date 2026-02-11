@@ -74,7 +74,7 @@ export default function Page() {
                       <div className="space-y-2">
                         <Link
                           href={`/blog/${encodeURIComponent(post.slug)}`}
-                          className="text-2xl font-semibold leading-snug text-primary transition-colors hover:text-accent sm:text-[1.75rem]"
+                          className="-mx-1 rounded-sm px-1 text-2xl font-semibold leading-snug text-primary transition-colors hover:bg-primary hover-text-base sm:text-[1.75rem]"
                         >
                           {post.title}
                         </Link>
@@ -146,3 +146,5 @@ export default function Page() {
     </main>
   );
 }
+
+
