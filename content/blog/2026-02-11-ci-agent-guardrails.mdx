@@ -1,0 +1,166 @@
+---
+title: "把 AI Agent 放进 CI：你需要的不是提示词，是 Guardrails"
+slug: "ci-agent-guardrails"
+date: "2026-02-11"
+updatedAt: "2026-02-11"
+summary: "当 Agent 进入 CI/CD，风险不再是『回答不准』，而是『权限、网络、依赖与产物』。这篇给一套可落地的最小 Guardrails 清单。"
+cover:
+  src: "/og.png"
+  alt: "CI Agent Guardrails 最小清单"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["ai", "agents", "cicd", "security", "guardrails"]
+category: "engineering"
+status: "published"
+type: "tutorial"
+relatedPosts:
+  - "timestamp-tool-retrospective-timezone-precision-ux"
+seo:
+  description: "一套可执行的 CI Agent Guardrails：权限最小化、网络出站控制、依赖可验证、产物可追溯、失败可回滚。"
+  keywords: ["CI", "Agent", "Guardrails", "供应链安全", "最小权限"]
+comments:
+  enabled: false
+---
+
+## 先把问题说清楚：CI 里的 Agent 和本地 Agent 完全不是一件事
+
+在本地跑 Agent，最坏情况通常是“写错东西、浪费时间”。
+
+把 Agent 放进 CI/CD，最坏情况会变成：
+
+- 拿到写权限后改代码、改配置、改发布脚本
+- 出站网络放开后外发敏感信息（日志、token、构建产物）
+- 拉取依赖时被投毒（供应链），你甚至以为那是“一个技能包/脚本”
+- 产物不可追溯：改了什么、为什么改、能不能回滚，没有链路
+
+所以要先建立一个共识：
+
+> CI Agent 的第一目标不是“更聪明”，而是“更可控”。
+
+
+## 最小 Guardrails：把系统当成『默认不可信』
+
+下面这份清单的设计原则是：
+
+- 默认只读
+- 默认不出网
+- 默认不写外部系统
+- 默认必须产生日志与可回滚动作
+
+你可以把它当成“CI Agent 上生产的最小闭环”。
+
+
+## Guardrails 1：权限（Permissions）——默认只读
+
+**目标：让 Agent 能观察、能提案，但不能直接破坏。**
+
+建议策略：
+
+- Git 权限：
+  - 默认 `read`
+  - 写入必须走受控路径（例如只允许写到 `docs/agent-output/` 或一个专门的分支）
+- Secrets：
+  - CI 中默认不给任何可横向移动的密钥
+  - 需要密钥的任务必须拆成“人工批准 + 短期 token + 最小范围”
+- 文件系统：
+  - 允许修改的目录白名单（deny-by-default）
+
+> 一个实用做法：让 Agent 的输出变成 PR/MR，而不是直接 push 到 main。
+
+
+## Guardrails 2：网络（Network Egress）——默认不出网
+
+**目标：阻断数据外流与任意下载。**
+
+建议策略：
+
+- 出站网络默认关闭
+- 如确实需要：
+  - 仅允许访问少量域名（allowlist）
+  - 记录每一次请求的域名、路径、响应码
+
+对 Agent 来说，“能联网”不是能力提升，而是风险指数级上升。
+
+
+## Guardrails 3：依赖（Supply Chain）——依赖必须可验证
+
+很多事故的起点不是恶意代码本身，而是“你把一个可执行分发物当成了文本”。
+
+最低要求：
+
+- lockfile 必须存在且参与校验
+- 依赖拉取必须固定版本（pin）
+- 对外部脚本/skill/工具：
+  - 允许的来源白名单
+  - 禁止 `curl | bash` 这类直接执行
+  - 需要完整审计记录：来源、版本、hash（能复现）
+
+参考（供延伸阅读）：
+
+- GitHub Agentic Workflows（示例项目，强调 guardrails/工程化）：
+  https://github.com/github/gh-aw
+
+
+## Guardrails 4：输出（Outputs）——产物必须可追溯
+
+**目标：每次运行都能回答四个问题：**
+
+1) 改了什么（diff）
+2) 为什么改（意图/需求）
+3) 怎么回滚（rollback 路径）
+4) 谁批准的（审批/触发来源）
+
+落地建议：
+
+- 每次运行必须写 `runlog`（动作清单）
+- 产出内容必须落盘并归档（例如文档仓库）
+- 输出长内容要分段，避免消息通道超时/截断（否则“运行成功但你没看到”）
+
+
+## Guardrails 5：失败策略（Failure Modes）——默认可中止、可恢复
+
+你要假设这三件事一定会发生：
+
+- Agent 生成了错误的改动
+- CI 跑到一半超时
+- 上游依赖/网络偶发失败
+
+所以需要：
+
+- 一键停止：能立刻停止后续步骤（abort）
+- 幂等：重跑不会把系统越搞越乱
+- 回滚脚本：和部署脚本同等级的“第一公民”
+
+
+## 最小落地版本（MVP）：一条安全的流水线长这样
+
+如果你只做一个最小版本，我建议是：
+
+1) Agent 只读扫描仓库，输出建议（不改代码）
+2) 允许 Agent 生成一个 PR/MR（写到分支）
+3) PR/MR 必须通过：lint/build/test
+4) 合并必须人工批准
+5) 每次运行都产出 runlog + 归档
+
+这套闭环的价值是：
+
+- 你得到 Agent 的“产出能力”
+- 同时把风险控制在可审计、可回滚的边界内
+
+
+## 结语：让自动化值得被信任
+
+当 Agent 开始参与工程流水线，真正决定成败的不是“提示词技巧”，而是“可控性工程”。
+
+你可以逐步开放权限，但必须按顺序：
+
+- 先可追溯
+- 再可回滚
+- 最后才是可写入/可出网
+
+
+## 参考链接
+
+- GitHub Agentic Workflows: https://github.com/github/gh-aw
+- GitHub Trending（用于观察 agent 工程化趋势）：https://github.com/trending

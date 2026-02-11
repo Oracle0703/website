@@ -1,0 +1,133 @@
+---
+title: "MDX 组件化实战：让博客内容可维护"
+slug: "mdx-components-in-production"
+date: "2026-02-11"
+updatedAt: "2026-02-11"
+summary: "结合当前站点实现，沉淀一套可长期维护的 MDX 组件写作规范，降低返工并提升阅读一致性。"
+cover:
+  src: "/blog/mdx-components-map.png"
+  alt: "MDX 组件系统结构图"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["mdx", "组件化", "内容工程", "nextjs"]
+category: "engineering"
+status: "published"
+type: "tutorial"
+relatedPosts:
+  - "blog-seo-baseline-nextjs"
+  - "个人网站搭建"
+seo:
+  description: "从真实项目出发，讲解 MDX 组件化如何统一样式、降低维护成本并提升写作效率。"
+  keywords: ["mdx", "组件化", "博客系统", "nextjs"]
+comments:
+  enabled: false
+---
+
+## 为什么要做 MDX 组件化
+
+内容少的时候，原生 Markdown 看起来足够简单；但当文章从 2 篇增长到 20 篇，问题会迅速暴露：
+
+- 同样是“提醒块”，每篇写法不同
+- 链接、代码块、图片缺少统一视觉层级
+- 主题样式升级时，需要逐篇修补旧文
+
+MDX 组件化的本质，是把“排版与交互规则”从文章正文中抽离，沉淀为可复用资产。
+
+<Image
+  src="/blog/mdx-components-map.png"
+  alt="MDX 内容渲染链路：正文 -> 组件映射 -> 主题样式 -> 最终页面"
+  width={1200}
+  height={630}
+/>
+
+## 本项目里的基础能力
+
+当前项目已经有完整基础：
+
+- `Callout`：信息、警告、成功提示
+- `CodeBlock`：代码块统一容器
+- `Image`：图片样式与懒加载
+- `MDXLink`：内外链统一处理与安全属性
+
+这套能力已经足够支撑“中小规模技术博客”的稳定产出。
+
+<Callout tone="info" title="实践建议">
+  先做小而稳的组件集合，不要一开始设计过多复杂组件。组件数量少但规范一致，长期维护反而更轻松。
+</Callout>
+
+## 组件设计要点（实战版本）
+
+### 1. 让 API 小而稳
+
+组件最怕“参数爆炸”。我的经验是：先保证 80% 场景稳定覆盖，再考虑扩展参数。
+
+例如 `Callout` 只保留：
+
+- `tone`
+- `title`
+- `children`
+
+这样作者记忆成本低，文档也清晰。
+
+### 2. 让组件表达语义，不只表达样式
+
+组件命名尽量对应“内容意图”，而不是“视觉外观”。
+
+- 好：`Callout`, `CodeBlock`
+- 一般：`BlueBox`, `FancyCard`
+
+语义命名的好处是，后续改样式不会影响写作者理解。
+
+### 3. 给作者一个固定写作模板
+
+如果你希望团队持续产出，必须提供“可复制的写作骨架”。
+
+```mdx
+## 背景
+
+一句话说明问题和边界。
+
+<Callout tone="info" title="结论先行">
+  用 2~3 句告诉读者这篇文能解决什么。
+</Callout>
+
+## 实现
+
+<CodeBlock language="ts">
+{`// 示例代码`}
+</CodeBlock>
+```
+
+模板比口头规范更有效。
+
+<Image
+  src="/blog/mdx-authoring-flow.png"
+  alt="作者写作流程：选题 -> 草稿 -> 组件化排版 -> 校验 -> 发布"
+  width={1200}
+  height={630}
+/>
+
+## 常见误区
+
+1. **过度组件化**：为了“好看”把普通段落都改成组件，反而破坏阅读节奏。
+2. **组件职责混乱**：同一个组件同时做布局、交互、主题适配，后期难维护。
+3. **历史兼容缺失**：组件更新后没有回归历史文章，导致旧文视觉断层。
+
+## 发布前检查清单
+
+- 文章是否只使用约定组件集合
+- 图片是否有可理解的 `alt`
+- 外链是否具备安全属性并且样式可辨识
+- 代码块是否带语言标识与必要上下文
+
+## 小结
+
+MDX 组件化不是“前端炫技”，而是内容系统工程。它的价值不在于一篇文章更漂亮，而在于一年后你仍然可以低成本维护全部文章。
+
+---
+
+相关阅读：
+
+- `/blog/blog-seo-baseline-nextjs`
+- `/blog/%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%AB%99%E6%90%AD%E5%BB%BA`

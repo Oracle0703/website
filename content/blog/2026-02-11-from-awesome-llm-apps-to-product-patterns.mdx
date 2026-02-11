@@ -1,0 +1,124 @@
+---
+title: "别再收藏 Awesome 了：从 LLM App 合集提炼 3 个能落地的产品模式"
+slug: "from-awesome-llm-apps-to-product-patterns"
+date: "2026-02-11"
+updatedAt: "2026-02-11"
+summary: "LLM App 合集能带来灵感，但真正有价值的是把它们归纳成可复用的模式。本文提炼 3 个最常见、最能落地的模式，并列出工程与商业化的关键坑。"
+cover:
+  src: "/og.png"
+  alt: "从 Awesome LLM Apps 提炼产品模式"
+  width: 1200
+  height: 630
+author: "Yuri"
+tags: ["llm", "product", "rag", "agents", "workflow"]
+category: "product"
+status: "published"
+type: "article"
+relatedPosts:
+  - "blog-content-model-state-machine"
+seo:
+  description: "把 Awesome LLM Apps 从『收藏夹』变成『方法论』：RAG 知识工作台、垂直工作流 Agent、端侧/离线助手三大模式与落地清单。"
+  keywords: ["LLM App", "RAG", "Agent", "工作流", "产品模式"]
+comments:
+  enabled: false
+---
+
+## 为什么『看合集』很爽，但『做产品』很难
+
+Awesome 列表的价值是：
+
+- 让你快速看到“别人都在做什么”
+
+它的陷阱是：
+
+- 让你误以为“拼一拼就能变产品”
+
+要把合集变成生产力，你需要的不是更多链接，而是**模式抽象**。
+
+下面这 3 个模式，是我认为最常见、也最容易落地的。
+
+
+## 模式 1：RAG 知识工作台（Knowledge Workbench）
+
+**一句话：把知识变成可检索、可追溯、可引用的工作流。**
+
+典型能力：
+
+- 文档导入与切分
+- 检索与引用（带来源）
+- 生成与改写（带引用）
+- 结果归档（可复查）
+
+最容易踩的坑：
+
+- “能回答”但“不能证明”：没有引用/来源
+- 索引不可控：更新后结果漂移
+- 评测缺失：不知道检索质量是否退步
+
+落地清单（MVP）：
+
+- 引用必须显示来源
+- 索引版本化（能回滚）
+- 一个最小 eval（见上一篇 eval harness）
+
+
+## 模式 2：垂直工作流 Agent（Vertical Workflow Agent）
+
+**一句话：把 AI 放进一个明确的业务流程里，而不是做通用聊天。**
+
+典型场景：
+
+- 客服工单整理与建议
+- 内容发布流水线（选题→写作→校对→发布）
+- 运维/安全巡检（发现→提案→审批→执行→回滚）
+
+最容易踩的坑：
+
+- 权限失控：Agent 直接写生产系统
+- 无审计：不知道它改了什么
+- 不可回滚：做错了只能人工擦屁股
+
+落地清单（MVP）：
+
+- 默认只读
+- 输出必须可追溯（runlog）
+- 关键动作必须人工批准（Guardrails）
+
+
+## 模式 3：端侧/离线助手（On-device / Offline Assistant）
+
+**一句话：把高频、小模型能力放到端上，换隐私与低延迟。**
+
+典型场景：
+
+- 编辑器/笔记应用的本地辅助
+- 轻量分类、摘要、标签
+- 弱网环境（户外/差网络）
+
+最容易踩的坑：
+
+- 冷启动太慢
+- 设备差异太大
+- 更新与回滚缺失
+
+落地清单（MVP）：
+
+- 能力探测 + 降级路径
+- 缓存与版本化
+- 指标与错误上报
+
+
+## 最重要的一句话：模式决定路线图
+
+当你把“合集”归纳成模式，你的路线图会清晰很多：
+
+- RAG：先把引用、索引、评测做稳
+- 工作流 Agent：先把 guardrails、审计、回滚做稳
+- 端侧助手：先把冷启动、缓存、降级做稳
+
+剩下的优化才是锦上添花。
+
+
+## 参考链接
+
+- GitHub Trending（观察模式变化）：https://github.com/trending
