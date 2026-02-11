@@ -69,7 +69,10 @@ type LinkProps = ComponentProps<typeof Link> & {
 export function MDXLink({ href, children, ...props }: LinkProps) {
   const isExternal = href.startsWith("http");
   const { className, ...rest } = props;
-  const mergedClassName = ["text-accent hover:text-accent-strong", className]
+  const mergedClassName = [
+    "text-accent underline decoration-accent/40 underline-offset-4 hover:text-accent-strong",
+    className
+  ]
     .filter(Boolean)
     .join(" ");
 
@@ -78,7 +81,7 @@ export function MDXLink({ href, children, ...props }: LinkProps) {
       <a
         href={href}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         className={mergedClassName}
       >
         {children}
@@ -106,14 +109,16 @@ export const mdxComponents = {
   h3: (props: ComponentProps<"h3">) => (
     <h3 className={`mt-6 ${TITLE_LG}`} {...props} />
   ),
-  p: (props: ComponentProps<"p">) => <p className={`mt-4 ${TEXT_SM_SECONDARY}`} {...props} />,
+  p: (props: ComponentProps<"p">) => (
+    <p className={`mt-4 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
+  ),
   ul: (props: ComponentProps<"ul">) => (
-    <ul className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_SM_SECONDARY}`} {...props} />
+    <ul className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
   ),
   ol: (props: ComponentProps<"ol">) => (
-    <ol className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_SM_SECONDARY}`} {...props} />
+    <ol className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
   ),
-  li: (props: ComponentProps<"li">) => <li className={TEXT_SM_SECONDARY} {...props} />,
+  li: (props: ComponentProps<"li">) => <li className={`${TEXT_SM_SECONDARY} leading-7`} {...props} />,
   blockquote: (props: ComponentProps<"blockquote">) => (
     <blockquote className={`mt-4 border-l-2 border-edge-strong pl-4 ${TEXT_SM_MUTED}`} {...props} />
   ),

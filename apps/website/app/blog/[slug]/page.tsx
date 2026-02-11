@@ -103,7 +103,7 @@ export default async function Page({ params }: PageProps) {
   const showUpdated = post.updatedAt && post.updatedAt !== post.date;
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-12 sm:px-6 md:space-y-10 md:py-16">
+    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-14 sm:px-6 md:space-y-10 md:py-20">
       <header className="space-y-4">
         <div className={`flex flex-wrap items-center gap-3 ${TEXT_XS_MUTED}`}>
           <span>{copy.publishedAt} · {formatDate(post.date, locale)}</span>
@@ -113,8 +113,8 @@ export default async function Page({ params }: PageProps) {
           <span>{copy.readingTime} · {post.readingTime} {copy.minute}</span>
         </div>
         <h1 className={TITLE_2XL}>{post.title}</h1>
-        <p className={TEXT_SM_MUTED}>{post.summary}</p>
-        <div className={`flex flex-wrap gap-3 ${TEXT_XS_SECONDARY}`}>
+        <p className={`max-w-3xl ${TEXT_SM_MUTED} leading-relaxed`}>{post.summary}</p>
+        <div className={`flex flex-wrap items-center gap-3 ${TEXT_XS_SECONDARY}`}>
           <span className="text-muted">{post.author}</span>
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -130,12 +130,12 @@ export default async function Page({ params }: PageProps) {
       </header>
 
       {coverSrc ? (
-        <div className="aspect-[16/9] overflow-hidden rounded-2xl border border-edge bg-base/40 md:aspect-auto">
+        <div className="aspect-[16/9] overflow-hidden rounded-2xl border border-edge/80 bg-base/40 md:aspect-auto">
           <img src={coverSrc} alt={coverAlt} className="h-full w-full object-cover" />
         </div>
       ) : null}
 
-      <article className="space-y-6">
+      <article className="panel-surface space-y-6 p-6 sm:p-8">
         {mdxError ? (
           <div className={`rounded-xl border border-dashed border-edge p-6 ${TEXT_SM_MUTED}`}>
             {copy.invalidContent}
@@ -145,14 +145,14 @@ export default async function Page({ params }: PageProps) {
         )}
       </article>
 
-      <div className={`flex gap-4 ${TEXT_SM_MUTED}`}>
-        <Link href="/blog" className="text-accent hover:text-accent-strong">
+      <div className={`flex flex-wrap items-center gap-5 ${TEXT_SM_MUTED}`}>
+        <Link href="/blog" className="link-accent font-medium">
           {copy.title}
         </Link>
-        <Link href="/enter" className="text-accent hover:text-accent-strong">
+        <Link href="/enter" className="link-accent font-medium">
           {common.backToEnter}
         </Link>
-        <Link href="/" className="text-muted hover:text-primary">
+        <Link href="/" className="link-muted font-medium">
           {common.backToHome}
         </Link>
       </div>
