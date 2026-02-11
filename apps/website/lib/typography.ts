@@ -7,11 +7,14 @@ export const TITLE_BASE = "text-base font-semibold text-primary";
 export const TITLE_BASE_SM_LG = "text-base font-semibold text-primary sm:text-lg";
 
 export const TEXT_BASE_SECONDARY = "text-base text-secondary";
+export const TEXT_BASE_MUTED = "text-base text-muted";
 export const TEXT_SM_MUTED = "text-sm text-muted";
 export const TEXT_SM_SECONDARY = "text-sm text-secondary";
 export const TEXT_SM_PRIMARY = "text-sm text-primary";
 export const TEXT_SM_SEMIBOLD_PRIMARY = "text-sm font-semibold text-primary";
 export const TEXT_SM_SEMIBOLD_ACCENT = "text-sm font-semibold text-accent";
+export const TEXT_SM_SEMIBOLD_SECONDARY = "text-sm font-semibold text-secondary";
+export const TEXT_BASE_SEMIBOLD_SECONDARY = "text-base font-semibold text-secondary";
 
 export const TEXT_XS_MUTED = "text-xs text-muted";
 export const TEXT_XS_SECONDARY = "text-xs text-secondary";

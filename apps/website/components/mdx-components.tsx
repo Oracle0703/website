@@ -38,7 +38,9 @@ type CodeBlockProps = {
 export function CodeBlock({ children, language }: CodeBlockProps) {
   return (
     <pre className="overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-sm text-primary">
-      {language ? <span className={`mb-2 block ${TEXT_XS_MUTED}`}>{language}</span> : null}
+      {language ? (
+        <span className={`mb-2 block ${TEXT_XS_MUTED}`}>{language}</span>
+      ) : null}
       <code>{children}</code>
     </pre>
   );
@@ -67,7 +69,10 @@ type AnchorProps = ComponentProps<"a">;
 export function MDXLink({ href, children, className, ...rest }: AnchorProps) {
   const safeHref = href ?? "";
   const isExternal = /^https?:\/\//i.test(safeHref);
-  const mergedClassName = ["text-accent hover:text-accent-strong", className]
+  const mergedClassName = [
+    "text-accent underline decoration-accent/40 underline-offset-4 hover:text-accent-strong",
+    className
+  ]
     .filter(Boolean)
     .join(" ");
 
@@ -76,7 +81,7 @@ export function MDXLink({ href, children, className, ...rest }: AnchorProps) {
       <a
         href={safeHref}
         target={rest.target ?? "_blank"}
-        rel={rest.rel ?? "noreferrer"}
+        rel={rest.rel ?? "noopener noreferrer"}
         className={mergedClassName}
         {...rest}
       >
@@ -116,16 +121,29 @@ export const mdxComponents = {
   h3: (props: ComponentProps<"h3">) => (
     <h3 className={`mt-6 ${TITLE_LG}`} {...props} />
   ),
-  p: (props: ComponentProps<"p">) => <p className={`mt-4 ${TEXT_SM_SECONDARY}`} {...props} />,
+  p: (props: ComponentProps<"p">) => (
+    <p className={`mt-4 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
+  ),
   ul: (props: ComponentProps<"ul">) => (
-    <ul className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_SM_SECONDARY}`} {...props} />
+    <ul
+      className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`}
+      {...props}
+    />
   ),
   ol: (props: ComponentProps<"ol">) => (
-    <ol className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_SM_SECONDARY}`} {...props} />
+    <ol
+      className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`}
+      {...props}
+    />
   ),
-  li: (props: ComponentProps<"li">) => <li className={TEXT_SM_SECONDARY} {...props} />,
+  li: (props: ComponentProps<"li">) => (
+    <li className={`${TEXT_SM_SECONDARY} leading-7`} {...props} />
+  ),
   blockquote: (props: ComponentProps<"blockquote">) => (
-    <blockquote className={`mt-4 border-l-2 border-edge-strong pl-4 ${TEXT_SM_MUTED}`} {...props} />
+    <blockquote
+      className={`mt-4 border-l-2 border-edge-strong pl-4 ${TEXT_SM_MUTED}`}
+      {...props}
+    />
   ),
   code: (props: ComponentProps<"code">) => {
     const { className = "", ...rest } = props;
@@ -134,6 +152,9 @@ export const mdxComponents = {
     return <code className={isBlock ? className : inlineClasses} {...rest} />;
   },
   pre: (props: ComponentProps<"pre">) => (
-    <pre className="mt-4 overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-sm text-primary" {...props} />
+    <pre
+      className="mt-4 overflow-x-auto rounded-xl border border-edge bg-base/60 p-4 text-sm text-primary"
+      {...props}
+    />
   )
 };
