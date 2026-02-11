@@ -65,100 +65,21 @@
 
 body {
   @apply bg-base text-primary antialiased;
-  background-image:
-    radial-gradient(circle at 15% 10%, rgb(var(--color-accent) / 0.12), transparent 42%),
-    radial-gradient(circle at 85% 0%, rgb(var(--color-accent-strong) / 0.08), transparent 38%);
+}
+
+/* Minimal form styling so the dashboard is usable without a component library. */
+input, textarea, select {
+  @apply bg-surface text-primary border border-edge rounded-md px-3 py-2;
+}
+
+button {
+  @apply bg-accent text-base font-medium rounded-md px-3 py-2;
+}
+
+button:disabled {
+  @apply opacity-60;
 }
 
 a {
-  @apply transition-colors duration-200;
-}
-
-::selection {
-  background: rgb(var(--color-accent) / 0.28);
-  color: rgb(var(--color-text-primary) / 1);
-}
-
-@layer components {
-  .panel-surface {
-    @apply rounded-2xl border border-edge/80 bg-surface/70 shadow-sm shadow-black/5 backdrop-blur-sm;
-  }
-
-  .card-interactive {
-    @apply transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none;
-  }
-
-  .link-muted {
-    @apply text-muted transition-colors hover:text-primary;
-  }
-
-  .link-accent {
-    @apply text-accent transition-colors hover:text-accent-strong;
-  }
-}
-
-.ticker {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-}
-
-.ticker::before,
-.ticker::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 36px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.ticker::before {
-  left: 0;
-  background: linear-gradient(
-    to right,
-    rgb(var(--color-base) / 1),
-    rgb(var(--color-base) / 0)
-  );
-}
-
-.ticker::after {
-  right: 0;
-  background: linear-gradient(
-    to left,
-    rgb(var(--color-base) / 1),
-    rgb(var(--color-base) / 0)
-  );
-}
-
-.ticker-track {
-  display: flex;
-  gap: 24px;
-  width: max-content;
-  animation: ticker-scroll 22s linear infinite;
-}
-
-.ticker-group {
-  display: flex;
-  gap: 24px;
-  padding-right: 24px;
-  align-items: center;
-  width: max-content;
-}
-
-@keyframes ticker-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track {
-    animation: none;
-    transform: none;
-  }
+  @apply text-accent-strong hover:underline;
 }

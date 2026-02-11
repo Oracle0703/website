@@ -11,5 +11,8 @@
     "start": "npm run start -w apps/website",
     "lint": "npm run lint -w apps/website",
     "test": "node --test"
+  },
+  "dependencies": {
+    "tailwindcss": "^4.1.18"
   }
 }

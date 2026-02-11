@@ -135,11 +135,11 @@ export function EnterClient() {
   return (
     <main className="relative flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 md:py-16">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(91,140,255,0.12),_transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(91,140,255,0.12),transparent_55%)]"
         aria-hidden="true"
       />
       <div className="pointer-events-none absolute inset-0 opacity-50" aria-hidden="true">
-        <div className="h-full w-full animate-pulse bg-[radial-gradient(circle,_rgba(91,140,255,0.12)_1px,_transparent_1px)] [background-size:24px_24px] motion-reduce:animate-none" />
+        <div className="h-full w-full animate-pulse bg-[radial-gradient(circle,rgba(91,140,255,0.12)_1px,transparent_1px)] bg-size-[24px_24px] motion-reduce:animate-none" />
       </div>
       <div
         className={`relative w-full max-w-5xl space-y-8 transition-all ease-out ${containerDuration} ${containerState} motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100 md:space-y-10`}

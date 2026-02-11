@@ -46,14 +46,14 @@ export default function Page() {
   const posts = getPublishedPosts();
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-12 sm:px-6 md:space-y-12 md:py-16">
-      <header className="space-y-3">
+    <main className="mx-auto w-full max-w-5xl space-y-10 px-4 py-14 sm:px-6 md:space-y-12 md:py-20">
+      <header className="space-y-4">
         <p className={TEXT_SM_MUTED}>{copy.eyebrow}</p>
         <h1 className={TITLE_3XL}>{copy.title}</h1>
-        <p className={TEXT_SM_MUTED}>{copy.description}</p>
+        <p className={`max-w-3xl ${TEXT_SM_MUTED} leading-relaxed`}>{copy.description}</p>
       </header>
 
-      <section className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6">
+      <section className="panel-surface p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className={TITLE_LG}>{copy.listTitle}</h2>
@@ -75,7 +75,7 @@ export default function Page() {
               return (
                 <article
                   key={post.slug}
-                  className="group rounded-2xl border border-edge bg-base/40 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/60 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none"
+                  className="group card-interactive rounded-2xl border border-edge bg-base/40 p-5"
                 >
                   <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-center">
                     <div className="space-y-3">
@@ -89,7 +89,7 @@ export default function Page() {
                         <p className={TEXT_SM_MUTED}>{post.summary}</p>
                       </div>
 
-                      <div className={`flex flex-wrap gap-3 ${TEXT_XS_MUTED}`}>
+                      <div className={`flex flex-wrap items-center gap-3 ${TEXT_XS_MUTED}`}>
                         <span>
                           {copy.publishedAt} · {formatDate(post.date, locale)}
                         </span>
@@ -126,7 +126,7 @@ export default function Page() {
                     </div>
 
                     {cover?.src && (
-                      <div className="aspect-[16/9] overflow-hidden rounded-xl border border-edge bg-base/40 md:aspect-auto md:h-full">
+                      <div className="aspect-video overflow-hidden rounded-xl border border-edge bg-base/40 md:aspect-auto md:h-full">
                         <img
                           src={cover.src}
                           alt={cover.alt}
@@ -143,11 +143,11 @@ export default function Page() {
         )}
       </section>
 
-      <div className={`flex gap-4 ${TEXT_SM_MUTED}`}>
-        <Link href="/enter" className="text-accent hover:text-accent-strong">
+      <div className={`flex flex-wrap items-center gap-5 ${TEXT_SM_MUTED}`}>
+        <Link href="/enter" className="link-accent font-medium">
           {common.backToEnter}
         </Link>
-        <Link href="/" className="text-muted hover:text-primary">
+        <Link href="/" className="link-muted font-medium">
           {common.backToHome}
         </Link>
       </div>
