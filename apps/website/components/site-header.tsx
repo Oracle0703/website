@@ -24,10 +24,10 @@ export function SiteHeader() {
   return (
     <header className="border-b border-edge/70 bg-base/80 backdrop-blur-sm">
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-7">
-        <div className="flex items-center justify-between md:grid md:grid-cols-[auto,1fr,auto] md:items-center">
+        <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
           <Link
             href="/"
-            className="text-lg font-semibold tracking-wide sm:text-xl md:justify-self-start"
+            className="text-lg font-semibold tracking-wide whitespace-nowrap sm:text-xl md:justify-self-start"
           >
             {messages.nav.brand}
           </Link>
@@ -144,3 +144,5 @@ export function SiteHeader() {
     </header>
   );
 }
+
+
