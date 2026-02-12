@@ -71,4 +71,4 @@ jobs:
         run: |
           set -euo pipefail
           ssh -p "${{ secrets.DEPLOY_PORT }}" "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "powershell -NoProfile -ExecutionPolicy Bypass -File \"${{ secrets.DEPLOY_PS1 }}\" -BuildId \"${{ steps.vars.outputs.build_id }}\" -ZipPath \"${{ secrets.DEPLOY_INCOMING_DIR }}\\website-src-${{ steps.vars.outputs.build_id }}.zip\""
+            "powershell -NoProfile -ExecutionPolicy Bypass -File \"${{ secrets.DEPLOY_PS1 }}\" -BuildId \"${{ steps.vars.outputs.build_id }}\" -ZipPath \"${{ secrets.DEPLOY_INCOMING_DIR }}/website-src-${{ steps.vars.outputs.build_id }}.zip\""

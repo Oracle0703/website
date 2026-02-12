@@ -4,7 +4,7 @@
 
 .DESCRIPTION
   This script is intended to be executed on the Windows Server via OpenSSH:
-    powershell -NoProfile -ExecutionPolicy Bypass -File "D:\deploy\website-deploy.ps1" -BuildId "<id>" -ZipPath "D:\incoming\website-src-<id>.zip"
+    powershell -NoProfile -ExecutionPolicy Bypass -File "D:\deploy\website-deploy.ps1" -BuildId "<id>" -ZipPath "D:/incoming/website-src-<id>.zip"
 
   It:
   - Expands the zip into a release directory.

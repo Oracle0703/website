@@ -19,7 +19,7 @@
 - **服务名**：NSSM 服务名（建议固定为 `meaningful-website`，部署/回滚脚本都依赖）
 - **端口**：Next.js 监听端口（默认 3000，建议固定；以及只监听 127.0.0.1）
 - **目录约定**（建议一次性定死，减少脚本分歧）：
-  - Incoming：`D:\incoming`（scp 上传 zip 的落点）
+  - Incoming：`D:\incoming`（scp 上传 zip 的落点；Secrets 里建议写 `D:/incoming`）
   - Releases：`D:\services\website\releases\<BuildId>`
   - Logs：`D:\logs\website`
   - Deploy script：`D:\deploy\website-deploy.ps1`
@@ -35,7 +35,7 @@
 - `DEPLOY_PORT`：SSH 端口（例如 `22`）
 - `DEPLOY_USER`：Windows SSH 登录用户名
 - `DEPLOY_SSH_KEY`：用于 ssh/scp 的私钥（建议 PEM 原文；如果复制会混入 CRLF，需要确保不带 `\r`）
-- `DEPLOY_INCOMING_DIR`：Windows 上 incoming 目录（例如 `D:\incoming`）
+- `DEPLOY_INCOMING_DIR`：Windows 上 incoming 目录（建议用正斜杠写法，便于 scp：例如 `D:/incoming`；PowerShell 也能识别）
 - `DEPLOY_PS1`：Windows 上部署脚本的完整路径（例如 `D:\deploy\website-deploy.ps1`）
 
 建议：为部署创建一个专用用户，最小化权限（仅部署目录读写 + 能重启服务）。
@@ -70,7 +70,7 @@ npm -v
 ## 3) 部署脚本（Windows，`DEPLOY_PS1` 指向）
 `website-cd-prod` 最后一步会远程执行 PowerShell 脚本，并传入：
 - `-BuildId <sha-or-manual>`
-- `-ZipPath <incoming\website-src-<BuildId>.zip>`
+- `-ZipPath <incoming/website-src-<BuildId>.zip>`
 
 仓库内提供一个可用的模板脚本：`docs/website/website-deploy.ps1`。
 首次上线建议把它放到服务器：`D:\\deploy\\website-deploy.ps1`（手工复制文件，或用 scp 上传）。
