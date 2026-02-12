@@ -72,6 +72,11 @@ npm -v
 - `-BuildId <sha-or-manual>`
 - `-ZipPath <incoming\website-src-<BuildId>.zip>`
 
+仓库内提供一个可用的模板脚本：`docs/website/website-deploy.ps1`。
+首次上线建议把它放到服务器：`D:\\deploy\\website-deploy.ps1`（手工复制文件，或用 scp 上传）。
+
+然后把 Gitee Secret `DEPLOY_PS1` 指向 `D:\\deploy\\website-deploy.ps1`。
+
 建议脚本最小行为：
 1) 校验 zip 存在。
 2) 解压到 `D:\services\website\releases\<BuildId>`。
