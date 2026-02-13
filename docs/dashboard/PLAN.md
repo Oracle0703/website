@@ -1,7 +1,8 @@
-# Dashboard Monorepo + OSS Storage Plan
+﻿# Dashboard Monorepo + OSS Storage Plan
 
 Owner: Yu
 Agent: jarvis
+Status date: 2026-02-13
 
 ## Goal
 - Unify stack with existing website: Next.js + Tailwind + CSS variables theme.
@@ -15,11 +16,12 @@ Agent: jarvis
 - No direct pushes to `main`.
 - Workflow: feature branch -> MR -> Yu merges into `main`.
 
-## Monorepo Structure
-- `apps/website/` (migrated from prior `frontend/`)
-- `apps/dashboard-web/` (planned)
-- `apps/dashboard-api/` (planned)
-- `packages/*` (planned, for shared theme/config)
+## Monorepo Structure (current)
+- `apps/website/` (active)
+- `apps/dashboard-web/` (active)
+- `apps/dashboard-api/` (active)
+- `packages/*` (reserved for shared theme/config)
+- `docs/legacy/` (archived files from historical root-level `backend/` and `admin/`)
 
 ## OSS Data Layout
 Bucket: TBD (Yu will create)
@@ -47,6 +49,6 @@ Prefix: `dashboard/`
   - smoke tests (render + fetch via mocked API)
 
 ## Milestones (MRs)
-- MR #1: monorepo scaffold + migrate `frontend/` -> `apps/website/` + root scripts + minimal tests
-- MR #2: dashboard-api OSS backend + tests
-- MR #3: dashboard-web Next app + tests
+- MR #1: monorepo scaffold + migrate `frontend/` -> `apps/website/` + root scripts + minimal tests (done)
+- MR #2: dashboard-api OSS backend + tests (in progress)
+- MR #3: dashboard-web Next app + tests (in progress)

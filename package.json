@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "meaningful-ink-monorepo",
   "private": true,
   "workspaces": [
@@ -7,10 +7,18 @@
   ],
   "scripts": {
     "dev": "npm run dev -w apps/website",
+    "dev:website": "npm run dev -w apps/website",
+    "dev:dashboard-web": "npm run dev -w apps/dashboard-web",
+    "dev:dashboard-api": "npm run dev -w apps/dashboard-api",
     "build": "npm run build -w apps/website",
+    "build:website": "npm run build -w apps/website",
+    "build:dashboard-web": "npm run build -w apps/dashboard-web",
+    "build:dashboard-api": "npm run build -w apps/dashboard-api",
     "start": "npm run start -w apps/website",
     "lint": "npm run lint -w apps/website",
-    "test": "node --test tests/workspaces.test.js"
+    "lint:website": "npm run lint -w apps/website",
+    "test": "node --test --test-isolation=none tests/workspaces.test.js",
+    "test:workspace": "node --test --test-isolation=none tests/workspaces.test.js"
   },
   "dependencies": {
     "tailwindcss": "^4.1.18"

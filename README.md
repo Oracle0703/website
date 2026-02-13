@@ -1,17 +1,20 @@
-# meaningful.ink monorepo
+﻿# meaningful.ink monorepo
 
-This repo is organized as an npm workspaces monorepo.
+This repository uses npm workspaces with a single root lockfile.
 
 ## Layout
 
 - `apps/website/` - Main website (Next.js)
-- `apps/dashboard-web/` - Dashboard web app (planned)
-- `apps/dashboard-api/` - Dashboard API (planned)
+- `apps/dashboard-web/` - Dashboard web app (Next.js)
+- `apps/dashboard-api/` - Dashboard API (Node.js + TypeScript)
+- `packages/` - Shared workspace for reusable libraries/configs
 - `content/` - Content source files (e.g. blog posts)
+- `docs/` - Architecture notes, plans, and audit reports
+- `docs/legacy/` - Archived historical specs/plans moved from old root folders
 
 ## Prerequisites
 
-- Node.js (LTS recommended)
+- Node.js LTS
 - npm (workspaces enabled)
 
 ## Install
@@ -22,32 +25,22 @@ From repo root:
 npm install
 ```
 
-## Run (website)
-
-From repo root:
+## Common scripts (root)
 
 ```bash
-npm run dev
+npm run dev                 # website
+npm run dev:dashboard-web
+npm run dev:dashboard-api
+npm run build:website
+npm run build:dashboard-web
+npm run build:dashboard-api
+npm run test
 ```
 
-Or run explicitly:
+## Workspace rule
 
-```bash
-npm run dev -w apps/website
-```
-
-## Build / Start (website)
-
-```bash
-npm run build
-npm run start
-```
-
-## Tests
-
-```bash
-npm test
-```
+- Keep lockfile only at repo root (`package-lock.json`).
+- Do not keep per-app lockfiles under `apps/*`.
 
 ## Branch conventions
 
