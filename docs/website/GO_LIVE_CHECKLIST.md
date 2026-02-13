@@ -19,10 +19,10 @@
 - **服务名**：NSSM 服务名（建议固定为 `meaningful-website`，部署/回滚脚本都依赖）
 - **端口**：Next.js 监听端口（默认 3000，建议固定；以及只监听 127.0.0.1）
 - **目录约定**（建议一次性定死，减少脚本分歧）：
-  - Incoming：`D:\incoming`（scp 上传 zip 的落点；Secrets 里建议写 `D:/incoming`）
-  - Releases：`D:\services\website\releases\<BuildId>`
-  - Logs：`D:\logs\website`
-  - Deploy script：`D:\deploy\website-deploy.ps1`
+  - Incoming：`C:\incoming`（scp 上传 zip 的落点；Secrets 里建议写 `C:/incoming`）
+  - Releases：`C:\services\website\releases\<BuildId>`
+  - Logs：`C:\logs\website`
+  - Deploy script：`C:\deploy\website-deploy.ps1`
 
 ---
 
@@ -35,8 +35,8 @@
 - `DEPLOY_PORT`：SSH 端口（例如 `22`）
 - `DEPLOY_USER`：Windows SSH 登录用户名
 - `DEPLOY_SSH_KEY`：用于 ssh/scp 的私钥（建议 PEM 原文；如果复制会混入 CRLF，需要确保不带 `\r`）
-- `DEPLOY_INCOMING_DIR`：Windows 上 incoming 目录（建议用正斜杠写法，便于 scp：例如 `D:/incoming`；PowerShell 也能识别）
-- `DEPLOY_PS1`：Windows 上部署脚本的完整路径（例如 `D:\deploy\website-deploy.ps1`）
+- `DEPLOY_INCOMING_DIR`：Windows 上 incoming 目录（建议用正斜杠写法，便于 scp：例如 `C:/incoming`；PowerShell 也能识别）
+- `DEPLOY_PS1`：Windows 上部署脚本的完整路径（例如 `C:\deploy\website-deploy.ps1`）
 
 建议：为部署创建一个专用用户，最小化权限（仅部署目录读写 + 能重启服务）。
 
@@ -47,10 +47,10 @@
 
 ```powershell
 # 目录约定（按需调整，但建议固定）
-mkdir D:\incoming
-mkdir D:\services\website\releases
-mkdir D:\logs\website
-mkdir D:\deploy
+mkdir C:\incoming
+mkdir C:\services\website\releases
+mkdir C:\logs\website
+mkdir C:\deploy
 ```
 
 依赖：
@@ -73,18 +73,18 @@ npm -v
 - `-ZipPath <incoming/website-src-<BuildId>.zip>`
 
 仓库内提供一个可用的模板脚本：`docs/website/website-deploy.ps1`。
-首次上线建议把它放到服务器：`D:\\deploy\\website-deploy.ps1`（手工复制文件，或用 scp 上传）。
+首次上线建议把它放到服务器：`C:\\deploy\\website-deploy.ps1`（手工复制文件，或用 scp 上传）。
 
-然后把 Gitee Secret `DEPLOY_PS1` 指向 `D:\\deploy\\website-deploy.ps1`。
+然后把 Gitee Secret `DEPLOY_PS1` 指向 `C:\\deploy\\website-deploy.ps1`。
 
 建议脚本最小行为：
 1) 校验 zip 存在。
-2) 解压到 `D:\services\website\releases\<BuildId>`。
+2) 解压到 `C:\services\website\releases\<BuildId>`。
 3) 在解压目录执行：
    - `npm ci`
    - `npm -w apps/website run build`
 4) 重启 NSSM 服务。
-5) 追加一条部署日志到 `D:\logs\website`（可选，但强烈建议）。
+5) 追加一条部署日志到 `C:\logs\website`（可选，但强烈建议）。
 
 注意：如果需要环境变量，优先用系统环境变量；不要把 `.env*` 放入仓库。
 
@@ -100,13 +100,13 @@ C:\tools\nssm\nssm.exe install meaningful-website
 
 GUI 参数建议：
 - Path：`C:\Program Files\nodejs\npm.cmd`
-- Startup directory：`D:\services\website\releases\<BuildId>`（首次可先手工选一个 buildId 目录）
+- Startup directory：`C:\services\website\releases\<BuildId>`（首次可先手工选一个 buildId 目录）
 - Arguments：
   - `run start -w apps/website -- -p 3000 -H 127.0.0.1`
 
 I/O（建议）：
-- stdout：`D:\logs\website\stdout.log`
-- stderr：`D:\logs\website\stderr.log`
+- stdout：`C:\logs\website\stdout.log`
+- stderr：`C:\logs\website\stderr.log`
 
 启动/重启：
 ```powershell
@@ -189,13 +189,13 @@ curl -I https://www.meaningful.ink/
 回滚目标：快速切回上一个可用 `BuildId`。
 
 最短回滚（手工）：
-1) 在 NSSM 中把 `Startup directory` 改回旧的 `D:\services\website\releases\<oldBuildId>`
+1) 在 NSSM 中把 `Startup directory` 改回旧的 `C:\services\website\releases\<oldBuildId>`
 2) `nssm restart meaningful-website`
 3) 复用第 6 节验证
 
 推荐做法（降低回滚耗时）：
-- 维护 `D:\services\website\current` 指向某个 release 目录
-- NSSM Startup directory 固定为 `D:\services\website\current`
+- 维护 `C:\services\website\current` 指向某个 release 目录
+- NSSM Startup directory 固定为 `C:\services\website\current`
 - 部署/回滚只切换 `current` 指向并重启服务
 
 ---
