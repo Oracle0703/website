@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "meaningful-ink-monorepo",
   "private": true,
   "workspaces": [
@@ -17,8 +17,8 @@
     "start": "npm run start -w apps/website",
     "lint": "npm run lint -w apps/website",
     "lint:website": "npm run lint -w apps/website",
-    "test": "node --test --test-isolation=none tests/workspaces.test.js",
-    "test:workspace": "node --test --test-isolation=none tests/workspaces.test.js"
+    "test": "node --test tests/workspaces.test.js",
+    "test:workspace": "node --test tests/workspaces.test.js"
   },
   "dependencies": {
     "tailwindcss": "^4.1.18"
