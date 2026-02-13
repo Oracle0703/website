@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "dashboard-api",
   "private": true,
   "type": "module",
@@ -6,7 +6,7 @@
     "dev": "npm run build && node --env-file=.env --watch ./dist/src/index.js",
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file=.env ./dist/src/index.js",
-    "test": "npm run build && node --test --test-isolation=none ./dist/test/*.js"
+    "test": "npm run build && node --test ./dist/test/*.js"
   },
   "dependencies": {
     "ali-oss": "^6.21.0",
