@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale } from "../../lib/i18n-server";
 import { getMessages } from "../../lib/i18n";
+import { toAbsoluteUrl } from "../../lib/site-url";
 import { TEXT_SM_MUTED, TITLE_2XL } from "../../lib/typography";
 
 export const generateMetadata = (): Metadata => {
@@ -10,7 +11,21 @@ export const generateMetadata = (): Metadata => {
 
   return {
     title: seo.aboutTitle,
-    description: seo.aboutDescription
+    description: seo.aboutDescription,
+    alternates: {
+      canonical: toAbsoluteUrl("/about")
+    },
+    openGraph: {
+      title: seo.aboutTitle,
+      description: seo.aboutDescription,
+      url: toAbsoluteUrl("/about"),
+      images: [toAbsoluteUrl("/og.png")]
+    },
+    twitter: {
+      title: seo.aboutTitle,
+      description: seo.aboutDescription,
+      images: [toAbsoluteUrl("/og.png")]
+    }
   };
 };
 

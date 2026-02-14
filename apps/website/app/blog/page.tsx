@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getLocale } from "../../lib/i18n-server";
 import { getMessages } from "../../lib/i18n";
 import { getPublishedPosts } from "../../lib/blog";
+import { toAbsoluteUrl } from "../../lib/site-url";
 import { TITLE_3XL } from "../../lib/typography";
 
 type PageProps = {
@@ -18,6 +19,20 @@ export const generateMetadata = (): Metadata => {
   return {
     title: seo.blogTitle,
     description: seo.blogDescription,
+    alternates: {
+      canonical: toAbsoluteUrl("/blog")
+    },
+    openGraph: {
+      title: seo.blogTitle,
+      description: seo.blogDescription,
+      url: toAbsoluteUrl("/blog"),
+      images: [toAbsoluteUrl("/og.png")]
+    },
+    twitter: {
+      title: seo.blogTitle,
+      description: seo.blogDescription,
+      images: [toAbsoluteUrl("/og.png")]
+    }
   };
 };
 

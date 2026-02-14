@@ -8,6 +8,7 @@ import type { BlogPost } from "../../../lib/blog";
 import { getLocale } from "../../../lib/i18n-server";
 import { getMessages } from "../../../lib/i18n";
 import { getPostBySlug, getPublishedPosts, isPublished } from "../../../lib/blog";
+import { toAbsoluteUrl } from "../../../lib/site-url";
 import { mdxComponents } from "../../../components/mdx-components";
 import { extractTocHeadings } from "../../../lib/blog-headings";
 import { TITLE_2XL } from "../../../lib/typography";
@@ -73,14 +74,25 @@ export const generateMetadata = ({ params }: PageProps): Metadata => {
 
   const description = post.seo?.description ?? post.summary;
   const cover = post.seo?.ogImage ?? getCoverSrc(post.cover);
+  const slug = encodeURIComponent(post.slug);
+  const canonicalPath = `/blog/${slug}`;
 
   return {
     title: post.title,
     description,
+    alternates: {
+      canonical: toAbsoluteUrl(canonicalPath)
+    },
     openGraph: {
       title: post.title,
       description,
       type: "article",
+      url: toAbsoluteUrl(canonicalPath),
+      images: cover ? [cover] : []
+    },
+    twitter: {
+      title: post.title,
+      description,
       images: cover ? [cover] : []
     },
     robots: post.seo?.noindex ? { index: false, follow: false } : undefined
