@@ -11,6 +11,13 @@ build/
 # dashboard-api build output (tsc)
 apps/dashboard-api/dist/
 
+# knock build output (tsc)
+apps/knock/dist/
+apps/knock/.test-dist/
+
+# knock local data (sqlite/state)
+apps/knock/data/
+
 # misc
 .DS_Store
 *.pem

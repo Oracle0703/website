@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Knock</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #111a33;
+        --text: #e6e8ef;
+        --muted: #9aa4bf;
+        --accent: #7aa2ff;
+        --danger: #ff6b6b;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand {
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .control {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      label {
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      select,
+      input,
+      button {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+      input::placeholder {
+        color: rgba(154, 164, 191, 0.7);
+      }
+      main {
+        padding: 16px 20px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      @media (max-width: 1000px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .kpi {
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .kpi-label {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-top: 10px;
+      }
+      .filters .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        table-layout: fixed;
+      }
+      .table-compact th,
+      .table-compact td {
+        padding: 6px 8px;
+      }
+      th,
+      td {
+        padding: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      tbody tr:hover {
+        background: rgba(122, 162, 255, 0.06);
+      }
+      .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .truncate {
+        max-width: 240px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 999px;
+        font-size: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--muted);
+      }
+      .tag.bad {
+        color: var(--danger);
+        border-color: rgba(255, 107, 107, 0.45);
+      }
+      .tag-group {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 6px;
+        border-radius: 999px;
+        font-size: 11px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        font-variant-numeric: tabular-nums;
+      }
+      .badge.good {
+        color: #4ade80;
+        border-color: rgba(74, 222, 128, 0.4);
+      }
+      .badge.info {
+        color: #38bdf8;
+        border-color: rgba(56, 189, 248, 0.4);
+      }
+      .badge.warn {
+        color: #f97316;
+        border-color: rgba(249, 115, 22, 0.4);
+      }
+      .badge.bad {
+        color: var(--danger);
+        border-color: rgba(255, 107, 107, 0.45);
+      }
+      .error {
+        color: var(--danger);
+        white-space: pre-wrap;
+      }
+      canvas {
+        width: 100% !important;
+        height: 280px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div class="brand">Knock</div>
+        <div class="muted" id="subtitle">loading...</div>
+      </div>
+      <div class="controls">
+        <div class="control">
+          <label class="muted" for="window">Window</label>
+          <select id="window">
+            <option value="1h">1h</option>
+            <option value="24h" selected>24h</option>
+            <option value="7d">7d</option>
+          </select>
+        </div>
+        <div class="control">
+          <label class="muted" for="bucket">Bucket</label>
+          <select id="bucket">
+            <option value="60" selected>1m</option>
+            <option value="300">5m</option>
+            <option value="900">15m</option>
+          </select>
+        </div>
+        <button id="refresh">Refresh</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="grid">
+        <div class="card">
+          <div class="kpi" id="kpi-total">-</div>
+          <div class="kpi-label">Requests</div>
+        </div>
+        <div class="card">
+          <div class="kpi" id="kpi-ip">-</div>
+          <div class="kpi-label">Unique IP</div>
+        </div>
+        <div class="card">
+          <div class="kpi" id="kpi-4xx">-</div>
+          <div class="kpi-label">4xx Ratio</div>
+        </div>
+        <div class="card">
+          <div class="kpi" id="kpi-susp">-</div>
+          <div class="kpi-label">Suspicious</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between">
+          <div>
+            <div style="font-weight: 700">Traffic</div>
+            <div class="muted" id="chart-subtitle">requests/min + status breakdown</div>
+            <div class="muted" id="chart-summary">-</div>
+          </div>
+          <div class="tag-group">
+            <div class="tag" id="tag-ingest">-</div>
+            <div class="tag" id="tag-bucket">-</div>
+          </div>
+        </div>
+        <div class="error" id="chart-error"></div>
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div class="card">
+        <div style="font-weight: 700">Table filters</div>
+        <div class="filters">
+          <div class="field">
+            <label class="muted" for="table-search">Search</label>
+            <input id="table-search" type="text" placeholder="ip, path, reason" />
+          </div>
+          <div class="field">
+            <label class="muted" for="table-focus">Focus</label>
+            <select id="table-focus">
+              <option value="all" selected>All rows</option>
+              <option value="errors">4xx / 5xx</option>
+              <option value="suspicious">Suspicious</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="muted" for="table-limit">Rows</label>
+            <select id="table-limit">
+              <option value="10">10</option>
+              <option value="15" selected>15</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+        </div>
+        <div class="muted" id="table-summary" style="margin-top: 8px">-</div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div style="font-weight: 700; margin-bottom: 8px">Top IP</div>
+          <table>
+            <thead>
+              <tr>
+                <th>IP</th>
+                <th class="num">Req</th>
+                <th class="num">Err</th>
+                <th class="num">Err%</th>
+                <th class="num">Susp</th>
+              </tr>
+            </thead>
+            <tbody id="top-ip"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div style="font-weight: 700; margin-bottom: 8px">Top Path</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Path</th>
+                <th class="num">Req</th>
+                <th class="num">Err</th>
+                <th class="num">Err%</th>
+                <th class="num">Susp</th>
+              </tr>
+            </thead>
+            <tbody id="top-path"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div style="font-weight: 700; margin-bottom: 8px">Suspicious (latest)</div>
+          <table class="table-compact">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th class="num">Status</th>
+                <th>Method</th>
+                <th>IP</th>
+                <th>Path</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody id="susp"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card muted" style="font-size: 12px">
+        Config: set <code>KNOCK_LOG_PATH</code> in <code>.env</code> to enable ingest. This MVP assumes Nginx combined-like logs.
+      </div>
+    </main>
+
+    <script src="/vendor/chart.umd.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

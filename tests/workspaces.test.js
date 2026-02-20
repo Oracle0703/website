@@ -17,6 +17,7 @@ test('workspace 目录符合 monorepo 约定', () => {
   assert.ok(exists('apps/website'), 'apps/website/ 应存在');
   assert.ok(exists('apps/dashboard-web'), 'apps/dashboard-web/ 应存在');
   assert.ok(exists('apps/dashboard-api'), 'apps/dashboard-api/ 应存在');
+  assert.ok(exists('apps/knock'), 'apps/knock/ 应存在');
 });
 
 test('历史遗留目录已收敛', () => {
@@ -40,4 +41,26 @@ test('dashboard-api 测试目录仅保留 TS 源文件', () => {
     .filter((name) => name.endsWith('.js'));
 
   assert.equal(jsTests.length, 0, 'apps/dashboard-api/test/ 不应提交 *.js 测试产物');
+});
+
+test('knock 目录与部署文档应齐备', () => {
+  assert.ok(exists('apps/knock/package.json'), 'apps/knock/package.json 应存在');
+  assert.ok(exists('apps/knock/src/index.ts'), 'apps/knock/src/index.ts 应存在');
+
+  assert.ok(exists('docs/knock/README.md'), 'docs/knock/README.md 应存在');
+  assert.ok(exists('docs/knock/windows-oneclick.md'), 'docs/knock/windows-oneclick.md 应存在');
+  assert.ok(exists('docs/knock/scripts/knock-pack-win.ps1'), 'knock-pack-win.ps1 应存在');
+  assert.ok(exists('docs/knock/scripts/knock-deploy.ps1'), 'knock-deploy.ps1 应存在');
+  assert.ok(exists('docs/knock/scripts/knock-install.ps1'), 'knock-install.ps1 应存在');
+});
+
+test('knock 测试目录仅保留 TS 源文件', () => {
+  const knockTestDir = path.join(root, 'apps', 'knock', 'test');
+  assert.ok(fs.existsSync(knockTestDir), 'apps/knock/test/ 应存在');
+
+  const jsTests = fs
+    .readdirSync(knockTestDir)
+    .filter((name) => name.endsWith('.js'));
+
+  assert.equal(jsTests.length, 0, 'apps/knock/test/ 不应提交 *.js 测试产物');
 });
