@@ -2,6 +2,11 @@
 
 MVP dashboard to visualize Nginx access logs on the server.
 
+Dashboard highlights:
+- KPIs for total requests, unique IPs, 4xx ratio, and suspicious hits.
+- Traffic chart with 2xx/3xx/4xx/5xx breakdown for the selected window.
+- Top IP/path tables plus a latest suspicious table with filters.
+
 ## Quick start (dev)
 
 ```bash

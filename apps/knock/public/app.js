@@ -104,6 +104,10 @@ function ratio(n, d) {
   return n / d;
 }
 
+function sumSeries(arr) {
+  return arr.reduce((acc, n) => acc + n, 0);
+}
+
 function applyTopFilters(rows, search, focus, key) {
   const needle = search.trim().toLowerCase();
   return rows.filter((row) => {
@@ -199,9 +203,30 @@ async function refresh() {
 
   const bucketLabel = fmtBucket(bucketSec);
   $('chart-subtitle').textContent = `requests/${bucketLabel} + status breakdown`;
+
+  const totalSum = sumSeries(dataTotal);
+  const sum2xx = sumSeries(s2xx);
+  const sum3xx = sumSeries(s3xx);
+  const sum4xx = sumSeries(s4xx);
+  const sum5xx = sumSeries(s5xx);
+
+  const updateStat = (countId, pctId, count) => {
+    if (totalSum > 0) {
+      $(countId).textContent = String(count);
+      $(pctId).textContent = fmtPct(ratio(count, totalSum));
+    } else {
+      $(countId).textContent = '-';
+      $(pctId).textContent = '-';
+    }
+  };
+
+  updateStat('stat-2xx', 'stat-2xx-pct', sum2xx);
+  updateStat('stat-3xx', 'stat-3xx-pct', sum3xx);
+  updateStat('stat-4xx', 'stat-4xx-pct', sum4xx);
+  updateStat('stat-5xx', 'stat-5xx-pct', sum5xx);
+
   if (dataTotal.length) {
-    const sum = dataTotal.reduce((acc, n) => acc + n, 0);
-    const avgPerBucket = sum / dataTotal.length;
+    const avgPerBucket = totalSum / dataTotal.length;
     const peak = Math.max(...dataTotal);
     const scaleToMin = 60 / bucketSec;
     const avgPerMin = avgPerBucket * scaleToMin;

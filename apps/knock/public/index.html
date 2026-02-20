@@ -156,6 +156,22 @@
         flex-wrap: wrap;
         justify-content: flex-end;
       }
+      .status-breakdown {
+        margin-top: 6px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-size: 12px;
+      }
+      .status-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status-value {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
       .badge {
         display: inline-flex;
         align-items: center;
@@ -245,6 +261,28 @@
             <div style="font-weight: 700">Traffic</div>
             <div class="muted" id="chart-subtitle">requests/min + status breakdown</div>
             <div class="muted" id="chart-summary">-</div>
+            <div class="status-breakdown">
+              <div class="status-item">
+                <span class="badge good">2xx</span>
+                <span class="status-value" id="stat-2xx">-</span>
+                <span class="muted" id="stat-2xx-pct">-</span>
+              </div>
+              <div class="status-item">
+                <span class="badge info">3xx</span>
+                <span class="status-value" id="stat-3xx">-</span>
+                <span class="muted" id="stat-3xx-pct">-</span>
+              </div>
+              <div class="status-item">
+                <span class="badge warn">4xx</span>
+                <span class="status-value" id="stat-4xx">-</span>
+                <span class="muted" id="stat-4xx-pct">-</span>
+              </div>
+              <div class="status-item">
+                <span class="badge bad">5xx</span>
+                <span class="status-value" id="stat-5xx">-</span>
+                <span class="muted" id="stat-5xx-pct">-</span>
+              </div>
+            </div>
           </div>
           <div class="tag-group">
             <div class="tag" id="tag-ingest">-</div>
