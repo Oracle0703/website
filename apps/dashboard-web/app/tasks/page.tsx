@@ -46,23 +46,21 @@ export default function TasksPage() {
   }, [ready]);
 
   return (
-    <div>
+    <div className="page-shell">
       <DashboardHeader />
 
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-primary">Tasks</h1>
-        <button
-          type="button"
-          className="bg-surface text-secondary border border-edge hover:text-primary"
-          disabled={loading}
-          onClick={() => void refresh()}
-        >
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Tasks</h1>
+          <p className="page-desc mt-1">Track work items by status and update progress in place.</p>
+        </div>
+        <button type="button" className="btn-ghost" disabled={loading} onClick={() => void refresh()}>
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
       <form
-        className="mb-6 flex flex-wrap items-end gap-3"
+        className="page-card flex flex-wrap items-end gap-3"
         onSubmit={async (e) => {
           e.preventDefault();
           setError(null);
@@ -78,8 +76,8 @@ export default function TasksPage() {
           }
         }}
       >
-        <label className="flex flex-1 flex-col gap-1">
-          <span className="text-sm text-secondary">New task title</span>
+        <label className="flex min-w-[220px] flex-1 flex-col gap-1.5">
+          <span className="text-sm font-medium text-secondary">New task title</span>
           <input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
@@ -93,32 +91,27 @@ export default function TasksPage() {
         </button>
       </form>
 
-      {error ? (
-        <div className="mb-6">
-          <ErrorBox title="Request failed" message={error} />
-        </div>
-      ) : null}
+      {error ? <ErrorBox title="Request failed" message={error} /> : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {STATUS_OPTIONS.map((status) => (
-          <div key={status} className="rounded-md border border-edge bg-surface">
-            <div className="border-b border-edge px-4 py-2 text-sm font-medium text-primary">
-              {status.toUpperCase()} ({byStatus[status].length})
+          <section key={status} className="page-card overflow-hidden p-0">
+            <div className="flex items-center justify-between border-b border-edge bg-base/80 px-4 py-3 text-sm font-medium text-primary">
+              <span>{status.toUpperCase()}</span>
+              <span className="rounded-full border border-edge px-2 py-0.5 text-xs text-secondary">{byStatus[status].length}</span>
             </div>
+
             <div className="flex flex-col gap-3 p-4">
-              {byStatus[status].length === 0 ? (
-                <div className="text-sm text-muted">No tasks.</div>
-              ) : null}
+              {byStatus[status].length === 0 ? <div className="text-sm text-muted">No tasks.</div> : null}
 
               {byStatus[status].map((t) => (
-                <div key={t.id} className="rounded-md border border-edge bg-base px-3 py-2">
+                <div key={t.id} className="rounded-lg border border-edge bg-base/80 px-3 py-3">
                   <div className="mb-2 text-sm font-medium text-primary">{t.title}</div>
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <div className="text-xs text-muted">Updated: {formatIso(t.updatedAt)}</div>
-                  </div>
+                  <div className="mb-2 text-xs text-muted">Updated: {formatIso(t.updatedAt)}</div>
                   <label className="flex items-center gap-2 text-xs text-secondary">
                     <span>Status</span>
                     <select
+                      className="min-w-24"
                       value={t.status}
                       onChange={async (e) => {
                         const next = e.target.value as TaskStatus;
@@ -141,13 +134,11 @@ export default function TasksPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         ))}
       </div>
 
-      <div className="mt-8 text-xs text-muted">
-        API: GET /tasks, POST /tasks, PATCH /tasks/:id
-      </div>
+      <div className="text-xs text-muted">API: GET /tasks, POST /tasks, PATCH /tasks/:id</div>
     </div>
   );
 }

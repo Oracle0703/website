@@ -38,35 +38,24 @@ export default function StatusPage() {
   }, [ready]);
 
   return (
-    <div>
+    <div className="page-shell">
       <DashboardHeader />
 
-      <div className="mb-4 flex items-center justify-between gap-4">
+      <div className="page-head">
         <div>
-          <h1 className="text-xl font-semibold text-primary">Status</h1>
-          <div className="mt-1 text-xs text-muted">
-            {updatedAt ? `Updated: ${formatIso(updatedAt)}` : ""}
-          </div>
+          <h1 className="page-title">Status</h1>
+          <p className="page-desc mt-1">{updatedAt ? `Updated: ${formatIso(updatedAt)}` : "No status update yet."}</p>
         </div>
 
-        <button
-          type="button"
-          className="bg-surface text-secondary border border-edge hover:text-primary"
-          disabled={loading}
-          onClick={() => void refresh()}
-        >
+        <button type="button" className="btn-ghost" disabled={loading} onClick={() => void refresh()}>
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
-      {error ? (
-        <div className="mb-4">
-          <ErrorBox title="Request failed" message={error} />
-        </div>
-      ) : null}
+      {error ? <ErrorBox title="Request failed" message={error} /> : null}
 
       <form
-        className="flex flex-col gap-3"
+        className="page-card flex flex-col gap-3"
         onSubmit={async (e) => {
           e.preventDefault();
           setError(null);
@@ -81,8 +70,8 @@ export default function StatusPage() {
           }
         }}
       >
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-secondary">text</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-secondary">text</span>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -91,7 +80,7 @@ export default function StatusPage() {
           />
         </label>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button type="submit" disabled={saving}>
             {saving ? "Saving..." : "Save"}
           </button>

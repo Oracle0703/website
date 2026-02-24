@@ -14,12 +14,8 @@
 }
 
 /*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
+  Tailwind CSS v4 changed the default border color to currentcolor.
+  Keep explicit compatibility so existing borders remain visible.
 */
 @layer base {
   *,
@@ -33,30 +29,30 @@
 
 :root {
   color-scheme: dark;
-  --color-base: 11 15 26;
-  --color-surface: 16 24 39;
-  --color-edge: 30 41 59;
-  --color-edge-strong: 51 65 85;
-  --color-text-primary: 241 245 249;
-  --color-text-secondary: 203 213 225;
-  --color-text-muted: 148 163 184;
-  --color-text-subtle: 226 232 240;
-  --color-accent: 91 140 255;
-  --color-accent-strong: 147 197 253;
+  --color-base: 5 10 24;
+  --color-surface: 10 18 38;
+  --color-edge: 42 63 108;
+  --color-edge-strong: 80 117 196;
+  --color-text-primary: 236 246 255;
+  --color-text-secondary: 178 204 236;
+  --color-text-muted: 120 147 184;
+  --color-text-subtle: 210 227 247;
+  --color-accent: 56 189 248;
+  --color-accent-strong: 99 102 241;
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --color-base: 248 250 252;
+  --color-base: 244 248 255;
   --color-surface: 255 255 255;
-  --color-edge: 226 232 240;
-  --color-edge-strong: 203 213 225;
+  --color-edge: 205 221 244;
+  --color-edge-strong: 171 196 235;
   --color-text-primary: 15 23 42;
   --color-text-secondary: 51 65 85;
   --color-text-muted: 100 116 139;
   --color-text-subtle: 71 85 105;
   --color-accent: 37 99 235;
-  --color-accent-strong: 29 78 216;
+  --color-accent-strong: 79 70 229;
 }
 
 [data-theme="dark"] {
@@ -65,21 +61,54 @@
 
 body {
   @apply bg-base text-primary antialiased;
+  background-image:
+    radial-gradient(circle at 12% -10%, rgba(56, 189, 248, 0.24), transparent 40%),
+    radial-gradient(circle at 88% -5%, rgba(99, 102, 241, 0.2), transparent 36%);
+}
+
+@layer components {
+  .page-shell {
+    @apply space-y-6;
+  }
+
+  .page-head {
+    @apply flex flex-wrap items-center justify-between gap-4;
+  }
+
+  .page-title {
+    @apply text-2xl font-semibold tracking-tight text-primary;
+  }
+
+  .page-desc {
+    @apply text-sm text-secondary;
+  }
+
+  .page-card {
+    @apply rounded-xl border border-edge bg-surface/90 p-5 shadow-[0_14px_38px_-24px_rgba(56,189,248,0.9)] backdrop-blur-sm;
+  }
+
+  .code-pill {
+    @apply rounded-sm border border-edge bg-base px-1 py-0.5 text-subtle;
+  }
+
+  .btn-ghost {
+    @apply border border-edge bg-base/80 text-secondary hover:border-edge-strong hover:text-primary;
+  }
 }
 
 /* Minimal form styling so the dashboard is usable without a component library. */
 input, textarea, select {
-  @apply bg-surface text-primary border border-edge rounded-md px-3 py-2;
+  @apply bg-base/85 text-primary border border-edge rounded-md px-3 py-2 placeholder:text-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:border-accent;
 }
 
 button {
-  @apply bg-accent text-base font-medium rounded-md px-3 py-2;
+  @apply bg-accent text-white font-medium rounded-md px-3 py-2 transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 shadow-[0_12px_26px_-18px_rgba(56,189,248,0.85)];
 }
 
 button:disabled {
-  @apply opacity-60;
+  @apply cursor-not-allowed opacity-60;
 }
 
 a {
-  @apply text-accent-strong hover:underline;
+  @apply text-accent hover:text-accent-strong hover:underline;
 }

@@ -38,30 +38,28 @@ export default function LogsPage() {
   }, [ready, refresh]);
 
   return (
-    <div>
+    <div className="page-shell">
       <DashboardHeader />
 
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold text-primary">Logs</h1>
-        <button
-          type="button"
-          className="bg-surface text-secondary border border-edge hover:text-primary"
-          disabled={loading}
-          onClick={() => void refresh()}
-        >
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Logs</h1>
+          <p className="page-desc mt-1">Inspect recent system records and tune filters for diagnostics.</p>
+        </div>
+        <button type="button" className="btn-ghost" disabled={loading} onClick={() => void refresh()}>
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
       <form
-        className="mb-6 flex flex-wrap items-end gap-3"
+        className="page-card flex flex-wrap items-end gap-3"
         onSubmit={(e) => {
           e.preventDefault();
           void refresh();
         }}
       >
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-secondary">days</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-secondary">days</span>
           <input
             type="number"
             min={1}
@@ -71,8 +69,8 @@ export default function LogsPage() {
           />
         </label>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-secondary">limit</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-secondary">limit</span>
           <input
             type="number"
             min={1}
@@ -87,27 +85,23 @@ export default function LogsPage() {
         </button>
       </form>
 
-      {error ? (
-        <div className="mb-6">
-          <ErrorBox title="Request failed" message={error} />
-        </div>
-      ) : null}
+      {error ? <ErrorBox title="Request failed" message={error} /> : null}
 
-      <div className="flex flex-col gap-3">
-        {entries.length === 0 ? <div className="text-sm text-muted">No log entries.</div> : null}
+      <div className="space-y-3">
+        {entries.length === 0 ? <div className="page-card text-sm text-muted">No log entries.</div> : null}
 
         {entries.map((e, idx) => (
-          <div key={`${e.ts}-${idx}`} className="rounded-md border border-edge bg-surface px-4 py-3">
+          <article key={`${e.ts}-${idx}`} className="page-card py-4">
             <div className="mb-1 flex items-center justify-between gap-3">
               <div className="text-sm font-medium text-primary">{e.message}</div>
               <div className="text-xs text-muted">{formatIso(e.ts)}</div>
             </div>
             {e.subtitle ? <div className="text-sm text-secondary">{e.subtitle}</div> : null}
-          </div>
+          </article>
         ))}
       </div>
 
-      <div className="mt-8 text-xs text-muted">API: GET /logs?days=7&amp;limit=200</div>
+      <div className="text-xs text-muted">API: GET /logs?days=7&amp;limit=200</div>
     </div>
   );
 }

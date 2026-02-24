@@ -18,59 +18,71 @@ export default function LoginPage() {
   const existingToken = getToken();
 
   return (
-    <div>
+    <div className="page-shell">
       <DashboardHeader />
 
-      <h1 className="mb-2 text-xl font-semibold text-primary">Login</h1>
-      <p className="mb-6 text-sm text-secondary">
-        Enter <code className="rounded-sm bg-surface px-1 py-0.5">ADMIN_PASSWORD</code> to get an admin token.
-      </p>
-
-      {existingToken ? (
-        <div className="mb-4 rounded-md border border-edge bg-surface px-4 py-3 text-sm text-secondary">
-          You already have a token in <code className="rounded-sm bg-base px-1 py-0.5">localStorage</code>. You can go to{" "}
-          <Link href="/tasks">/tasks</Link>.
+      <section className="page-card mx-auto mt-6 w-full max-w-md px-6 py-7">
+        <div className="mb-5">
+          <div className="mb-2 inline-flex rounded-full border border-edge bg-base px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-subtle">
+            Secure Access
+          </div>
+          <h1 className="page-title">Login</h1>
+          <p className="mt-2 text-sm leading-6 text-secondary">
+            Enter <code className="code-pill">ADMIN_PASSWORD</code> to get an
+            admin token.
+          </p>
         </div>
-      ) : null}
 
-      <form
-        className="flex max-w-md flex-col gap-3"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setError(null);
-          setSubmitting(true);
-          try {
-            await loginAdmin(password);
-            router.push("/tasks");
-          } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : String(err));
-          } finally {
-            setSubmitting(false);
-          }
-        }}
-      >
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-secondary">ADMIN_PASSWORD</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            autoComplete="current-password"
-            required
-          />
-        </label>
+        {existingToken ? (
+          <div className="mb-4 rounded-md border border-edge bg-base/85 px-4 py-3 text-sm text-secondary">
+            You already have a token in{" "}
+            <code className="code-pill">localStorage</code>. You can go to{" "}
+            <Link href="/tasks">/tasks</Link>.
+          </div>
+        ) : null}
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Logging in..." : "Login"}
-        </button>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError(null);
+            setSubmitting(true);
+            try {
+              await loginAdmin(password);
+              router.push("/tasks");
+            } catch (err: unknown) {
+              setError(err instanceof Error ? err.message : String(err));
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-secondary">
+              ADMIN_PASSWORD
+            </span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
+              autoComplete="current-password"
+              required
+            />
+          </label>
 
-        {error ? <ErrorBox title="Login failed" message={error} /> : null}
-      </form>
+          <button type="submit" className="w-full" disabled={submitting}>
+            {submitting ? "Logging in..." : "Login"}
+          </button>
 
-      <div className="mt-8 text-xs text-muted">
-        Tip: configure API base via <code className="rounded-sm bg-surface px-1 py-0.5">NEXT_PUBLIC_DASHBOARD_API_BASE</code>.
-      </div>
+          {error ? <ErrorBox title="Login failed" message={error} /> : null}
+        </form>
+
+        <div className="mt-6 rounded-md border border-edge bg-base/80 px-3 py-2 text-xs text-muted">
+          Tip: configure API base via{" "}
+          <code className="code-pill">NEXT_PUBLIC_DASHBOARD_API_BASE</code>.
+        </div>
+      </section>
     </div>
   );
 }
