@@ -55,15 +55,37 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 const STATUS_VALUES: PostStatus[] = ["draft", "published", "archived", "scheduled"];
 
-function getContentRoot() {
-  const candidates = [
-    path.join(process.cwd(), "content", "blog"),
-    path.join(process.cwd(), "..", "content", "blog"),
-    path.join(process.cwd(), "..", "..", "content", "blog")
-  ];
+function findContentRootFrom(startDir: string) {
+  let current = startDir;
 
-  const matched = candidates.find((candidate) => fs.existsSync(candidate));
-  return matched ?? candidates[0];
+  // Search up the directory tree so deploy working directories can vary.
+  for (let i = 0; i < 10; i += 1) {
+    const candidate = path.join(current, "content", "blog");
+    if (fs.existsSync(candidate)) return candidate;
+
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+
+  return null;
+}
+
+function getContentRoot() {
+  // Production deployments should set this to an absolute path like:
+  // `C:\\services\\meaningful-website\\current\\content\\blog`.
+  const override = process.env.BLOG_CONTENT_ROOT;
+  if (override) {
+    const candidates = [override, path.join(override, "content", "blog")];
+    const matched = candidates.find((candidate) => fs.existsSync(candidate));
+    if (matched) return matched;
+  }
+
+  const walked = findContentRootFrom(process.cwd());
+  if (walked) return walked;
+
+  // Fallback for local dev.
+  return path.join(process.cwd(), "content", "blog");
 }
 
 function isValidDate(value: string) {
