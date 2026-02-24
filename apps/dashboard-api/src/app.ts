@@ -47,6 +47,31 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
   const app = express();
   app.use(express.json({ limit: "1mb" }));
 
+  // Allow dashboard-web to talk to this API in local dev (different port => CORS).
+  // Configure via `CORS_ORIGINS` (comma-separated). Use `*` to allow any origin.
+  const corsOriginsRaw = process.env.CORS_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000";
+  const corsOrigins = new Set(
+    corsOriginsRaw
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean)
+  );
+  const corsAllowAll = corsOrigins.has("*");
+
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    if (origin && (corsAllowAll || corsOrigins.has(origin))) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    }
+
+    if (req.method === "OPTIONS") return res.status(204).end();
+    return next();
+  });
+
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
   app.post("/auth/login", (req, res) => {
