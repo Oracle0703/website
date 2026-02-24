@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "npm run build && node --env-file=.env --watch ./dist/src/index.js",
     "build": "tsc -p tsconfig.json",
-    "start": "node --env-file=.env ./dist/src/index.js",
+    "start": "npm run build && node --env-file=.env ./dist/src/index.js",
+    "start:dist": "node --env-file=.env ./dist/src/index.js",
     "test": "npm run build && node --test ./dist/test/*.js"
   },
   "dependencies": {
