@@ -3,6 +3,7 @@ import { HomePageClient } from "../components/home/home-page-client";
 import { getLocale } from "../lib/i18n-server";
 import { getHtmlLang, getMessages } from "../lib/i18n";
 import { getPublishedPosts } from "../lib/blog";
+import { toAbsoluteUrl } from "../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
   const locale = getLocale();
@@ -10,7 +11,21 @@ export const generateMetadata = (): Metadata => {
 
   return {
     title: seo.homeTitle,
-    description: seo.homeDescription
+    description: seo.homeDescription,
+    alternates: {
+      canonical: toAbsoluteUrl("/")
+    },
+    openGraph: {
+      title: seo.homeTitle,
+      description: seo.homeDescription,
+      url: toAbsoluteUrl("/"),
+      images: [toAbsoluteUrl("/og.png")]
+    },
+    twitter: {
+      title: seo.homeTitle,
+      description: seo.homeDescription,
+      images: [toAbsoluteUrl("/og.png")]
+    }
   };
 };
 
@@ -32,7 +47,7 @@ export default function HomePage() {
       {
         "@type": "WebSite",
         name: seo.siteName,
-        url: "/",
+        url: toAbsoluteUrl("/"),
         description: seo.jsonLd.siteDescription,
         inLanguage: getHtmlLang(locale)
       },
@@ -40,7 +55,7 @@ export default function HomePage() {
         "@type": "Person",
         name: seo.siteName,
         jobTitle: seo.jsonLd.jobTitle,
-        url: "/"
+        url: toAbsoluteUrl("/")
       }
     ]
   };

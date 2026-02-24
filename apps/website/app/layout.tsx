@@ -4,12 +4,15 @@ import { LayoutShell } from "../components/layout-shell";
 import { getLocale } from "../lib/i18n-server";
 import { getHtmlLang, getMessages } from "../lib/i18n";
 import { getTheme } from "../lib/theme-server";
+import { getSiteBaseUrl } from "../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
   const locale = getLocale();
   const { seo } = getMessages(locale);
+  const baseUrl = getSiteBaseUrl();
 
   return {
+    metadataBase: new URL(baseUrl),
     title: {
       default: seo.defaultTitle,
       template: `%s | ${seo.siteName}`
@@ -19,11 +22,11 @@ export const generateMetadata = (): Metadata => {
       title: seo.defaultTitle,
       description: seo.defaultDescription,
       type: "website",
-      url: "/",
       images: ["/og.png"]
     },
-    alternates: {
-      canonical: "/"
+    twitter: {
+      card: "summary_large_image",
+      images: ["/og.png"]
     }
   };
 };

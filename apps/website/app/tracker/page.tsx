@@ -5,6 +5,7 @@ import { AnnouncementTicker } from "../../components/announcement-ticker";
 import { getLocale } from "../../lib/i18n-server";
 import { getMessages } from "../../lib/i18n";
 import type { Locale } from "../../lib/i18n";
+import { toAbsoluteUrl } from "../../lib/site-url";
 import {
   EYEBROW_ACCENT,
   TEXT_SM_MUTED,
@@ -21,7 +22,21 @@ export const generateMetadata = (): Metadata => {
 
   return {
     title: seo.trackerTitle,
-    description: seo.trackerDescription
+    description: seo.trackerDescription,
+    alternates: {
+      canonical: toAbsoluteUrl("/tracker")
+    },
+    openGraph: {
+      title: seo.trackerTitle,
+      description: seo.trackerDescription,
+      url: toAbsoluteUrl("/tracker"),
+      images: [toAbsoluteUrl("/og.png")]
+    },
+    twitter: {
+      title: seo.trackerTitle,
+      description: seo.trackerDescription,
+      images: [toAbsoluteUrl("/og.png")]
+    }
   };
 };
 
