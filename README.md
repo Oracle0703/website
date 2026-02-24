@@ -1,49 +1,52 @@
-﻿# meaningful.ink monorepo
+# meaningful.ink monorepo
 
-This repository uses npm workspaces with a single root lockfile.
+This repository is an npm-workspaces monorepo with a single root lockfile.
 
-## Layout
+## Directory layout
 
-- `apps/website/` - Main website (Next.js)
-- `apps/dashboard-web/` - Dashboard web app (Next.js)
-- `apps/dashboard-api/` - Dashboard API (Node.js + TypeScript)
-- `packages/` - Shared workspace for reusable libraries/configs
-- `content/` - Content source files (e.g. blog posts)
-- `docs/` - Architecture notes, plans, and audit reports
-- `docs/legacy/` - Archived historical specs/plans moved from old root folders
+- `apps/website/`: Main website (Next.js)
+- `apps/dashboard-web/`: Dashboard web app (Next.js)
+- `apps/dashboard-api/`: Dashboard API (Node.js + TypeScript)
+- `apps/knock/`: Knock service (Node.js + TypeScript)
+- `packages/`: Shared workspace packages
+- `content/`: Website content source files
+- `docs/`: Architecture notes, migration records, and runbooks
+- `tests/`: Root smoke tests for monorepo scaffolding
 
 ## Prerequisites
 
 - Node.js LTS
-- npm (workspaces enabled)
+- npm 9+
 
 ## Install
 
-From repo root:
+Run from repository root:
 
 ```bash
 npm install
 ```
 
-## Common scripts (root)
+## Root scripts
 
 ```bash
-npm run dev                 # website
+npm run dev                   # same as dev:website
+npm run dev:website
 npm run dev:dashboard-web
 npm run dev:dashboard-api
+npm run dev:knock
+
+npm run build                 # same as build:website
 npm run build:website
 npm run build:dashboard-web
 npm run build:dashboard-api
-npm run test
+npm run build:knock
+
+npm run test                  # monorepo scaffold smoke test
 ```
 
-## Workspace rule
+## Workspace conventions
 
-- Keep lockfile only at repo root (`package-lock.json`).
-- Do not keep per-app lockfiles under `apps/*`.
-
-## Branch conventions
-
-- Feature: `feature/<name>/<YYYYMMDD>/<what>`
-- Hotfix: `hotfix/<name>/<YYYYMMDD>/<issue>`
-- Open an MR from your branch; merge into `main` only after checks pass.
+- Workspaces are declared at root in `package.json` (`apps/*`, `packages/*`).
+- Keep a single lockfile at root (`package-lock.json`).
+- Do not create nested lockfiles under `apps/*` or `packages/*`.
+- Legacy `frontend/` is intentionally removed; `apps/website/` is the active website app.
