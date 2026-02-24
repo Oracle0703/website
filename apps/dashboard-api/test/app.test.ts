@@ -118,3 +118,71 @@ test("logs append then read contains entry", async () => {
     await close();
   }
 });
+
+test("ingest event writes timeline and updates state", async () => {
+  process.env.INGEST_TOKEN = "it";
+
+  const { base, close } = await startServer();
+  try {
+    const ts = new Date().toISOString();
+
+    const ingest1 = await fetch(`${base}/ingest/event`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer it",
+        "idempotency-key": "k1",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        ts,
+        type: "task.started",
+        category: "ops",
+        title: "Start something",
+        summary: "working"
+      })
+    });
+    assert.equal(ingest1.status, 201);
+
+    const { body } = await login(base);
+    const token = body.token as string;
+
+    const stateRes = await fetch(`${base}/state`, { headers: { authorization: `Bearer ${token}` } });
+    assert.equal(stateRes.status, 200);
+    const state = await stateRes.json();
+    assert.equal(state.now.title, "Start something");
+
+    const eventsRes1 = await fetch(`${base}/events?days=1&limit=10`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    assert.equal(eventsRes1.status, 200);
+    const events1 = await eventsRes1.json();
+    assert.equal(events1.events.length, 1);
+
+    const ingest2 = await fetch(`${base}/ingest/event`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer it",
+        "idempotency-key": "k1",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        ts,
+        type: "task.started",
+        category: "ops",
+        title: "Start something",
+        summary: "working"
+      })
+    });
+    assert.equal(ingest2.status, 200);
+    const ingest2Body = await ingest2.json();
+    assert.equal(ingest2Body.duplicate, true);
+
+    const eventsRes2 = await fetch(`${base}/events?days=1&limit=10`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    const events2 = await eventsRes2.json();
+    assert.equal(events2.events.length, 1);
+  } finally {
+    await close();
+  }
+});
