@@ -1,0 +1,25 @@
+{
+  "name": "knock",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npm run build && node --env-file=.env --watch ./dist/server.js",
+    "build": "node ./scripts/build.mjs && node ./scripts/copy-static.mjs",
+    "build:test": "node --eval \"require('node:fs').rmSync('.test-dist', { recursive: true, force: true })\" && tsc -p tsconfig.test.json",
+    "start": "node --env-file=.env ./dist/server.js",
+    "test": "npm run build && npm run build:test && node --test ./.test-dist/test/*.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "chart.js": "^4.4.1",
+    "esbuild": "^0.25.12",
+    "typescript": "^5.4.3"
+  }
+}
