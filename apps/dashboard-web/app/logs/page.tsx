@@ -1,15 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-import { DashboardHeader } from "../../components/DashboardHeader";
+import { DashboardShell, GlassCard } from "../../exm";
 import { ErrorBox } from "../../components/ErrorBox";
 import { getLogs } from "../../lib/api";
+import { clearToken } from "../../lib/auth";
 import { formatIso } from "../../lib/format";
 import { useRequireAuth } from "../../lib/useRequireAuth";
 import type { LogEntry } from "../../lib/types";
 
 export default function LogsPage() {
+  const router = useRouter();
   const { ready } = useRequireAuth();
 
   const [days, setDays] = useState(7);
@@ -38,70 +41,87 @@ export default function LogsPage() {
   }, [ready, refresh]);
 
   return (
-    <div className="page-shell">
-      <DashboardHeader />
-
-      <div className="page-head">
-        <div>
-          <h1 className="page-title">Logs</h1>
-          <p className="page-desc mt-1">Inspect recent system records and tune filters for diagnostics.</p>
-        </div>
-        <button type="button" className="btn-ghost" disabled={loading} onClick={() => void refresh()}>
+    <DashboardShell
+      activeTab="logs"
+      title="Log Stream"
+      subtitle="Inspect recent system records and tune filters for diagnostics."
+      onLogout={() => {
+        clearToken();
+        router.push("/");
+      }}
+      meta={<span className="rounded-full border border-slate-700/80 bg-slate-900/70 px-3 py-1">Rows: {entries.length}</span>}
+      actions={
+        <button
+          type="button"
+          className="rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs text-slate-300 transition hover:border-cyan-400/70 hover:text-cyan-200"
+          disabled={loading}
+          onClick={() => void refresh()}
+        >
           {loading ? "Refreshing..." : "Refresh"}
         </button>
+      }
+    >
+      <div className="space-y-5">
+        <GlassCard title="Filters">
+          <form
+            className="flex flex-wrap items-end gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void refresh();
+            }}
+          >
+            <label className="flex flex-col gap-1.5 text-xs uppercase tracking-[0.14em] text-slate-400">
+              days
+              <input
+                type="number"
+                min={1}
+                max={31}
+                value={days}
+                onChange={(event) => setDays(Number(event.target.value))}
+                className="w-28 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5 text-xs uppercase tracking-[0.14em] text-slate-400">
+              limit
+              <input
+                type="number"
+                min={1}
+                max={1000}
+                value={limit}
+                onChange={(event) => setLimit(Number(event.target.value))}
+                className="w-32 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+              />
+            </label>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-md border border-cyan-400/70 bg-gradient-to-r from-cyan-500 to-indigo-500 px-3 py-2 text-sm font-medium text-white shadow-[0_0_18px_rgba(56,189,248,0.35)] transition hover:from-cyan-400 hover:to-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Apply
+            </button>
+          </form>
+        </GlassCard>
+
+        {error ? <ErrorBox title="Request failed" message={error} /> : null}
+
+        <GlassCard title="Recent Logs">
+          <div className="space-y-3">
+            {entries.length === 0 ? <div className="text-sm text-slate-500">No log entries.</div> : null}
+
+            {entries.map((entry, index) => (
+              <article key={`${entry.ts}-${index}`} className="rounded-lg border border-slate-800/80 bg-slate-950/70 px-4 py-3">
+                <div className="mb-1 flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium text-slate-100">{entry.message}</div>
+                  <div className="text-xs text-slate-500">{formatIso(entry.ts)}</div>
+                </div>
+                {entry.subtitle ? <div className="text-sm text-slate-300">{entry.subtitle}</div> : null}
+              </article>
+            ))}
+          </div>
+        </GlassCard>
       </div>
-
-      <form
-        className="page-card flex flex-wrap items-end gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void refresh();
-        }}
-      >
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-secondary">days</span>
-          <input
-            type="number"
-            min={1}
-            max={31}
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-secondary">limit</span>
-          <input
-            type="number"
-            min={1}
-            max={1000}
-            value={limit}
-            onChange={(e) => setLimit(Number(e.target.value))}
-          />
-        </label>
-
-        <button type="submit" disabled={loading}>
-          Apply
-        </button>
-      </form>
-
-      {error ? <ErrorBox title="Request failed" message={error} /> : null}
-
-      <div className="space-y-3">
-        {entries.length === 0 ? <div className="page-card text-sm text-muted">No log entries.</div> : null}
-
-        {entries.map((e, idx) => (
-          <article key={`${e.ts}-${idx}`} className="page-card py-4">
-            <div className="mb-1 flex items-center justify-between gap-3">
-              <div className="text-sm font-medium text-primary">{e.message}</div>
-              <div className="text-xs text-muted">{formatIso(e.ts)}</div>
-            </div>
-            {e.subtitle ? <div className="text-sm text-secondary">{e.subtitle}</div> : null}
-          </article>
-        ))}
-      </div>
-
-      <div className="text-xs text-muted">API: GET /logs?days=7&amp;limit=200</div>
-    </div>
+    </DashboardShell>
   );
 }
