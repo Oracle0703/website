@@ -22,6 +22,9 @@ apps/knock/data/
 .DS_Store
 *.pem
 
+# editor / tools
+.trae/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
