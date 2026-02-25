@@ -10,10 +10,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-theme="dark">
-      <body>
-        <div className="min-h-screen px-4 py-6 md:px-6 md:py-8">
-          <div className="mx-auto w-full max-w-5xl">{children}</div>
-        </div>
+      <body className="overflow-hidden">
+        <div className="h-dvh w-full overflow-hidden">{children}</div>
       </body>
     </html>
   );

@@ -99,12 +99,12 @@ export default function DashboardLanding(props: DashboardLandingProps) {
 
 export function DashboardShell(props: DashboardShellProps) {
   return (
-    <div className="relative left-1/2 w-screen -translate-x-1/2 px-2 md:px-4">
-      <div className="relative min-h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border border-slate-800/70 bg-[#050814] text-slate-100 shadow-[0_30px_80px_-42px_rgba(34,211,238,0.45)] md:min-h-[calc(100vh-3rem)]">
+    <div className="box-border h-dvh w-full overflow-hidden p-2 md:p-4">
+      <div className="relative h-full overflow-hidden rounded-2xl border border-slate-800/70 bg-[#050814] text-slate-100 shadow-[0_30px_80px_-42px_rgba(34,211,238,0.45)]">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-purple-500/10" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.16),_transparent_55%),_radial-gradient(circle_at_bottom,_rgba(168,85,247,0.16),_transparent_52%)]" />
 
-        <div className="relative z-10 flex min-h-[calc(100vh-2rem)] md:min-h-[calc(100vh-3rem)]">
+        <div className="relative z-10 flex h-full">
           <aside className="hidden w-64 border-r border-slate-800/60 bg-slate-950/65 backdrop-blur-xl lg:block">
             <div className="flex items-center gap-3 border-b border-slate-800/60 px-5 py-4">
               <div className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/60 bg-cyan-500/20 text-cyan-300 font-semibold">
@@ -177,7 +177,7 @@ export function DashboardShell(props: DashboardShellProps) {
               </button>
             </header>
 
-            <main className="flex-1 px-4 py-5 md:px-6">
+            <main className="flex min-h-0 flex-1 flex-col px-4 py-5 md:px-6">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h1 className="text-lg font-semibold tracking-wide text-slate-50">{props.title}</h1>
@@ -189,7 +189,7 @@ export function DashboardShell(props: DashboardShellProps) {
                 </div>
               </div>
 
-              {props.children}
+              <div className="min-h-0 flex-1">{props.children}</div>
             </main>
           </div>
         </div>
@@ -253,11 +253,18 @@ function LoginCard(props: DashboardLandingProps) {
 type GlassCardProps = {
   title: string;
   children: ReactNode;
+  className?: string;
+  bodyClassName?: string;
 };
 
 export function GlassCard(props: GlassCardProps) {
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-950/60 backdrop-blur-2xl shadow-[0_0_40px_rgba(15,23,42,0.9)]">
+    <section
+      className={[
+        "relative flex flex-col overflow-hidden rounded-2xl border border-slate-800/70 bg-slate-950/60 backdrop-blur-2xl shadow-[0_0_40px_rgba(15,23,42,0.9)]",
+        props.className ?? ""
+      ].join(" ")}
+    >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.12),_transparent_55%)]" />
       <header className="relative flex items-center justify-between border-b border-slate-800/70 px-4 py-3">
         <div className="flex items-center gap-2">
@@ -266,7 +273,7 @@ export function GlassCard(props: GlassCardProps) {
         </div>
         <span className="text-[10px] text-slate-500">LIVE</span>
       </header>
-      <div className="relative px-4 py-3">{props.children}</div>
+      <div className={["relative px-4 py-3", props.bodyClassName ?? ""].join(" ")}>{props.children}</div>
     </section>
   );
 }

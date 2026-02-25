@@ -27,19 +27,26 @@ export default function UsersPage() {
       }}
       meta={<span className="rounded-full border border-slate-700/80 bg-slate-900/70 px-3 py-1">Users: {USERS.length}</span>}
     >
-      <GlassCard title="Members">
-        <div className="space-y-3">
-          {USERS.map((user) => (
-            <div key={user.name} className="flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-950/70 px-3 py-2 text-sm">
-              <div>
-                <div className="font-medium text-slate-100">{user.name}</div>
-                <div className="text-xs text-slate-500">{user.role}</div>
-              </div>
-              <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-cyan-300">{user.status}</span>
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="console-scroll-area min-h-0 flex-1 overflow-y-auto pr-1">
+          <GlassCard title="Members">
+            <div className="space-y-3">
+              {USERS.map((user) => (
+                <div
+                  key={user.name}
+                  className="flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-950/70 px-3 py-2 text-sm"
+                >
+                  <div>
+                    <div className="font-medium text-slate-100">{user.name}</div>
+                    <div className="text-xs text-slate-500">{user.role}</div>
+                  </div>
+                  <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-cyan-300">{user.status}</span>
+                </div>
+              ))}
             </div>
-          ))}
+          </GlassCard>
         </div>
-      </GlassCard>
+      </div>
     </DashboardShell>
   );
 }

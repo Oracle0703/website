@@ -71,7 +71,7 @@ export default function TasksPage() {
         </button>
       }
     >
-      <div className="space-y-5">
+      <div className="flex h-full min-h-0 flex-col gap-5">
         <GlassCard title="Create Task">
           <form
             className="flex flex-wrap items-end gap-3"
@@ -113,10 +113,16 @@ export default function TasksPage() {
 
         {error ? <ErrorBox title="Request failed" message={error} /> : null}
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <div className="console-scroll-area min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
           {STATUS_OPTIONS.map((status) => (
-            <GlassCard key={status} title={`${status.toUpperCase()} (${byStatus[status].length})`}>
-              <div className="space-y-3">
+            <GlassCard
+              key={status}
+              title={`${status.toUpperCase()} (${byStatus[status].length})`}
+              className="min-h-0 max-h-[56dvh]"
+              bodyClassName="min-h-0 flex-1"
+            >
+              <div className="console-scroll-area h-full space-y-3 overflow-y-auto pr-1">
                 {byStatus[status].length === 0 ? <div className="text-sm text-slate-500">No tasks.</div> : null}
 
                 {byStatus[status].map((task) => (
@@ -152,6 +158,7 @@ export default function TasksPage() {
               </div>
             </GlassCard>
           ))}
+          </div>
         </div>
       </div>
     </DashboardShell>

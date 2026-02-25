@@ -102,7 +102,7 @@ input, textarea, select {
 }
 
 button {
-  @apply bg-accent text-white font-medium rounded-md px-3 py-2 transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 shadow-[0_12px_26px_-18px_rgba(56,189,248,0.85)];
+  @apply cursor-pointer bg-accent text-white font-medium rounded-md px-3 py-2 transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 shadow-[0_12px_26px_-18px_rgba(56,189,248,0.85)];
 }
 
 button:disabled {
@@ -110,5 +110,36 @@ button:disabled {
 }
 
 a {
-  @apply text-accent hover:text-accent-strong hover:underline;
+  @apply cursor-pointer text-accent hover:text-accent-strong hover:underline;
+}
+
+
+.console-scroll-area,
+.task-scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.7) rgba(15, 23, 42, 0.35);
+}
+
+.console-scroll-area::-webkit-scrollbar,
+.task-scroll-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.console-scroll-area::-webkit-scrollbar-track,
+.task-scroll-area::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 9999px;
+}
+
+.console-scroll-area::-webkit-scrollbar-thumb,
+.task-scroll-area::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.9), rgba(99, 102, 241, 0.9));
+  border-radius: 9999px;
+  border: 1px solid rgba(10, 18, 38, 0.6);
+}
+
+.console-scroll-area::-webkit-scrollbar-thumb:hover,
+.task-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.95), rgba(129, 140, 248, 0.95));
 }
