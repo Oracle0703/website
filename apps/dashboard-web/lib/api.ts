@@ -1,5 +1,5 @@
 import { clearToken, getToken, setToken } from "./auth";
-import type { LogsGetResponse, StatusDoc, TaskStatus, TasksGetResponse } from "./types";
+import type { EventsGetResponse, LogsGetResponse, StateDoc, StatusDoc, TaskStatus, TasksGetResponse } from "./types";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_DASHBOARD_API_BASE ?? "https://ms.meaningful.ink/api/dashboard";
@@ -50,7 +50,6 @@ export async function apiFetch(path: string, init?: RequestInit) {
   });
 
   if (res.status === 401) {
-    // If the backend says token is invalid/missing, make it easy to recover.
     clearToken();
   }
 
@@ -83,33 +82,45 @@ export async function loginAdmin(password: string): Promise<{ token: string }> {
   return { token: data.token };
 }
 
+export async function getState(): Promise<StateDoc> {
+  const res = await apiFetch("/state");
+  return (await res.json()) as StateDoc;
+}
+
+export async function getEvents(params?: { days?: number; limit?: number }): Promise<EventsGetResponse> {
+  const days = params?.days ?? 7;
+  const limit = params?.limit ?? 50;
+  const qs = new URLSearchParams({ days: String(days), limit: String(limit) });
+  const res = await apiFetch(`/events?${qs.toString()}`);
+  return (await res.json()) as EventsGetResponse;
+}
+
 export async function getTasks(): Promise<TasksGetResponse> {
   const res = await apiFetch("/tasks");
   return (await res.json()) as TasksGetResponse;
 }
 
-export async function createTask(title: string): Promise<{ task: unknown }> {
+export async function createTask(title: string) {
   const res = await apiFetch("/tasks", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ title })
   });
-  return (await res.json()) as { task: unknown };
+  return (await res.json()) as { task: { id: string } };
 }
 
-export async function updateTaskStatus(id: string, status: TaskStatus): Promise<{ ok: true }> {
+export async function updateTaskStatus(id: string, status: TaskStatus) {
   const res = await apiFetch(`/tasks/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ status })
   });
-  return (await res.json()) as { ok: true };
+  return (await res.json()) as { ok: boolean };
 }
 
 export async function getLogs(params?: { days?: number; limit?: number }): Promise<LogsGetResponse> {
   const days = params?.days ?? 7;
   const limit = params?.limit ?? 200;
-
   const qs = new URLSearchParams({ days: String(days), limit: String(limit) });
   const res = await apiFetch(`/logs?${qs.toString()}`);
   return (await res.json()) as LogsGetResponse;
@@ -120,11 +131,11 @@ export async function getStatus(): Promise<StatusDoc> {
   return (await res.json()) as StatusDoc;
 }
 
-export async function setStatus(text: string): Promise<{ ok: true }> {
+export async function setStatus(text: string) {
   const res = await apiFetch("/status", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ text })
   });
-  return (await res.json()) as { ok: true };
+  return (await res.json()) as { ok: boolean };
 }
