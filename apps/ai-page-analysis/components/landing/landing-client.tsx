@@ -17,6 +17,7 @@ export function LandingClient() {
   const [completedStages, setCompletedStages] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [output, setOutput] = useState<DemoOutput | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const timersRef = useRef<number[]>([]);
 
   const progressValue = output ? 100 : Math.round((completedStages / workflowStages.length) * 100);
@@ -32,6 +33,31 @@ export function LandingClient() {
   const resetTimers = () => {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
     timersRef.current = [];
+  };
+
+  const flashFeedback = (message: string) => {
+    setFeedback(message);
+    window.setTimeout(() => setFeedback(null), 2200);
+  };
+
+  const copyDraft = async (content: string, kind: "plan" | "spec") => {
+    try {
+      await navigator.clipboard.writeText(content);
+      flashFeedback(`${kind}.md 已复制`);
+    } catch {
+      flashFeedback(`复制 ${kind}.md 失败`);
+    }
+  };
+
+  const downloadDraft = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    flashFeedback(`${filename} 已导出`);
   };
 
   const handleModeChange = (nextMode: DemoMode) => {
@@ -93,6 +119,7 @@ export function LandingClient() {
             <a href="#demo" className="inline-flex items-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5">开始完整演示</a>
             <a href="#specs" className="inline-flex items-center rounded-full border border-edge-strong bg-surface/75 px-5 py-2.5 text-sm font-semibold text-secondary transition hover:-translate-y-0.5 hover:bg-surface">查看输出结构</a>
           </div>
+          {feedback ? <p className="text-sm text-accent">{feedback}</p> : null}
         </div>
         <div className="panel-surface p-6">
           <p className="text-sm text-muted">核心输出</p>
@@ -332,12 +359,20 @@ export function LandingClient() {
                         <p className="text-sm text-secondary">plan.md 草稿</p>
                         <span className="text-[11px] text-muted">plan-ready</span>
                       </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button type="button" onClick={() => copyDraft(output.planDraft, "plan")} className="rounded-full border border-edge px-3 py-1 text-[11px] text-secondary transition hover:border-accent hover:text-accent">复制 plan</button>
+                        <button type="button" onClick={() => downloadDraft(output.planDraft, "plan.md")} className="rounded-full border border-edge px-3 py-1 text-[11px] text-secondary transition hover:border-accent hover:text-accent">导出 .md</button>
+                      </div>
                       <pre className="mt-2 overflow-x-auto rounded border border-edge/60 bg-base/50 p-3 text-[11px] leading-5 text-muted">{output.planDraft}</pre>
                     </div>
                     <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-sm text-secondary">spec.md 草稿</p>
                         <span className="text-[11px] text-muted">spec-ready</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button type="button" onClick={() => copyDraft(output.specDraft, "spec")} className="rounded-full border border-edge px-3 py-1 text-[11px] text-secondary transition hover:border-accent hover:text-accent">复制 spec</button>
+                        <button type="button" onClick={() => downloadDraft(output.specDraft, "spec.md")} className="rounded-full border border-edge px-3 py-1 text-[11px] text-secondary transition hover:border-accent hover:text-accent">导出 .md</button>
                       </div>
                       <pre className="mt-2 overflow-x-auto rounded border border-edge/60 bg-base/50 p-3 text-[11px] leading-5 text-muted">{output.specDraft}</pre>
                     </div>
