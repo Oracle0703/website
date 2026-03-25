@@ -17,9 +17,9 @@
 - `README.md`
 
 ## 建议新仓库名
-- `ai-page-analysis`
+- `ai-page-requirement-analysis`
+- `page-requirement-assistant`
 - `page-analysis-assistant`
-- `page-redesign-assistant`
 
 ## 迁移后的优先事项
 1. 跑通本地 dev / build

@@ -1,85 +1,90 @@
 export type DemoMode = "url" | "screenshot" | "brief";
 export type Priority = "P0" | "P1" | "P2";
-export type Severity = "高" | "中" | "低";
 
 export type DemoOutput = {
   analysisId: string;
   generatedAt: string;
   headline: string;
-  scores: { label: string; score: number }[];
-  issues: { title: string; severity: Severity; evidence: string; impact: string }[];
-  recommendations: { module: string; action: string; priority: Priority; expectedImpact: string }[];
-  backlog: { task: string; owner: string; eta: string; priority: Priority }[];
+  requirementType: string;
+  pageGoal: string;
+  needs: { title: string; owner: string; summary: string }[];
+  mustHave: { title: string; reason: string; priority: Priority }[];
+  apiSuggestions: { name: string; method: string; purpose: string }[];
+  keyPoints: string[];
+  prdGaps: string[];
+  devSplit: { area: string; items: string[] }[];
 };
 
 export const modePlaceholders: Record<DemoMode, string> = {
-  url: "https://example.com/landing-page",
-  screenshot: "首页截图：主 CTA 过低，价值表达抽象，信任背书偏后。",
-  brief: "目标：提升试用转化；受众：企业决策者；问题：首屏理解成本高。"
+  url: "https://example.com/dashboard/funnel",
+  screenshot: "漏斗分析后台截图：顶部在数据看台新增漏斗入口，查询区为动态表单，结果区包含列表和折线图。",
+  brief: "目标：新增漏斗分析能力；页面需支持查询配置、结果展示、看板接入和接口设计说明。"
 };
 
-export const workflowStages = [
-  "解析页面素材",
-  "提取结构与层级",
-  "诊断问题与影响",
-  "生成改版方案"
-];
+export const workflowStages = ["识别页面类型", "拆解产运需求", "定位关键实现点", "生成研发解读"];
 
 export function createMockOutput(mode: DemoMode, input: string): DemoOutput {
   return {
-    analysisId: `APA-${Date.now().toString().slice(-6)}`,
+    analysisId: `APR-${Date.now().toString().slice(-6)}`,
     generatedAt: new Date().toLocaleString("zh-CN", { hour12: false }),
-    headline: `已完成${mode === "url" ? "URL" : mode === "screenshot" ? "截图" : "Brief"}分析：${input.slice(0, 28) || "未提供输入"}`,
-    scores: [
-      { label: "信息清晰度", score: 64 },
-      { label: "视觉层级", score: 58 },
-      { label: "转化路径", score: 51 },
-      { label: "执行可落地", score: 79 }
-    ],
-    issues: [
+    headline: `已完成${mode === "url" ? "URL" : mode === "screenshot" ? "截图" : "Brief"}需求解读：${input.slice(0, 24) || "未提供输入"}`,
+    requirementType: "数据分析后台 / 漏斗分析功能新增需求",
+    pageGoal: "在数据看台中新增漏斗分析能力，支持通过动态查询条件查看转化过程，并输出列表与趋势结果。",
+    needs: [
       {
-        title: "首屏价值表达偏弱",
-        severity: "高",
-        evidence: "标题无法快速说明对象与收益",
-        impact: "首屏停留和继续浏览率偏低"
+        title: "页面与入口",
+        owner: "产品 / 前端",
+        summary: "在数据看台新增漏斗入口，并在新建看板时支持漏斗类型。"
       },
       {
-        title: "CTA 焦点不集中",
-        severity: "高",
-        evidence: "主次按钮权重接近，且视觉中心不突出",
-        impact: "点击率被稀释"
+        title: "查询配置区",
+        owner: "产品 / 前后端",
+        summary: "用动态表单承接日期范围、时间粒度、漏斗步骤与步骤属性。"
       },
       {
-        title: "信任背书出现过晚",
-        severity: "中",
-        evidence: "客户、案例和数据集中在中后段",
-        impact: "影响转化决策"
+        title: "结果展示区",
+        owner: "前端 / 后端",
+        summary: "结果页至少包含表格与折线图，承接人数、转化率与时间趋势。"
       }
     ],
-    recommendations: [
-      {
-        module: "Hero 首屏",
-        action: "重写标题为对象+结果型表达，并强化副标题场景说明",
-        priority: "P0",
-        expectedImpact: "提升首屏理解速度"
-      },
-      {
-        module: "CTA 区域",
-        action: "将主 CTA 上移并增强按钮对比度",
-        priority: "P0",
-        expectedImpact: "提高关键点击率"
-      },
-      {
-        module: "信任模块",
-        action: "前置客户 Logo、案例与关键指标",
-        priority: "P1",
-        expectedImpact: "增强说服力"
-      }
+    mustHave: [
+      { title: "数据看台新增漏斗入口", reason: "这是用户进入漏斗能力的主入口", priority: "P0" },
+      { title: "动态步骤表单", reason: "漏斗步骤和属性配置是查询能力核心", priority: "P0" },
+      { title: "表格 + 折线图结果", reason: "结果展示是该需求的主要交付物", priority: "P0" },
+      { title: "看板保存 / 编辑能力", reason: "漏斗需纳入原有看板体系，支持复用", priority: "P1" }
     ],
-    backlog: [
-      { task: "重写 Hero 标题与副标题", owner: "产品/文案", eta: "0.5d", priority: "P0" },
-      { task: "重排 CTA 与首屏视觉焦点", owner: "设计/前端", eta: "1d", priority: "P0" },
-      { task: "新增信任背书模块", owner: "设计/前端", eta: "1.5d", priority: "P1" }
+    apiSuggestions: [
+      { name: "事件列表接口", method: "GET", purpose: "供动态步骤选择事件名称" },
+      { name: "属性字段接口", method: "GET", purpose: "供每一步配置属性过滤条件" },
+      { name: "漏斗分析接口", method: "POST", purpose: "返回人数、转化率、时间维度结果" },
+      { name: "看板保存接口", method: "POST/PUT", purpose: "保存漏斗看板配置并支持后续编辑" }
+    ],
+    keyPoints: [
+      "必须先确认漏斗统计口径：按用户还是按事件、是否要求顺序发生。",
+      "动态表单要支持步骤新增、删除、校验与属性联动。",
+      "后端最好一次性返回表格与图表需要的数据结构，避免前端二次拼装。",
+      "结果区必须同时考虑空状态、加载中和查询失败状态。"
+    ],
+    prdGaps: [
+      "漏斗最大步骤数是否固定。",
+      "步骤属性过滤是 AND 还是 OR。",
+      "折线图展示人数还是转化率。",
+      "是否支持导出、分页和权限控制。",
+      "看板保存后是否允许再次编辑。"
+    ],
+    devSplit: [
+      {
+        area: "前端",
+        items: ["数据看台新增漏斗入口", "动态查询表单", "列表结果", "折线图结果", "新建看板弹窗扩展"]
+      },
+      {
+        area: "后端",
+        items: ["事件列表接口", "属性字段接口", "漏斗分析接口", "看板保存与读取接口"]
+      },
+      {
+        area: "测试",
+        items: ["步骤增删校验", "转化率计算正确性", "空状态与异常状态", "接口参数边界"]
+      }
     ]
   };
 }
