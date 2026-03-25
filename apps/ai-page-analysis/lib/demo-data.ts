@@ -13,6 +13,8 @@ export type DemoOutput = {
   keyPoints: string[];
   prdGaps: string[];
   devSplit: { area: string; items: string[] }[];
+  planDraft: string;
+  specDraft: string;
 };
 
 export const modePlaceholders: Record<DemoMode, string> = {
@@ -21,13 +23,18 @@ export const modePlaceholders: Record<DemoMode, string> = {
   brief: "目标：新增漏斗分析能力；页面需支持查询配置、结果展示、看板接入和接口设计说明。"
 };
 
-export const workflowStages = ["识别页面类型", "拆解产运需求", "定位关键实现点", "生成研发解读"];
+export const workflowStages = ["识别页面类型", "拆解产运需求", "定位关键实现点", "生成 plan/spec 草稿"];
 
 export function createMockOutput(mode: DemoMode, input: string): DemoOutput {
+  const summary = input.slice(0, 48) || "未提供输入";
+  const planDraft = `# plan.md\n\n## 项目目标\n- 新增漏斗分析能力，承接数据看台中的转化过程分析场景。\n- 通过动态查询表单配置漏斗步骤、时间范围和过滤条件。\n- 输出列表与趋势图，支持后续看板保存与复用。\n\n## 范围\n### In Scope\n- 数据看台新增漏斗入口\n- 查询页面（动态表单）\n- 展示页面（列表 + 折线图）\n- 漏斗分析接口接入\n- 漏斗看板保存 / 编辑\n\n### Out of Scope\n- 高级归因分析\n- 导出能力\n- 复杂权限体系\n\n## 阶段拆分\n### Phase 1\n- 新增漏斗入口\n- 完成动态查询表单\n- 完成列表与折线图展示\n\n### Phase 2\n- 支持漏斗看板保存与编辑\n- 完善空状态、异常状态和查询校验\n\n## 关键里程碑\n1. 查询表单与结果结构对齐\n2. 漏斗接口跑通\n3. 看板接入现有数据看台体系\n`;
+
+  const specDraft = `# spec.md\n\n## 需求类型\n- 数据分析后台 / 漏斗分析功能新增需求\n\n## 页面目标\n- 在数据看台中新增漏斗页面，支持用户按时间、步骤和属性查询转化过程。\n\n## 页面结构\n1. 查询页面\n   - 日期范围\n   - 时间粒度\n   - 漏斗步骤\n   - 步骤属性\n2. 展示页面\n   - 列表结果\n   - 折线图趋势\n\n## 必须实现\n- 数据看台新增漏斗入口\n- 动态步骤表单\n- 步骤属性配置\n- 表格结果展示\n- 折线图结果展示\n- 漏斗看板类型接入\n\n## 接口建议\n- GET 事件列表接口\n- GET 属性字段接口\n- POST 漏斗分析接口\n- POST/PUT 看板保存接口\n\n## 关键实现点\n- 明确漏斗统计口径（用户/事件、顺序约束）\n- 动态表单增删改校验\n- 结果结构一次性返回给前端\n- 处理空状态、异常状态、加载态\n\n## 待确认 / 缺失项\n- 最大步骤数\n- 过滤条件组合规则\n- 折线图展示人数还是转化率\n- 看板保存后是否允许编辑\n- 是否支持导出\n`;
+
   return {
     analysisId: `APR-${Date.now().toString().slice(-6)}`,
     generatedAt: new Date().toLocaleString("zh-CN", { hour12: false }),
-    headline: `已完成${mode === "url" ? "URL" : mode === "screenshot" ? "截图" : "Brief"}需求解读：${input.slice(0, 24) || "未提供输入"}`,
+    headline: `已完成${mode === "url" ? "URL" : mode === "screenshot" ? "截图" : "Brief"}需求解读：${summary}`,
     requirementType: "数据分析后台 / 漏斗分析功能新增需求",
     pageGoal: "在数据看台中新增漏斗分析能力，支持通过动态查询条件查看转化过程，并输出列表与趋势结果。",
     needs: [
@@ -85,6 +92,8 @@ export function createMockOutput(mode: DemoMode, input: string): DemoOutput {
         area: "测试",
         items: ["步骤增删校验", "转化率计算正确性", "空状态与异常状态", "接口参数边界"]
       }
-    ]
+    ],
+    planDraft,
+    specDraft
   };
 }

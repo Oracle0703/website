@@ -87,7 +87,7 @@ export function LandingClient() {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">独立产品 / requirement-ready</p>
           <h1 className="text-3xl font-semibold text-primary sm:text-4xl">AI 页面需求分析助手</h1>
           <p className="max-w-2xl text-base leading-relaxed text-secondary">
-            给我一个 URL、页面截图或业务 Brief，我帮你解读这个页面的产运需求、必须实现、关键实现点和缺失项。
+            给我一个 URL、页面截图或业务 Brief，我帮你解读这个页面的产运需求、必须实现、关键实现点和缺失项，并直接生成可继续加工的 plan/spec 草稿。
           </p>
           <div className="flex flex-wrap gap-3">
             <a href="#demo" className="inline-flex items-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5">开始完整演示</a>
@@ -100,6 +100,7 @@ export function LandingClient() {
             <li className="rounded-lg border border-edge/70 bg-base/35 px-3 py-2">需求类型与页面目标</li>
             <li className="rounded-lg border border-edge/70 bg-base/35 px-3 py-2">产运需求、必须实现、接口建议</li>
             <li className="rounded-lg border border-edge/70 bg-base/35 px-3 py-2">关键实现点、PRD 缺失项、研发拆解</li>
+            <li className="rounded-lg border border-edge/70 bg-base/35 px-3 py-2">`plan.md` / `spec.md` 草稿</li>
           </ul>
         </div>
       </section>
@@ -322,6 +323,23 @@ export function LandingClient() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm text-secondary">plan.md 草稿</p>
+                        <span className="text-[11px] text-muted">plan-ready</span>
+                      </div>
+                      <pre className="mt-2 overflow-x-auto rounded border border-edge/60 bg-base/50 p-3 text-[11px] leading-5 text-muted">{output.planDraft}</pre>
+                    </div>
+                    <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm text-secondary">spec.md 草稿</p>
+                        <span className="text-[11px] text-muted">spec-ready</span>
+                      </div>
+                      <pre className="mt-2 overflow-x-auto rounded border border-edge/60 bg-base/50 p-3 text-[11px] leading-5 text-muted">{output.specDraft}</pre>
                     </div>
                   </div>
                 </div>
