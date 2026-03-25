@@ -9,6 +9,9 @@ export type AnalyzeInput = {
     description?: string;
     headings?: string[];
     ctas?: string[];
+    ogImage?: string;
+    imageCount?: number;
+    imageAlts?: string[];
     screenshotSummary?: string;
   };
 };

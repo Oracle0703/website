@@ -4,6 +4,8 @@ export const ANALYZE_OUTPUT_SCHEMA = {
   required: [
     "requirementType",
     "pageGoal",
+    "textSignals",
+    "visualSignals",
     "needs",
     "mustHave",
     "apiSuggestions",
@@ -16,6 +18,8 @@ export const ANALYZE_OUTPUT_SCHEMA = {
   properties: {
     requirementType: { type: "string" },
     pageGoal: { type: "string" },
+    textSignals: { type: "array", items: { type: "string" } },
+    visualSignals: { type: "array", items: { type: "string" } },
     needs: {
       type: "array",
       items: {

@@ -7,6 +7,8 @@ export type DemoOutput = {
   headline: string;
   requirementType: string;
   pageGoal: string;
+  textSignals: string[];
+  visualSignals: string[];
   needs: { title: string; owner: string; summary: string }[];
   mustHave: { title: string; reason: string; priority: Priority }[];
   apiSuggestions: { name: string; method: string; purpose: string }[];
@@ -19,6 +21,16 @@ export type DemoOutput = {
   specDraft: string;
 };
 
+export type MockContext = {
+  title?: string;
+  description?: string;
+  headings?: string[];
+  ctas?: string[];
+  ogImage?: string;
+  imageCount?: number;
+  imageAlts?: string[];
+};
+
 export const modePlaceholders: Record<DemoMode, string> = {
   url: "https://example.com/dashboard/funnel",
   screenshot: "漏斗分析后台截图：顶部在数据看台新增漏斗入口，查询区为动态表单，结果区包含列表和折线图。",
@@ -27,8 +39,25 @@ export const modePlaceholders: Record<DemoMode, string> = {
 
 export const workflowStages = ["识别页面类型", "拆解产运需求", "定位关键实现点", "生成 plan/spec 草稿"];
 
-export function createMockOutput(mode: DemoMode, input: string): DemoOutput {
+export function createMockOutput(mode: DemoMode, input: string, context?: MockContext): DemoOutput {
   const summary = input.slice(0, 48) || "未提供输入";
+  const headings = context?.headings?.slice(0, 4) ?? [];
+  const ctas = context?.ctas?.slice(0, 4) ?? [];
+  const imageAlts = context?.imageAlts?.slice(0, 4) ?? [];
+
+  const textSignals = [
+    context?.title ? `页面标题：${context.title}` : null,
+    context?.description ? `描述：${context.description}` : null,
+    headings.length > 0 ? `标题结构：${headings.join(" / ")}` : null,
+    ctas.length > 0 ? `CTA 文案：${ctas.join(" / ")}` : null
+  ].filter(Boolean) as string[];
+
+  const visualSignals = [
+    typeof context?.imageCount === "number" ? `页面包含 ${context.imageCount} 张图片` : null,
+    context?.ogImage ? "存在 OG 主图，可作为主视觉线索" : null,
+    imageAlts.length > 0 ? `图片说明：${imageAlts.join(" / ")}` : null,
+    mode === "screenshot" ? "当前输入为截图说明，需重点关注视觉层级与模块布局" : null
+  ].filter(Boolean) as string[];
 
   const planDraft = `# plan.md
 
@@ -172,6 +201,8 @@ export function createMockOutput(mode: DemoMode, input: string): DemoOutput {
     headline: `已完成${mode === "url" ? "URL" : mode === "screenshot" ? "截图" : "Brief"}需求解读：${summary}`,
     requirementType: "数据分析后台 / 漏斗分析功能新增需求",
     pageGoal: "在数据看台中新增漏斗分析能力，支持通过动态查询条件查看转化过程，并输出列表与趋势结果。",
+    textSignals,
+    visualSignals,
     needs: [
       {
         title: "页面与入口",

@@ -18,7 +18,7 @@ export class OpenAICompatibleProvider implements AnalyzeProvider {
 
   async analyze(input: AnalyzeInput): Promise<DemoOutput> {
     if (!this.apiKey) {
-      return createMockOutput(input.mode, input.input);
+      return createMockOutput(input.mode, input.input, input.extracted);
     }
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {

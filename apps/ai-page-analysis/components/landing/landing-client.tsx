@@ -279,6 +279,25 @@ export function LandingClient() {
                     </div>
                   </div>
 
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
+                      <p className="text-sm text-secondary">文本依据</p>
+                      <ul className="mt-2 space-y-1 text-xs text-muted">
+                        {output.textSignals.length > 0 ? output.textSignals.map((item) => (
+                          <li key={item} className="rounded border border-edge/60 bg-base/40 px-2 py-2">{item}</li>
+                        )) : <li className="rounded border border-edge/60 bg-base/40 px-2 py-2">暂无文本线索</li>}
+                      </ul>
+                    </div>
+                    <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
+                      <p className="text-sm text-secondary">视觉线索</p>
+                      <ul className="mt-2 space-y-1 text-xs text-muted">
+                        {output.visualSignals.length > 0 ? output.visualSignals.map((item) => (
+                          <li key={item} className="rounded border border-edge/60 bg-base/40 px-2 py-2">{item}</li>
+                        )) : <li className="rounded border border-edge/60 bg-base/40 px-2 py-2">暂无视觉线索</li>}
+                      </ul>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <p className="text-sm text-secondary">产运需求</p>
                     {output.needs.map((item) => (
