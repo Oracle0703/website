@@ -89,7 +89,7 @@ export function LandingClient() {
 
     const doneTimer = window.setTimeout(async () => {
       try {
-        const response = await fetch("/api/demo", {
+        const response = await fetch("/api/analyze", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ mode, input: actualInput })
