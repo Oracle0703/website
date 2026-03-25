@@ -318,10 +318,29 @@ export function LandingClient() {
                       </div>
                     </div>
                     <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
+                      <p className="text-sm text-secondary">状态与异常</p>
+                      <ul className="mt-2 space-y-1 text-xs text-muted">
+                        {output.statusAndErrors.map((item) => (
+                          <li key={item} className="rounded border border-edge/60 bg-base/40 px-2 py-2">{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
                       <p className="text-sm text-secondary">关键实现点</p>
                       <ul className="mt-2 space-y-1 text-xs text-muted">
                         {output.keyPoints.map((point) => (
                           <li key={point} className="rounded border border-edge/60 bg-base/40 px-2 py-2">{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="rounded-lg border border-edge/70 bg-base/35 px-3 py-3">
+                      <p className="text-sm text-secondary">边界条件</p>
+                      <ul className="mt-2 space-y-1 text-xs text-muted">
+                        {output.boundaries.map((item) => (
+                          <li key={item} className="rounded border border-edge/60 bg-base/40 px-2 py-2">{item}</li>
                         ))}
                       </ul>
                     </div>
