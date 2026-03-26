@@ -24,10 +24,12 @@ npm run dev -- --hostname 127.0.0.1 --port 3010
 ## 环境变量
 ```bash
 NEXT_PUBLIC_APP_URL=http://localhost:3010
-AI_BASE_URL=https://api.openai.com/v1
+AI_BASE_URL=https://integrate.api.nvidia.com/v1
 AI_API_KEY=your_key
-AI_MODEL=gpt-4o
+AI_MODEL=z-ai/glm5
 ```
+
+默认使用 NVIDIA OpenAI-compatible 接口与 GLM-5 模型，也可以替换为其他兼容提供商的 `AI_BASE_URL` / `AI_MODEL`。
 
 ## 当前接口
 - `GET /api/healthz`
