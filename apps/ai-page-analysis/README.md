@@ -31,6 +31,8 @@ AI_MODEL=z-ai/glm5
 
 默认使用 NVIDIA OpenAI-compatible 接口与 GLM-5 模型，也可以替换为其他兼容提供商的 `AI_BASE_URL` / `AI_MODEL`。
 
+页面输入区内也提供了 `API Key / Base URL / Model` 配置位：仅保存在当前浏览器本地，方便你直接切换自己的模型配置；如果不填 `API Key`，后端仍会优先读取服务端环境变量。
+
 ## 当前接口
 - `GET /api/healthz`
 - `POST /api/demo`

@@ -1,7 +1,7 @@
 import { createMockOutput, type DemoOutput } from "../demo-data";
 import { ANALYZE_OUTPUT_SCHEMA } from "./schema";
 import { buildUserPrompt, SYSTEM_PROMPT } from "./prompt";
-import type { AnalyzeInput, AnalyzeProvider } from "./types";
+import type { AnalyzeInput, AnalyzeProvider, AnalyzeRuntimeConfig } from "./types";
 
 type BaseOutput = Omit<DemoOutput, "analysisId" | "generatedAt" | "headline" | "planDraft" | "specDraft">;
 
@@ -13,10 +13,26 @@ function buildDrafts(base: BaseOutput, input: AnalyzeInput) {
   return { planDraft, specDraft };
 }
 
+function pickConfiguredValue(overrideValue: string | undefined, envValue: string | undefined, fallbackValue?: string) {
+  const override = overrideValue?.trim();
+  if (override) return override;
+
+  const env = envValue?.trim();
+  if (env) return env;
+
+  return fallbackValue;
+}
+
 export class OpenAICompatibleProvider implements AnalyzeProvider {
-  private baseUrl = process.env.AI_BASE_URL || "https://integrate.api.nvidia.com/v1";
-  private apiKey = process.env.AI_API_KEY;
-  private model = process.env.AI_MODEL || "z-ai/glm5";
+  private baseUrl: string;
+  private apiKey: string | undefined;
+  private model: string;
+
+  constructor(runtimeConfig?: AnalyzeRuntimeConfig) {
+    this.baseUrl = pickConfiguredValue(runtimeConfig?.baseUrl, process.env.AI_BASE_URL, "https://integrate.api.nvidia.com/v1") ?? "https://integrate.api.nvidia.com/v1";
+    this.apiKey = pickConfiguredValue(runtimeConfig?.apiKey, process.env.AI_API_KEY);
+    this.model = pickConfiguredValue(runtimeConfig?.model, process.env.AI_MODEL, "z-ai/glm5") ?? "z-ai/glm5";
+  }
 
   private parseJsonContent(content: string) {
     const candidates = new Set<string>();
@@ -132,6 +148,6 @@ export class OpenAICompatibleProvider implements AnalyzeProvider {
   }
 }
 
-export function getAnalyzeProvider(): AnalyzeProvider {
-  return new OpenAICompatibleProvider();
+export function getAnalyzeProvider(runtimeConfig?: AnalyzeRuntimeConfig): AnalyzeProvider {
+  return new OpenAICompatibleProvider(runtimeConfig);
 }

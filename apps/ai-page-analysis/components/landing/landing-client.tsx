@@ -9,6 +9,14 @@ const modeOptions: { id: DemoMode; label: string; helper: string }[] = [
   { id: "brief", label: "业务 Brief", helper: "从业务目标和背景出发推导页面需要承载的能力。" }
 ];
 
+type RuntimeConfigState = {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+};
+
+const runtimeConfigStorageKey = "ai-page-analysis.runtime-config";
+
 export function LandingClient() {
   const [mode, setMode] = useState<DemoMode>("url");
   const [input, setInput] = useState(modePlaceholders.url);
@@ -18,21 +26,68 @@ export function LandingClient() {
   const [logs, setLogs] = useState<string[]>([]);
   const [output, setOutput] = useState<DemoOutput | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [showRuntimeConfig, setShowRuntimeConfig] = useState(false);
+  const [runtimeConfig, setRuntimeConfig] = useState<RuntimeConfigState>({
+    apiKey: "",
+    baseUrl: "https://integrate.api.nvidia.com/v1",
+    model: "z-ai/glm5"
+  });
   const timersRef = useRef<number[]>([]);
+  const runtimeConfigReadyRef = useRef(false);
 
   const progressValue = output ? 100 : Math.round((completedStages / workflowStages.length) * 100);
   const modeMeta = useMemo(() => modeOptions.find((item) => item.id === mode), [mode]);
+  const hasCustomRuntimeConfig = useMemo(
+    () => Boolean(runtimeConfig.apiKey.trim() || runtimeConfig.baseUrl.trim() !== "https://integrate.api.nvidia.com/v1" || runtimeConfig.model.trim() !== "z-ai/glm5"),
+    [runtimeConfig]
+  );
 
   useEffect(() => {
+    try {
+      const rawValue = window.localStorage.getItem(runtimeConfigStorageKey);
+      if (rawValue) {
+        const parsed = JSON.parse(rawValue) as Partial<RuntimeConfigState>;
+        setRuntimeConfig({
+          apiKey: typeof parsed.apiKey === "string" ? parsed.apiKey : "",
+          baseUrl: typeof parsed.baseUrl === "string" && parsed.baseUrl.trim() ? parsed.baseUrl : "https://integrate.api.nvidia.com/v1",
+          model: typeof parsed.model === "string" && parsed.model.trim() ? parsed.model : "z-ai/glm5"
+        });
+      }
+    } catch {
+      // Ignore invalid local config.
+    }
+
+    runtimeConfigReadyRef.current = true;
+
     return () => {
       timersRef.current.forEach((timer) => window.clearTimeout(timer));
       timersRef.current = [];
     };
   }, []);
 
+  useEffect(() => {
+    if (!runtimeConfigReadyRef.current) return;
+    window.localStorage.setItem(runtimeConfigStorageKey, JSON.stringify(runtimeConfig));
+  }, [runtimeConfig]);
+
   const resetTimers = () => {
     timersRef.current.forEach((timer) => window.clearTimeout(timer));
     timersRef.current = [];
+  };
+
+  const updateRuntimeConfig = (key: keyof RuntimeConfigState, value: string) => {
+    setRuntimeConfig((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const resetRuntimeConfig = () => {
+    const nextConfig = {
+      apiKey: "",
+      baseUrl: "https://integrate.api.nvidia.com/v1",
+      model: "z-ai/glm5"
+    };
+    setRuntimeConfig(nextConfig);
+    window.localStorage.removeItem(runtimeConfigStorageKey);
+    flashFeedback("API 配置已清空");
   };
 
   const flashFeedback = (message: string) => {
@@ -67,13 +122,21 @@ export function LandingClient() {
 
   const handleGenerate = () => {
     const actualInput = input.trim() || modePlaceholders[mode];
+    const requestRuntimeConfig = {
+      apiKey: runtimeConfig.apiKey.trim(),
+      baseUrl: runtimeConfig.baseUrl.trim(),
+      model: runtimeConfig.model.trim()
+    };
     if (!input.trim()) setInput(actualInput);
 
     resetTimers();
     setIsGenerating(true);
     setActiveStage(0);
     setCompletedStages(0);
-    setLogs(["已接收输入，准备启动需求解读流程"]);
+    setLogs([
+      "已接收输入，准备启动需求解读流程",
+      requestRuntimeConfig.apiKey ? `当前使用自定义模型配置：${requestRuntimeConfig.model || "未指定模型"}` : "当前未填写 API Key，将优先使用服务端环境变量"
+    ]);
     setOutput(null);
 
     let elapsed = 0;
@@ -92,7 +155,11 @@ export function LandingClient() {
         const response = await fetch("/api/analyze", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ mode, input: actualInput })
+          body: JSON.stringify({
+            mode,
+            input: actualInput,
+            runtimeConfig: requestRuntimeConfig
+          })
         });
         const payload = (await response.json()) as { data?: DemoOutput };
         setOutput(payload.data ?? null);
@@ -191,6 +258,69 @@ export function LandingClient() {
               })}
             </div>
             <p className="mt-3 text-xs text-muted">{modeMeta?.helper}</p>
+            <div className="mt-3 rounded-xl border border-edge/70 bg-base/35 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-primary">模型配置</p>
+                  <p className="text-xs text-muted">API Key 仅保存在当前浏览器，用于这页直接调分析接口。</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {hasCustomRuntimeConfig ? <span className="text-[11px] text-accent">自定义配置已启用</span> : <span className="text-[11px] text-muted">当前使用默认 GLM-5</span>}
+                  <button
+                    type="button"
+                    onClick={() => setShowRuntimeConfig((prev) => !prev)}
+                    className="rounded-full border border-edge px-3 py-1 text-[11px] text-secondary transition hover:border-accent hover:text-accent"
+                  >
+                    {showRuntimeConfig ? "收起" : "展开"}
+                  </button>
+                </div>
+              </div>
+              {showRuntimeConfig ? (
+                <div className="mt-3 grid gap-3">
+                  <label className="grid gap-1 text-xs text-muted">
+                    API Key
+                    <input
+                      type="password"
+                      value={runtimeConfig.apiKey}
+                      onChange={(event) => updateRuntimeConfig("apiKey", event.target.value)}
+                      placeholder="填你自己的 API Key"
+                      autoComplete="off"
+                      className="rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs text-muted">
+                    Base URL
+                    <input
+                      type="text"
+                      value={runtimeConfig.baseUrl}
+                      onChange={(event) => updateRuntimeConfig("baseUrl", event.target.value)}
+                      placeholder="https://integrate.api.nvidia.com/v1"
+                      className="rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs text-muted">
+                    Model
+                    <input
+                      type="text"
+                      value={runtimeConfig.model}
+                      onChange={(event) => updateRuntimeConfig("model", event.target.value)}
+                      placeholder="z-ai/glm5"
+                      className="rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
+                    />
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={resetRuntimeConfig}
+                      className="rounded-full border border-edge px-3 py-1 text-[11px] text-secondary transition hover:border-accent hover:text-accent"
+                    >
+                      清空配置
+                    </button>
+                    <span className="text-[11px] text-muted">不填 API Key 时，后端会继续尝试读取服务端环境变量。</span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
             <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
