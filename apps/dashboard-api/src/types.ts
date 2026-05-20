@@ -11,5 +11,5 @@ export type PutJsonResult = {
 
 export interface JsonObjectStore {
   getJson<T>(key: string): Promise<GetJsonResult<T>>;
-  putJson<T>(key: string, value: T, opts?: { ifMatch?: string }): Promise<PutJsonResult>;
+  putJson<T>(key: string, value: T, opts?: { ifMatch?: string; ifNoneMatch?: "*" }): Promise<PutJsonResult>;
 }

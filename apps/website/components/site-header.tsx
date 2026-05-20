@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "./language-provider";
 import { useTheme } from "./theme-provider";
+import { getLocalePath } from "../lib/locale-routing";
 import {
   TEXT_BASE_SECONDARY,
   TEXT_BASE_SEMIBOLD_SECONDARY
@@ -20,13 +21,14 @@ export function SiteHeader() {
   const themeAriaLabel =
     theme === "dark" ? messages.theme.switchToLight : messages.theme.switchToDark;
   const menuLabel = menuOpen ? messages.nav.closeMenu : messages.nav.openMenu;
+  const getHref = (href: string) => getLocalePath(href, locale);
 
   return (
     <header className="border-b border-edge/70 bg-base/80 backdrop-blur-sm">
       <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-7">
         <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
           <Link
-            href="/"
+            href={getHref("/")}
             className="text-lg font-semibold tracking-wide whitespace-nowrap sm:text-xl md:justify-self-start"
           >
             {messages.nav.brand}
@@ -37,7 +39,7 @@ export function SiteHeader() {
             {messages.nav.items.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={getHref(item.href)}
                 className="relative font-medium hover:text-primary after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-accent after:transition-all hover:after:w-full"
               >
                 {item.label}
@@ -62,7 +64,7 @@ export function SiteHeader() {
               {toggleLabel}
             </button>
             <Link
-              href="/enter"
+              href={getHref("/enter")}
               className="link-accent text-base font-semibold"
             >
               {messages.nav.enter}
@@ -70,7 +72,7 @@ export function SiteHeader() {
           </div>
           <div className="flex items-center gap-4 md:hidden">
             <Link
-              href="/enter"
+              href={getHref("/enter")}
               className="link-accent text-base font-semibold"
             >
               {messages.nav.enter}
@@ -112,7 +114,7 @@ export function SiteHeader() {
               {messages.nav.items.map((item) => (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={getHref(item.href)}
                   onClick={() => setMenuOpen(false)}
                   className="rounded-lg px-2 py-2 font-medium hover:bg-surface/70 hover:text-primary"
                 >
@@ -144,6 +146,5 @@ export function SiteHeader() {
     </header>
   );
 }
-
 
 

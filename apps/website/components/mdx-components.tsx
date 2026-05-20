@@ -1,4 +1,5 @@
 import { isValidElement, type ComponentProps, type ReactElement, type ReactNode } from "react";
+import NextImage from "next/image";
 import Link from "next/link";
 import { MDXCodeBlock } from "./mdx-code-block";
 import { slugifyHeading } from "../lib/blog-headings";
@@ -21,6 +22,9 @@ const CALLOUT_STYLES: Record<NonNullable<CalloutProps["tone"]>, string> = {
   warning: "border-amber-500/40 bg-amber-500/10 text-secondary",
   success: "border-emerald-500/40 bg-emerald-500/10 text-secondary"
 };
+
+const DEFAULT_MDX_IMAGE_WIDTH = 1200;
+const DEFAULT_MDX_IMAGE_HEIGHT = 630;
 
 function getNodeText(node: ReactNode): string {
   if (node == null || typeof node === "boolean") return "";
@@ -103,16 +107,23 @@ export function CodeBlock({ children, language }: CodeBlockProps) {
 
 type ImageProps = ComponentProps<"img">;
 
-export function Image({ src, alt = "", className, ...props }: ImageProps) {
+export function Image({ src, alt = "", className, width, height, ...props }: ImageProps) {
   const mergedClassName = ["rounded-xl border border-edge bg-base/40", className]
     .filter(Boolean)
     .join(" ");
+  const imageWidth = Number(width) || DEFAULT_MDX_IMAGE_WIDTH;
+  const imageHeight = Number(height) || DEFAULT_MDX_IMAGE_HEIGHT;
+  const imageSrc = typeof src === "string" ? src : "";
+
+  if (!imageSrc) return null;
 
   return (
-    <img
-      src={src}
+    <NextImage
+      src={imageSrc}
       alt={alt}
-      loading="lazy"
+      width={imageWidth}
+      height={imageHeight}
+      sizes="(max-width: 768px) 100vw, 768px"
       className={mergedClassName}
       {...props}
     />

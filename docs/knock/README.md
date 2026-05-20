@@ -40,6 +40,7 @@ Required:
 Optional:
 - `KNOCK_PORT` (default 3010)
 - `KNOCK_SITE_NAME` (default `knock`)
+- `KNOCK_AUTH_USERNAME` / `KNOCK_AUTH_PASSWORD` (enables Basic Auth; required if exposed beyond localhost)
 - `KNOCK_DATA_DIR` (default `./data`, contains `knock.db` and `state.json`)
 - `KNOCK_RETENTION_DAYS` (default 14)
 - `KNOCK_INGEST_INTERVAL_SEC` (default 60, min 5)
@@ -47,6 +48,7 @@ Optional:
 - `KNOCK_DISABLE_INGEST` (`true`/`false`, default `false`)
 
 Notes:
+- Do not expose Knock publicly without `KNOCK_AUTH_USERNAME` and `KNOCK_AUTH_PASSWORD` or equivalent Nginx access control.
 - `KNOCK_DATA_DIR` is resolved from the current working directory; in services use absolute paths.
 - Logs should be UTF-8 (Nginx default). Non-UTF8 content may appear garbled but parsing still relies on ASCII fields.
 

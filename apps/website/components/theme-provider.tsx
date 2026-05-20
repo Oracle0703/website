@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { defaultTheme, THEME_COOKIE, type Theme } from "../lib/theme";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { defaultTheme, getThemeFromCookieValue, THEME_COOKIE, type Theme } from "../lib/theme";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -14,10 +14,33 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
+const getCookieValue = (name: string) => {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : undefined;
+};
+
+const getStoredTheme = () => {
+  if (typeof window === "undefined") return defaultTheme;
+
+  try {
+    const storedValue = window.localStorage.getItem(THEME_COOKIE) ?? getCookieValue(THEME_COOKIE);
+    return getThemeFromCookieValue(storedValue);
+  } catch {
+    return getThemeFromCookieValue(getCookieValue(THEME_COOKIE));
+  }
+};
+
 const persistTheme = (theme: Theme) => {
   if (typeof document === "undefined") return;
   document.cookie = `${THEME_COOKIE}=${theme};path=/;max-age=${COOKIE_MAX_AGE};samesite=lax`;
   document.documentElement.dataset.theme = theme;
+
+  try {
+    window.localStorage.setItem(THEME_COOKIE, theme);
+  } catch {
+    // Ignore storage failures in private or restricted browsing contexts.
+  }
 };
 
 export const ThemeProvider = ({
@@ -28,8 +51,20 @@ export const ThemeProvider = ({
   children: ReactNode;
 }) => {
   const [theme, setTheme] = useState<Theme>(initialTheme ?? defaultTheme);
+  const didMountPersistRef = useRef(false);
 
   useEffect(() => {
+    const restoredTheme = getStoredTheme();
+    setTheme(restoredTheme);
+    persistTheme(restoredTheme);
+  }, []);
+
+  useEffect(() => {
+    if (!didMountPersistRef.current) {
+      didMountPersistRef.current = true;
+      return;
+    }
+
     persistTheme(theme);
   }, [theme]);
 

@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
 import { EnterClient } from "./enter-client";
-import { getLocale } from "../../lib/i18n-server";
-import { getMessages } from "../../lib/i18n";
+import { defaultLocale, getMessages } from "../../lib/i18n";
+import { getLanguageAlternates } from "../../lib/seo";
 import { toAbsoluteUrl } from "../../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
-  const locale = getLocale();
-  const { seo } = getMessages(locale);
+  const { seo } = getMessages(defaultLocale);
 
   return {
     title: seo.enterTitle,
     description: seo.enterDescription,
-    alternates: {
-      canonical: toAbsoluteUrl("/enter")
-    },
+    alternates: getLanguageAlternates("/enter"),
     openGraph: {
       title: seo.enterTitle,
       description: seo.enterDescription,

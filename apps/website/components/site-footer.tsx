@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "./language-provider";
+import { getLocalePath } from "../lib/locale-routing";
 import { TEXT_BASE_MUTED } from "../lib/typography";
 
 const socialLinks = [
@@ -11,7 +12,7 @@ const socialLinks = [
 ];
 
 export function SiteFooter() {
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
 
   return (
     <footer className="border-t border-edge/70 bg-base/80">
@@ -35,7 +36,7 @@ export function SiteFooter() {
             {messages.nav.items.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={getLocalePath(item.href, locale)}
                 className="inline-flex rounded-sm -mx-1 px-1 font-medium text-secondary visited:text-secondary transition-colors hover:bg-primary hover-text-base"
               >
                 {item.label}

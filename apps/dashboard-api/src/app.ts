@@ -1,6 +1,6 @@
 import express from "express";
-import type { Request } from "express";
-import type { JsonObjectStore, JsonValue } from "./types.js";
+import type { NextFunction, Request, Response } from "express";
+import type { GetJsonResult, JsonObjectStore, JsonValue } from "./types.js";
 import { requireAuth, signAdminToken, type AuthConfig } from "./auth.js";
 
 type Task = {
@@ -75,6 +75,29 @@ function clampRecent<T>(arr: T[], max = 20) {
   return arr.slice(0, max);
 }
 
+function isNotFoundError(error: unknown) {
+  const candidate = error as { status?: number; code?: string; name?: string } | undefined;
+  return (
+    candidate?.status === 404 ||
+    candidate?.code === "NoSuchKey" ||
+    candidate?.code === "NoSuchBucket" ||
+    candidate?.name === "NoSuchKeyError"
+  );
+}
+
+function isPreconditionFailed(error: unknown) {
+  const candidate = error as { status?: number; code?: string } | undefined;
+  return candidate?.status === 412 || candidate?.code === "PreconditionFailed";
+}
+
+function asyncRoute(
+  handler: (req: Request, res: Response, next: NextFunction) => Promise<unknown>
+) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(handler(req, res, next)).catch(next);
+  };
+}
+
 function defaultState(): StateDoc {
   return {
     updatedAt: new Date(0).toISOString(),
@@ -134,9 +157,34 @@ function parseIngestEvent(req: Request): { ok: true; event: IngestEvent } | { ok
 async function safeGet<T>(store: JsonObjectStore, key: string, fallback: T): Promise<{ value: T; etag?: string }> {
   try {
     return await store.getJson<T>(key);
-  } catch {
+  } catch (error) {
+    if (!isNotFoundError(error)) throw error;
     return { value: fallback };
   }
+}
+
+async function updateJsonArray<T>(
+  store: JsonObjectStore,
+  key: string,
+  fallback: T[],
+  updater: (items: T[]) => T[] | null,
+  maxAttempts = 4
+) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const current: GetJsonResult<T[]> = await safeGet<T[]>(store, key, fallback);
+    const nextValue = updater(current.value);
+    if (nextValue === null) return { updated: false as const };
+
+    try {
+      await store.putJson(key, nextValue, current.etag ? { ifMatch: current.etag } : { ifNoneMatch: "*" });
+      return { updated: true as const };
+    } catch (error) {
+      if (isPreconditionFailed(error) && attempt < maxAttempts - 1) continue;
+      throw error;
+    }
+  }
+
+  throw Object.assign(new Error("etag_conflict"), { status: 409 });
 }
 
 export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; prefix?: string }) {
@@ -186,7 +234,7 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
   }
 
   // Jarvis ingest endpoint: protected by separate token, not the admin JWT.
-  app.post("/ingest/event", async (req, res) => {
+  app.post("/ingest/event", asyncRoute(async (req, res) => {
     const tokenCheck = requireIngestToken(readBearerToken(req) ?? undefined);
     if (!tokenCheck.ok) return res.status(tokenCheck.status).json({ error: tokenCheck.error });
 
@@ -198,12 +246,14 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
     const keyDate = Number.isNaN(d.getTime()) ? todayYmd() : todayYmd(d);
 
     const eventsKey = `events/${keyDate}.json`;
-    const existing = await safeGet<IngestEvent[]>(store, eventsKey, []);
-    if (existing.value.some((item) => item.id === event.id)) {
+    const eventWrite = await updateJsonArray<IngestEvent>(store, eventsKey, [], (existing) => {
+      if (existing.some((item) => item.id === event.id)) return null;
+      return [...existing, event];
+    });
+
+    if (!eventWrite.updated) {
       return res.json({ ok: true, duplicate: true });
     }
-
-    await store.putJson(eventsKey, [...existing.value, event]);
 
     const currentState = await safeGet<StateDoc>(store, "state.json", defaultState());
     const state: StateDoc = currentState.value;
@@ -268,23 +318,23 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
       await store.putJson("state.json", state, currentState.etag ? { ifMatch: currentState.etag } : undefined);
     } catch (e: any) {
       // If another writer updated state concurrently, accept last-write-wins.
-      if (e?.status !== 412) throw e;
+      if (!isPreconditionFailed(e)) throw e;
       await store.putJson("state.json", state);
     }
 
     return res.status(201).json({ ok: true, id: event.id });
-  });
+  }));
 
   app.use(requireAuth(auth));
 
   // Aggregated state for dashboard homepage.
-  app.get("/state", async (_req, res) => {
+  app.get("/state", asyncRoute(async (_req, res) => {
     const doc = await safeGet<StateDoc>(store, "state.json", defaultState());
     return res.json(doc.value);
-  });
+  }));
 
   // Event timeline (ingested from Jarvis).
-  app.get("/events", async (req, res) => {
+  app.get("/events", asyncRoute(async (req, res) => {
     const days = Math.min(Math.max(Number(req.query.days ?? 7), 1), 31);
     const limit = Math.min(Math.max(Number(req.query.limit ?? 200), 1), 1000);
 
@@ -299,15 +349,15 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
 
     out.sort((a, b) => (a.ts < b.ts ? 1 : -1));
     return res.json({ events: out.slice(0, limit) });
-  });
+  }));
 
   // Tasks
-  app.get("/tasks", async (_req, res) => {
+  app.get("/tasks", asyncRoute(async (_req, res) => {
     const doc = await safeGet<TasksDoc>(store, "tasks.json", { tasks: [] });
     return res.json(doc);
-  });
+  }));
 
-  app.post("/tasks", async (req, res) => {
+  app.post("/tasks", asyncRoute(async (req, res) => {
     const title = String(req.body?.title ?? "").trim();
     if (!title) return res.status(400).json({ error: "missing_title" });
 
@@ -326,12 +376,12 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
       return res.status(201).json({ task });
     } catch (e: any) {
       // ali-oss throws with status=412 on If-Match mismatch
-      if (e?.status === 412) return res.status(409).json({ error: "etag_conflict" });
+      if (isPreconditionFailed(e)) return res.status(409).json({ error: "etag_conflict" });
       throw e;
     }
-  });
+  }));
 
-  app.patch("/tasks/:id", async (req, res) => {
+  app.patch("/tasks/:id", asyncRoute(async (req, res) => {
     const id = String(req.params.id);
     const status = req.body?.status as Task["status"] | undefined;
     if (!status || !["todo", "doing", "done"].includes(status)) {
@@ -340,6 +390,9 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
 
     const current = await safeGet<TasksDoc>(store, "tasks.json", { tasks: [] });
     const now = new Date().toISOString();
+    if (!current.value.tasks.some((t) => t.id === id)) {
+      return res.status(404).json({ error: "task_not_found" });
+    }
     const tasks = current.value.tasks.map((t) => (t.id === id ? { ...t, status, updatedAt: now } : t));
 
     const etag = current.etag;
@@ -347,13 +400,13 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
       await store.putJson("tasks.json", { tasks }, etag ? { ifMatch: etag } : undefined);
       return res.json({ ok: true });
     } catch (e: any) {
-      if (e?.status === 412) return res.status(409).json({ error: "etag_conflict" });
+      if (isPreconditionFailed(e)) return res.status(409).json({ error: "etag_conflict" });
       throw e;
     }
-  });
+  }));
 
   // Logs: append-only in daily partitions
-  app.post("/logs", async (req, res) => {
+  app.post("/logs", asyncRoute(async (req, res) => {
     const message = String(req.body?.message ?? "").trim();
     if (!message) return res.status(400).json({ error: "missing_message" });
 
@@ -365,12 +418,11 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
     };
 
     const key = `logs/${todayYmd()}.json`;
-    const current = await safeGet<LogEntry[]>(store, key, []);
-    await store.putJson(key, [...current.value, entry]);
+    await updateJsonArray<LogEntry>(store, key, [], (current) => [...current, entry]);
     return res.status(201).json({ ok: true });
-  });
+  }));
 
-  app.get("/logs", async (req, res) => {
+  app.get("/logs", asyncRoute(async (req, res) => {
     const days = Math.min(Math.max(Number(req.query.days ?? 7), 1), 31);
     const limit = Math.min(Math.max(Number(req.query.limit ?? 200), 1), 1000);
 
@@ -385,19 +437,25 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
 
     out.sort((a, b) => (a.ts < b.ts ? 1 : -1));
     return res.json({ entries: out.slice(0, limit) });
-  });
+  }));
 
   // Status
-  app.get("/status", async (_req, res) => {
+  app.get("/status", asyncRoute(async (_req, res) => {
     const doc = await safeGet<StatusDoc>(store, "status.json", { updatedAt: new Date(0).toISOString(), text: "" });
     return res.json(doc.value);
-  });
+  }));
 
-  app.post("/status", async (req, res) => {
+  app.post("/status", asyncRoute(async (req, res) => {
     const text = String(req.body?.text ?? "");
     const doc: StatusDoc = { updatedAt: new Date().toISOString(), text };
     await store.putJson("status.json", doc);
     return res.status(201).json({ ok: true });
+  }));
+
+  app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    const status = (error as { status?: number } | undefined)?.status;
+    if (status === 409) return res.status(409).json({ error: "etag_conflict" });
+    return res.status(500).json({ error: "internal_error" });
   });
 
   return app;

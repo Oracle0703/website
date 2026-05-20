@@ -22,6 +22,8 @@ New-Item -ItemType Directory -Force -Path C:\services\knock | Out-Null
 Set-Content -Path C:\services\knock\config.env -Encoding utf8 -Value @(
   "KNOCK_PORT=3010",
   "KNOCK_SITE_NAME=meaningful.ink",
+  "KNOCK_AUTH_USERNAME=admin",
+  "KNOCK_AUTH_PASSWORD=REPLACE_WITH_LONG_RANDOM_PASSWORD",
   "KNOCK_LOG_PATH=C:\REPLACE\WITH\ABSOLUTE\NGINX\ACCESS.LOG",
   "KNOCK_DATA_DIR=C:\services\knock\data",
   "KNOCK_RETENTION_DAYS=14",
@@ -66,6 +68,8 @@ It does **not** ship `dist/src` or `dist/test`.
 Service name default: `knock`
 
 ## Nginx reverse proxy example
+
+Do not publish Knock without either Knock Basic Auth (`KNOCK_AUTH_USERNAME` / `KNOCK_AUTH_PASSWORD`) or Nginx-side access control.
 
 ```nginx
 server {

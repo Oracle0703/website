@@ -11,6 +11,7 @@ export const messages = {
       items: [
         { href: "/", label: "首页" },
         { href: "/blog", label: "博客" },
+        { href: "/projects", label: "作品" },
         { href: "/labs", label: "实验室" },
         { href: "/tracker", label: "打卡" },
         { href: "/about", label: "关于" },
@@ -36,15 +37,36 @@ export const messages = {
       heroTitle: "全栈开发者",
       heroSubtitle: "构建内容与体验的数字空间",
       heroIntro:
-        "连接博客、实验室与打卡平台，打造持续输出的开发者作品集。",
-      ctaEnter: "进入站点",
+        "我把 AI 工具、内容系统、后台控制台和产品原型打磨成可展示、可维护、可继续产品化的个人网站系统。",
+      ctaEnter: "查看作品",
       ctaBlog: "阅读博客",
+      ctaProjects: "查看作品",
       primarySectionsLabel: "主要入口",
       primarySections: [
+        { label: "作品", href: "/projects" },
         { label: "博客", href: "/blog" },
         { label: "实验室", href: "/labs" },
-        { label: "打卡平台", href: "/tracker" }
+        { label: "联系", href: "/contact" }
       ],
+      currentFocusTitle: "当前构建中",
+      currentFocusDescription:
+        "AI 页面分析助手正在从展示型 Demo 走向可用 MVP：先固化输入、诊断、建议和 backlog，再接入真实抓取与模型分析。",
+      currentFocusMeta: "Prototype · AI Tool",
+      currentFocusHref: "/ai-page-analysis",
+      currentFocusAction: "查看当前原型",
+      featuredProjectsTitle: "精选作品",
+      featuredProjectsDescription: "用统一项目模型展示可复用的工程与产品能力。",
+      featuredSeriesTitle: "推荐系列",
+      featuredSeriesDescription: "按主题组织阅读路径，让文章形成长期资产。",
+      latestFallbackTitle: "最新文章",
+      labsTrackerTitle: "实验与系统",
+      labsTrackerDescription: "Labs 承接小工具和原型，Tracker 承接产品规则与长期行为系统。",
+      contactTitle: "合作与沟通",
+      contactDescription:
+        "适合讨论 AI 应用原型、个人网站工程化、后台控制台、内容系统与小产品落地。",
+      contactAction: "联系沟通",
+      latestBlog: "最新博客",
+      viewAll: "查看全部",
       entryCards: [
         {
           title: "博客",
@@ -62,8 +84,6 @@ export const messages = {
           href: "/tracker"
         }
       ],
-      latestBlog: "最新博客",
-      viewAll: "查看全部",
       labsTitle: "实验室精选",
       trackerTitle: "打卡平台预览",
       trackerDesc: "用轻量的打卡系统追踪习惯与成长，兼顾数据与体验。",
@@ -170,6 +190,17 @@ export const messages = {
         allTags: "全部",
         filterActive: "当前筛选",
         relatedPostsTitle: "相关阅读",
+        seriesTitle: "专题系列",
+        seriesDescription: "按主题整理的连续阅读路径。",
+        seriesCountSuffix: "篇文章",
+        seriesFirstPost: "从第一篇开始",
+        seriesNavigationTitle: "本系列文章",
+        currentPost: "当前文章",
+        articleCtaTitle: "继续探索",
+        articleCtaDescription: "把这篇文章延伸到作品、更多内容或直接沟通。",
+        viewProjects: "查看作品",
+        readMoreArticles: "阅读更多文章",
+        contactMe: "联系沟通",
         tableOfContents: "目录",
         publishedAt: "发布于",
         updatedAt: "更新于",
@@ -190,34 +221,113 @@ export const messages = {
       about: {
         eyebrow: "关于我",
         title: "关于我",
-        description: "一些关于背景、经验与价值观的说明。"
+        description:
+          "我关注从问题定义到可运行产品的完整链路：把想法拆成可验证的原型，再用工程质量把它们沉淀成长期资产。",
+        sections: [
+          {
+            title: "工作背景",
+            body:
+              "主要做全栈开发、前端体验和产品原型，把 Next.js、TypeScript、Node.js、内容系统和轻量后端组合成可维护的作品。"
+          },
+          {
+            title: "当前方向",
+            body:
+              "重点推进 AI 工具、个人网站工程化、Dashboard Console、内容资产管理和打卡类产品系统。"
+          },
+          {
+            title: "交付方式",
+            body:
+              "先定义边界和验收标准，再用小步实现、自动化测试、文档记录和可回滚的迭代降低不确定性。"
+          }
+        ],
+        principlesTitle: "工作原则",
+        principles: [
+          "用真实场景校验产品判断，不只做展示效果。",
+          "优先保持数据、路由、SEO 和内容策略一致。",
+          "让每个原型都有下一步演进路径，而不是停留在 Demo。"
+        ]
       },
       contact: {
         eyebrow: "联系我",
         title: "联系我",
-        description: "欢迎通过邮箱或社交媒体联系。"
+        description:
+          "适合讨论边界清晰、可以快速验证的产品和工程合作。优先从目标、约束、交付物和时间线开始对齐。",
+        collaborationTitle: "适合沟通",
+        collaborationAreas: [
+          "AI 应用原型和页面分析工具",
+          "个人网站、内容系统和 SEO 基线",
+          "后台控制台、数据看板和运营工具",
+          "小产品从 0 到 1 的需求拆解与落地"
+        ],
+        boundariesTitle: "合作边界",
+        boundaries: [
+          "不承诺未验证的商业结果，先定义可衡量的阶段目标。",
+          "不把自动生成内容直接当成最终表达，关键内容需要人工校准。",
+          "不在范围不清时直接开工，先收敛问题和验收标准。"
+        ],
+        primaryAction: "先看作品",
+        secondaryAction: "阅读文章"
+      },
+      projects: {
+        eyebrow: "作品",
+        title: "作品",
+        description: "把实验、内容和工程实践沉淀成可复用的项目案例。",
+        featuredTitle: "精选作品",
+        featuredDescription: "优先展示最能代表当前产品化方向和工程能力的项目。",
+        allTitle: "全部项目",
+        allDescription: "按状态和类型梳理当前网站生态中的项目资产。",
+        emptyTitle: "暂无作品",
+        emptyDescription: "完成首批项目整理后会在这里展示。",
+        problemTitle: "问题",
+        solutionTitle: "方案",
+        roleTitle: "我的工作",
+        stackTitle: "技术栈",
+        highlightsTitle: "亮点",
+        limitationsTitle: "当前限制",
+        nextStepsTitle: "下一步",
+        linksTitle: "相关入口",
+        viewDetail: "查看详情",
+        backToProjects: "返回作品",
+        statusLabel: "状态",
+        typeLabel: "类型",
+        backLinksTitle: "继续浏览",
+        status: {
+          concept: "概念",
+          prototype: "原型",
+          mvp: "MVP",
+          live: "已上线"
+        },
+        type: {
+          "ai-tool": "AI 工具",
+          dashboard: "控制台",
+          infra: "基础设施",
+          "frontend-tool": "前端工具",
+          "product-system": "产品系统"
+        }
       }
     },
     seo: {
       siteName: "开发者工作室",
       defaultTitle: "开发者主页",
-      defaultDescription: "展示博客、实验室与打卡平台的个人开发者网站。",
+      defaultDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
       homeTitle: "开发者主页",
-      homeDescription: "展示博客、实验室与打卡平台的个人开发者网站。",
+      homeDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
       enterTitle: "进入站点",
       enterDescription: "选择进入博客、实验室或打卡平台。",
       blogTitle: "博客",
       blogDescription: "记录技术、产品与思考的内容专区。",
+      projectsTitle: "作品",
+      projectsDescription: "展示 AI 工具、产品系统、控制台和基础设施项目案例。",
       labsTitle: "实验室",
       labsDescription: "交互实验与原型的集合。",
       trackerTitle: "打卡平台",
       trackerDescription: "追踪习惯，沉淀成长数据。",
       aboutTitle: "关于我",
-      aboutDescription: "一些关于背景、经验与价值观的说明。",
+      aboutDescription: "了解我如何构建 AI 工具、内容系统、后台控制台和产品原型。",
       contactTitle: "联系我",
-      contactDescription: "欢迎通过邮箱或社交媒体联系。",
+      contactDescription: "围绕 AI 应用原型、个人网站工程化、内容系统和小产品落地发起沟通。",
       jsonLd: {
-        siteDescription: "展示博客、实验室与打卡平台的个人开发者网站。",
+        siteDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
         jobTitle: "全栈开发者"
       }
     }
@@ -228,6 +338,7 @@ export const messages = {
       items: [
         { href: "/", label: "Home" },
         { href: "/blog", label: "Blog" },
+        { href: "/projects", label: "Projects" },
         { href: "/labs", label: "Labs" },
         { href: "/tracker", label: "Tracker" },
         { href: "/about", label: "About" },
@@ -253,15 +364,36 @@ export const messages = {
       heroTitle: "Full-Stack Developer",
       heroSubtitle: "Building content-driven experiences",
       heroIntro:
-        "Connecting the blog, labs, and tracker to ship a portfolio that evolves with learning.",
-      ctaEnter: "Enter Site",
+        "I turn AI tools, content systems, dashboards, and product prototypes into a maintainable personal product system.",
+      ctaEnter: "View projects",
       ctaBlog: "Read the Blog",
+      ctaProjects: "View projects",
       primarySectionsLabel: "Primary sections",
       primarySections: [
+        { label: "Projects", href: "/projects" },
         { label: "Blog", href: "/blog" },
         { label: "Labs", href: "/labs" },
-        { label: "Tracker", href: "/tracker" }
+        { label: "Contact", href: "/contact" }
       ],
+      currentFocusTitle: "Currently building",
+      currentFocusDescription:
+        "The AI page analysis assistant is moving from a demo into an MVP: inputs, diagnosis, recommendations, and backlog first, then real crawling and model analysis.",
+      currentFocusMeta: "Prototype · AI Tool",
+      currentFocusHref: "/ai-page-analysis",
+      currentFocusAction: "View current prototype",
+      featuredProjectsTitle: "Featured projects",
+      featuredProjectsDescription: "A structured set of projects showing reusable product and engineering capability.",
+      featuredSeriesTitle: "Recommended series",
+      featuredSeriesDescription: "Themed reading paths that make writing work as a long-term asset.",
+      latestFallbackTitle: "Latest posts",
+      labsTrackerTitle: "Labs and systems",
+      labsTrackerDescription: "Labs hosts tools and prototypes; Tracker hosts product rules and long-term behavior systems.",
+      contactTitle: "Work together",
+      contactDescription:
+        "Useful for AI app prototypes, personal-site engineering, dashboards, content systems, and small product delivery.",
+      contactAction: "Contact",
+      latestBlog: "Latest Posts",
+      viewAll: "View all",
       entryCards: [
         {
           title: "Blog",
@@ -279,8 +411,6 @@ export const messages = {
           href: "/tracker"
         }
       ],
-      latestBlog: "Latest Posts",
-      viewAll: "View all",
       labsTitle: "Featured Labs",
       trackerTitle: "Tracker Preview",
       trackerDesc:
@@ -388,6 +518,17 @@ export const messages = {
         allTags: "All",
         filterActive: "Active filter",
         relatedPostsTitle: "Related posts",
+        seriesTitle: "Series",
+        seriesDescription: "Reading paths organized by theme.",
+        seriesCountSuffix: "posts",
+        seriesFirstPost: "Start with the first post",
+        seriesNavigationTitle: "In this series",
+        currentPost: "Current post",
+        articleCtaTitle: "Keep exploring",
+        articleCtaDescription: "Connect this article to projects, more writing, or a direct conversation.",
+        viewProjects: "View projects",
+        readMoreArticles: "Read more articles",
+        contactMe: "Contact",
         tableOfContents: "Table of contents",
         publishedAt: "Published",
         updatedAt: "Updated",
@@ -408,34 +549,113 @@ export const messages = {
       about: {
         eyebrow: "About",
         title: "About",
-        description: "Background, experience, and values."
+        description:
+          "I work across the path from product questions to running software: shape the problem, build a testable prototype, then harden the system so it can keep evolving.",
+        sections: [
+          {
+            title: "Background",
+            body:
+              "My work sits between full-stack development, frontend experience, and product prototyping with Next.js, TypeScript, Node.js, content workflows, and lightweight backend systems."
+          },
+          {
+            title: "Current focus",
+            body:
+              "The site is centered on AI tools, personal-site engineering, dashboard consoles, content systems, and habit-oriented product systems."
+          },
+          {
+            title: "How I work",
+            body:
+              "I start with scope and acceptance criteria, then use small iterations, tests, documentation, and reversible changes to reduce delivery risk."
+          }
+        ],
+        principlesTitle: "Working principles",
+        principles: [
+          "Validate product decisions against real usage, not only visual polish.",
+          "Keep routing, data, SEO, and content policy aligned.",
+          "Give every prototype a clear path beyond the demo stage."
+        ]
       },
       contact: {
         eyebrow: "Contact",
         title: "Contact",
-        description: "Reach out via email or social links."
+        description:
+          "Reach out for focused product and engineering work where the goal, constraints, deliverables, and timeline can be made explicit.",
+        collaborationTitle: "Good fit",
+        collaborationAreas: [
+          "AI app prototypes and page analysis tools",
+          "Personal-site engineering, content systems, and SEO baselines",
+          "Dashboard consoles, data views, and operations tools",
+          "Small product delivery from idea to working release"
+        ],
+        boundariesTitle: "Boundaries",
+        boundaries: [
+          "I do not promise unvalidated business outcomes; we define measurable milestones first.",
+          "I do not treat generated content as final copy without human review.",
+          "I do not start from vague scope; we narrow the problem and acceptance criteria first."
+        ],
+        primaryAction: "View projects",
+        secondaryAction: "Read writing"
+      },
+      projects: {
+        eyebrow: "Projects",
+        title: "Projects",
+        description: "Project cases distilled from experiments, writing, and engineering work.",
+        featuredTitle: "Featured projects",
+        featuredDescription: "The projects that best represent the current product and engineering direction.",
+        allTitle: "All projects",
+        allDescription: "A structured view of the project assets across this website ecosystem.",
+        emptyTitle: "No projects yet",
+        emptyDescription: "The first project set will appear here once it is curated.",
+        problemTitle: "Problem",
+        solutionTitle: "Solution",
+        roleTitle: "My role",
+        stackTitle: "Stack",
+        highlightsTitle: "Highlights",
+        limitationsTitle: "Current limitations",
+        nextStepsTitle: "Next steps",
+        linksTitle: "Related links",
+        viewDetail: "View details",
+        backToProjects: "Back to projects",
+        statusLabel: "Status",
+        typeLabel: "Type",
+        backLinksTitle: "Keep exploring",
+        status: {
+          concept: "Concept",
+          prototype: "Prototype",
+          mvp: "MVP",
+          live: "Live"
+        },
+        type: {
+          "ai-tool": "AI Tool",
+          dashboard: "Dashboard",
+          infra: "Infra",
+          "frontend-tool": "Frontend Tool",
+          "product-system": "Product System"
+        }
       }
     },
     seo: {
       siteName: "Developer Studio",
       defaultTitle: "Developer Portfolio",
-      defaultDescription: "Showcasing blog, labs, and tracker for a personal developer site.",
+      defaultDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
       homeTitle: "Developer Portfolio",
-      homeDescription: "Showcasing blog, labs, and tracker for a personal developer site.",
+      homeDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
       enterTitle: "Enter",
       enterDescription: "Choose to enter the blog, labs, or tracker.",
       blogTitle: "Blog",
       blogDescription: "Writing about engineering, products, and ideas.",
+      projectsTitle: "Projects",
+      projectsDescription: "Project cases across AI tools, product systems, dashboards, and infrastructure.",
       labsTitle: "Labs",
       labsDescription: "Experiments and prototypes in progress.",
       trackerTitle: "Tracker",
       trackerDescription: "Track habits and learning progress.",
       aboutTitle: "About",
-      aboutDescription: "Background, experience, and values.",
+      aboutDescription: "How I build AI tools, content systems, dashboards, and product prototypes.",
       contactTitle: "Contact",
-      contactDescription: "Reach out via email or social links.",
+      contactDescription: "Start a focused conversation about AI prototypes, site engineering, content systems, or small product delivery.",
       jsonLd: {
-        siteDescription: "Showcasing blog, labs, and tracker for a personal developer site.",
+        siteDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
         jobTitle: "Full-Stack Developer"
       }
     }

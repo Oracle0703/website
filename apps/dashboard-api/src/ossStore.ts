@@ -41,12 +41,13 @@ export function createOssStore(params: {
       };
     },
 
-    async putJson<T>(key: string, value: T, opts?: { ifMatch?: string }) {
+    async putJson<T>(key: string, value: T, opts?: { ifMatch?: string; ifNoneMatch?: "*" }) {
       const objectKey = keyOf(key);
       const headers: Record<string, string> = {
         "Content-Type": "application/json; charset=utf-8"
       };
       if (opts?.ifMatch) headers["If-Match"] = opts.ifMatch;
+      if (opts?.ifNoneMatch) headers["If-None-Match"] = opts.ifNoneMatch;
 
       const res = await client.put(objectKey, Buffer.from(JSON.stringify(value, null, 2), "utf-8"), {
         headers

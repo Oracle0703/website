@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "../../components/use-prefers-reduced-motion";
 import { useI18n } from "../../components/language-provider";
 import { useTheme } from "../../components/theme-provider";
+import { getLocalePath } from "../../lib/locale-routing";
 import {
   TEXT_SM_MUTED,
   TEXT_XS_MUTED,
@@ -65,8 +66,10 @@ export function EnterClient() {
     theme === "dark" ? messages.theme.switchToLight : messages.theme.switchToDark;
   const entries: Entry[] = copy.entries.map((entry) => ({
     ...entry,
+    href: getLocalePath(entry.href, locale),
     Icon: entryIcons[entry.id as EntryId]
   }));
+  const homeHref = getLocalePath("/", locale);
   const router = useRouter();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [isMounted, setIsMounted] = useState(false);
@@ -86,16 +89,16 @@ export function EnterClient() {
       setIsNavigating(true);
 
       if (prefersReducedMotion) {
-        router.push("/");
+        router.push(homeHref);
         return;
       }
 
       setIsExiting(true);
       window.setTimeout(() => {
-        router.push("/");
+        router.push(homeHref);
       }, 320);
     },
-    [isNavigating, prefersReducedMotion, router]
+    [homeHref, isNavigating, prefersReducedMotion, router]
   );
 
   const handleNavigate = useCallback(
@@ -146,7 +149,7 @@ export function EnterClient() {
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
-            href="/"
+            href={homeHref}
             onClick={handleBack}
             className="text-sm font-semibold tracking-wide text-primary hover:text-primary"
           >
@@ -214,7 +217,7 @@ export function EnterClient() {
 
         <div className={`flex flex-col items-center gap-3 ${TEXT_XS_MUTED}`}>
           <Link
-            href="/"
+            href={homeHref}
             onClick={handleBack}
             className={`${TEXT_SM_MUTED} hover:text-primary`}
           >

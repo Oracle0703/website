@@ -1,0 +1,20 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const root = process.cwd();
+
+function read(relPath) {
+  return fs.readFileSync(path.join(root, relPath), "utf8");
+}
+
+test("static rendering spike distinguishes initial diagnosis from current D2 state", () => {
+  const source = read("docs/website/STATIC_RENDERING_SPIKE.md");
+
+  assert.match(source, /初始诊断/);
+  assert.match(source, /当前 D2 状态/);
+  assert.match(source, /app 代码已无 `i18n-server` \/ `getLocale\(\)`/);
+  assert.match(source, /公开入口为 `○`/);
+  assert.match(source, /详情页保持 `●` SSG/);
+});

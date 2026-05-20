@@ -3,6 +3,10 @@ import path from 'node:path';
 export type KnockConfig = {
   port: number;
   siteName: string;
+  basicAuth: null | {
+    username: string;
+    password: string;
+  };
   logPath: string;
   dataDir: string;
   dbPath: string;
@@ -35,6 +39,9 @@ function envWindow(key: string, def: '1h' | '24h' | '7d'): '1h' | '24h' | '7d' {
 export function loadConfig(): KnockConfig {
   const port = envInt('KNOCK_PORT', 3010);
   const siteName = (process.env.KNOCK_SITE_NAME || 'knock').trim() || 'knock';
+  const authUsername = (process.env.KNOCK_AUTH_USERNAME || '').trim();
+  const authPassword = process.env.KNOCK_AUTH_PASSWORD || '';
+  const basicAuth = authUsername && authPassword ? { username: authUsername, password: authPassword } : null;
   const logPath = (process.env.KNOCK_LOG_PATH || '').trim();
 
   const dataDir = (process.env.KNOCK_DATA_DIR || './data').trim() || './data';
@@ -52,6 +59,7 @@ export function loadConfig(): KnockConfig {
   return {
     port,
     siteName,
+    basicAuth,
     logPath,
     dataDir: absDataDir,
     dbPath,

@@ -5,15 +5,39 @@ import type { JsonObjectStore } from "../src/types.js";
 
 class MemStore implements JsonObjectStore {
   private data = new Map<string, { json: any; etag: string }>();
+  putCalls: Array<{ key: string; opts?: { ifMatch?: string; ifNoneMatch?: "*" } }> = [];
+  failGetKeys = new Set<string>();
+  conflictOnceKeys = new Set<string>();
+
+  seed<T>(key: string, value: T, etag = "seed-etag") {
+    this.data.set(key, { json: value, etag });
+  }
+
+  getRaw<T>(key: string): T | undefined {
+    return this.data.get(key)?.json as T | undefined;
+  }
 
   async getJson<T>(key: string): Promise<{ value: T; etag?: string }> {
+    if (this.failGetKeys.has(key)) {
+      throw Object.assign(new Error("store_down"), { status: 503 });
+    }
     const v = this.data.get(key);
-    if (!v) throw new Error("not_found");
+    if (!v) throw Object.assign(new Error("not_found"), { status: 404 });
     return { value: v.json as T, etag: v.etag };
   }
 
-  async putJson<T>(key: string, value: T, opts?: { ifMatch?: string }): Promise<{ etag?: string }> {
+  async putJson<T>(key: string, value: T, opts?: { ifMatch?: string; ifNoneMatch?: "*" }): Promise<{ etag?: string }> {
+    this.putCalls.push({ key, opts });
+    if (this.conflictOnceKeys.has(key)) {
+      this.conflictOnceKeys.delete(key);
+      throw Object.assign(new Error("precondition"), { status: 412 });
+    }
+
     const current = this.data.get(key);
+    if (opts?.ifNoneMatch === "*" && current) {
+      throw Object.assign(new Error("precondition"), { status: 412 });
+    }
+
     if (opts?.ifMatch) {
       if (!current) throw Object.assign(new Error("precondition"), { status: 412 });
       if (current.etag !== opts.ifMatch) throw Object.assign(new Error("precondition"), { status: 412 });
@@ -96,6 +120,44 @@ test("tasks CRUD happy path", async () => {
   }
 });
 
+test("patching a missing task returns 404", async () => {
+  const { base, close } = await startServer();
+  try {
+    const { body } = await login(base);
+    const token = body.token as string;
+
+    const patch = await fetch(`${base}/tasks/missing`, {
+      method: "PATCH",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ status: "done" })
+    });
+    assert.equal(patch.status, 404);
+    const data = await patch.json();
+    assert.equal(data.error, "task_not_found");
+  } finally {
+    await close();
+  }
+});
+
+test("store read failures are not treated as empty documents", async () => {
+  const { base, close, store } = await startServer();
+  try {
+    const { body } = await login(base);
+    const token = body.token as string;
+    store.failGetKeys.add("tasks.json");
+
+    const res = await fetch(`${base}/tasks`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    assert.equal(res.status, 500);
+    const data = await res.json();
+    assert.equal(data.error, "internal_error");
+  } finally {
+    await close();
+  }
+});
+
 test("logs append then read contains entry", async () => {
   const { base, close } = await startServer();
   try {
@@ -114,6 +176,30 @@ test("logs append then read contains entry", async () => {
     const data = await get.json();
     assert.equal(data.entries.length, 1);
     assert.equal(data.entries[0].message, "m");
+  } finally {
+    await close();
+  }
+});
+
+test("logs append uses conditional writes and retries etag conflicts", async () => {
+  const { base, close, store } = await startServer();
+  try {
+    const { body } = await login(base);
+    const token = body.token as string;
+    const key = `logs/${new Date().toISOString().slice(0, 10)}.json`;
+    store.seed(key, [{ ts: "2026-01-01T00:00:00.000Z", message: "existing" }], "etag-old");
+    store.conflictOnceKeys.add(key);
+
+    const add = await fetch(`${base}/logs`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ message: "new" })
+    });
+
+    assert.equal(add.status, 201);
+    assert.ok(store.putCalls.some((call) => call.key === key && call.opts?.ifMatch));
+    const stored = store.getRaw<Array<{ message: string }>>(key) ?? [];
+    assert.deepEqual(stored.map((entry) => entry.message), ["existing", "new"]);
   } finally {
     await close();
   }

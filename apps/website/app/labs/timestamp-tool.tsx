@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Locale } from "../../lib/i18n";
+import { useI18n } from "../../components/language-provider";
 import {
   EYEBROW_ACCENT,
   EYEBROW_SECONDARY,
@@ -41,7 +41,7 @@ type Copy = {
   empty: string;
 };
 
-const copyMap: Record<Locale, Copy> = {
+const copyMap = {
   zh: {
     eyebrow: "实验室工具",
     title: "时间戳转换工具",
@@ -96,7 +96,7 @@ const copyMap: Record<Locale, Copy> = {
     currentTitle: "Current timestamp",
     empty: "—"
   }
-};
+} satisfies Record<ReturnType<typeof useI18n>["locale"], Copy>;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -123,7 +123,8 @@ const toInputValue = (date: Date) => {
 
 const isValidDate = (date: Date) => !Number.isNaN(date.getTime());
 
-export function TimestampTool({ locale }: { locale: Locale }) {
+export function TimestampTool() {
+  const { locale } = useI18n();
   const copy = copyMap[locale];
   const [dateInput, setDateInput] = useState("");
   const [timestampInput, setTimestampInput] = useState("");

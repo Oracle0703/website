@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import { HomePageClient } from "../components/home/home-page-client";
-import { getLocale } from "../lib/i18n-server";
-import { getHtmlLang, getMessages } from "../lib/i18n";
+import { defaultLocale, getMessages } from "../lib/i18n";
 import { getPublishedPosts } from "../lib/blog";
+import { getPublishedSeries } from "../lib/blog-series";
+import { getFeaturedProjectViews } from "../lib/projects";
+import { getJsonLdLanguage, getLanguageAlternates } from "../lib/seo";
 import { toAbsoluteUrl } from "../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
-  const locale = getLocale();
-  const { seo } = getMessages(locale);
+  const { seo } = getMessages(defaultLocale);
 
   return {
     title: seo.homeTitle,
     description: seo.homeDescription,
-    alternates: {
-      canonical: toAbsoluteUrl("/")
-    },
+    alternates: getLanguageAlternates("/"),
     openGraph: {
       title: seo.homeTitle,
       description: seo.homeDescription,
@@ -30,8 +29,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function HomePage() {
-  const locale = getLocale();
-  const { seo } = getMessages(locale);
+  const { seo } = getMessages(defaultLocale);
   const latestBlogItems = getPublishedPosts()
     .slice(0, 3)
     .map((post) => ({
@@ -40,6 +38,27 @@ export default function HomePage() {
       date: post.date,
       href: `/blog/${encodeURIComponent(post.slug)}`
     }));
+  const featuredProjects = getFeaturedProjectViews(defaultLocale)
+    .slice(0, 3)
+    .map((project) => ({
+      title: project.title,
+      subtitle: project.subtitle,
+      status: project.status,
+      href: `/projects/${encodeURIComponent(project.slug)}`
+    }));
+  const featuredSeries = getPublishedSeries()
+    .slice(0, 3)
+    .flatMap((series) => {
+      const firstPost = series.posts[0];
+      if (!firstPost) return [];
+      return [
+        {
+          title: series.title,
+          count: series.posts.length,
+          href: `/blog/${encodeURIComponent(firstPost.slug)}`
+        }
+      ];
+    });
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -49,7 +68,7 @@ export default function HomePage() {
         name: seo.siteName,
         url: toAbsoluteUrl("/"),
         description: seo.jsonLd.siteDescription,
-        inLanguage: getHtmlLang(locale)
+        inLanguage: getJsonLdLanguage(defaultLocale)
       },
       {
         "@type": "Person",
@@ -62,7 +81,11 @@ export default function HomePage() {
 
   return (
     <>
-      <HomePageClient latestBlogItems={latestBlogItems} />
+      <HomePageClient
+        latestBlogItems={latestBlogItems}
+        featuredProjects={featuredProjects}
+        featuredSeries={featuredSeries}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AIPageAnalysisLandingClient } from "../../components/landing/ai-page-analysis-landing-client";
+import { getLanguageAlternates } from "../../lib/seo";
 import { toAbsoluteUrl } from "../../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
@@ -9,9 +10,7 @@ export const generateMetadata = (): Metadata => {
   return {
     title,
     description,
-    alternates: {
-      canonical: toAbsoluteUrl("/ai-page-analysis")
-    },
+    alternates: getLanguageAlternates("/ai-page-analysis"),
     openGraph: {
       title,
       description,
@@ -27,5 +26,5 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function AIPageAnalysisPage() {
-  return <AIPageAnalysisLandingClient />;
+  return <AIPageAnalysisLandingClient locale="zh" />;
 }

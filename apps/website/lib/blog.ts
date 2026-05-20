@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { defaultLocale, isLocale, type Locale } from "./i18n";
 
 export type PostStatus = "draft" | "published" | "archived" | "scheduled";
 
@@ -20,6 +21,12 @@ export interface SEOConfig {
   ogImage?: string;
 }
 
+export interface BlogSeriesFrontmatter {
+  id: string;
+  title: string;
+  order: number;
+}
+
 export interface BlogPostFrontmatter {
   title: string;
   slug: string;
@@ -35,6 +42,11 @@ export interface BlogPostFrontmatter {
   draft?: boolean;
   seo?: SEOConfig;
   type?: "article" | "tutorial" | "note" | "translation" | "announcement";
+  locale?: Locale;
+  availableLocales?: Locale[];
+  translationOf?: string | null;
+  translations?: Partial<Record<Locale, string | null>>;
+  series?: BlogSeriesFrontmatter;
   relatedPosts?: string[];
   comments?: { enabled: boolean; provider?: string };
 }
@@ -46,6 +58,15 @@ export type BlogPost = BlogPostFrontmatter & {
   filePath: string;
 };
 
+type LocalizedPostOverride = {
+  title: string;
+  summary: string;
+  content: string;
+  coverAlt?: string;
+  seo?: SEOConfig;
+  seriesTitle?: string;
+};
+
 type ValidationResult = {
   isValid: boolean;
   errors: string[];
@@ -54,6 +75,114 @@ type ValidationResult = {
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 const STATUS_VALUES: PostStatus[] = ["draft", "published", "archived", "scheduled"];
+
+const localizedPostOverrides: Record<string, Partial<Record<Locale, LocalizedPostOverride>>> = {
+  "ci-agent-guardrails": {
+    en: {
+      title: "CI Agent Guardrails: You Need Boundaries, Not Better Prompts",
+      summary:
+        "When agents enter CI/CD, the risk shifts from inaccurate answers to permissions, network access, dependencies, and traceability. This is a practical minimum guardrails checklist.",
+      coverAlt: "CI Agent Guardrails minimum checklist",
+      seriesTitle: "AI Productization Practice",
+      seo: {
+        description:
+          "A practical CI Agent guardrails checklist covering least privilege, network egress, verifiable dependencies, traceable outputs, and rollback-safe failure modes.",
+        keywords: ["CI", "Agent", "Guardrails", "Supply Chain Security", "Least Privilege"]
+      },
+      content: `
+## Start with the real problem
+
+Running an agent locally is usually a contained risk: it may write the wrong code, waste time, or require review.
+
+Putting an agent into CI/CD changes the threat model. The agent may receive write permissions, reach external networks, pull dependencies, upload artifacts, or trigger deployment behavior. At that point, the risk is no longer just answer quality. The risk is operational control.
+
+The first goal of a CI agent is not to become smarter. The first goal is to remain bounded, observable, and reversible.
+
+## Minimum guardrail 1: permissions
+
+Start from read-only access. Let the agent inspect the repository, produce reports, and propose changes before it can write to anything.
+
+A practical baseline:
+
+- Git access defaults to read-only.
+- Write access, when needed, goes through a dedicated branch or pull request.
+- Secrets are not available by default.
+- Any secret access requires explicit approval, short-lived credentials, and narrow scope.
+- Filesystem writes use an allowlist instead of broad workspace access.
+
+The safest production pattern is to let the agent create reviewable changes, not push directly to the main branch.
+
+## Minimum guardrail 2: network egress
+
+Network access is a data boundary. If the agent can call arbitrary external services, it can leak logs, tokens, source snippets, or build artifacts.
+
+Use a deny-by-default policy:
+
+- Disable outbound network access by default.
+- Allow only known domains when a task truly needs network access.
+- Log each request target, status, and purpose.
+- Block direct script execution patterns such as remote shell piping.
+
+Connectivity is not just a capability increase. It is also a risk multiplier.
+
+## Minimum guardrail 3: dependency verification
+
+Many automation incidents begin when an executable dependency is treated like harmless text.
+
+The minimum bar:
+
+- Lockfiles are required and reviewed.
+- Dependency versions are pinned.
+- External tools, skills, and scripts have an allowed source.
+- Downloaded artifacts are tied to version and checksum when possible.
+- CI records which dependency inputs were used for each run.
+
+The agent should not be able to silently change the supply chain beneath the build.
+
+## Minimum guardrail 4: traceable outputs
+
+Every agent run should answer four questions:
+
+1. What changed?
+2. Why did it change?
+3. How can it be rolled back?
+4. Who or what approved the action?
+
+That means each run should produce logs, a diff, a task summary, and a clear rollback path. Long outputs should be written to files or archived reports so important details are not lost in a truncated chat message.
+
+## Minimum guardrail 5: failure modes
+
+Assume that the agent will eventually generate a bad patch, hit a flaky dependency, or time out in the middle of a workflow.
+
+Design for that reality:
+
+- A run can be stopped immediately.
+- Re-running is idempotent.
+- Partial output does not corrupt the workspace.
+- Rollback scripts are treated as part of the deployment surface.
+- Failed runs leave enough evidence for diagnosis.
+
+## A practical MVP workflow
+
+The minimum trustworthy CI agent loop looks like this:
+
+1. The agent scans the repository with read-only access.
+2. It writes a report or opens a pull request on a controlled branch.
+3. The pull request must pass lint, build, and tests.
+4. Human review approves the change before merge.
+5. The run log and generated artifacts are archived.
+
+This gives you the agent's production leverage while keeping the system auditable and reversible.
+
+## Closing
+
+Once agents participate in engineering workflows, the deciding factor is not prompt style. The deciding factor is control engineering.
+
+Open permissions in this order: first traceability, then rollback, then limited writes, and only then carefully scoped network access.
+`.trim()
+    }
+  }
+};
 
 function findContentRootFrom(startDir: string) {
   let current = startDir;
@@ -106,6 +235,52 @@ function normalizeStatus(frontmatter: BlogPostFrontmatter) {
   return "draft";
 }
 
+function normalizeLocale(value: unknown): Locale {
+  return typeof value === "string" && isLocale(value) ? value : defaultLocale;
+}
+
+function normalizeAvailableLocales(frontmatter: BlogPostFrontmatter): Locale[] {
+  const rawLocales = Array.isArray(frontmatter.availableLocales)
+    ? frontmatter.availableLocales
+    : [frontmatter.locale ?? defaultLocale];
+  const locales = rawLocales.filter((locale): locale is Locale =>
+    typeof locale === "string" && isLocale(locale)
+  );
+
+  return locales.length > 0 ? [...new Set(locales)] : [defaultLocale];
+}
+
+function applyLocaleOverride(post: BlogPost, locale: Locale): BlogPost {
+  const override = localizedPostOverrides[post.slug]?.[locale];
+  if (!override) return post;
+
+  const cover =
+    typeof post.cover === "string"
+      ? post.cover
+      : {
+          ...post.cover,
+          alt: override.coverAlt ?? post.cover.alt
+        };
+  const series = post.series
+    ? {
+        ...post.series,
+        title: override.seriesTitle ?? post.series.title
+      }
+    : post.series;
+
+  return {
+    ...post,
+    title: override.title,
+    summary: override.summary,
+    cover,
+    seo: override.seo ?? post.seo,
+    series,
+    content: override.content,
+    wordCount: getWordCount(override.content),
+    readingTime: getReadingTime(override.content)
+  };
+}
+
 function validateFrontmatter(frontmatter: BlogPostFrontmatter): ValidationResult {
   const errors: string[] = [];
 
@@ -125,6 +300,21 @@ function validateFrontmatter(frontmatter: BlogPostFrontmatter): ValidationResult
   if (status === "scheduled") {
     if (!frontmatter.publishDate || !isValidDateTime(frontmatter.publishDate)) {
       errors.push("invalid publishDate for scheduled status");
+    }
+  }
+
+  if (frontmatter.series) {
+    if (typeof frontmatter.series.id !== "string" || frontmatter.series.id.trim().length === 0) {
+      errors.push("invalid series id");
+    }
+    if (
+      typeof frontmatter.series.title !== "string" ||
+      frontmatter.series.title.trim().length === 0
+    ) {
+      errors.push("invalid series title");
+    }
+    if (typeof frontmatter.series.order !== "number" || !Number.isFinite(frontmatter.series.order)) {
+      errors.push("invalid series order");
     }
   }
 
@@ -167,6 +357,8 @@ function parsePost(filePath: string): BlogPost | null {
   return {
     ...frontmatter,
     status: normalizeStatus(frontmatter),
+    locale: normalizeLocale(frontmatter.locale),
+    availableLocales: normalizeAvailableLocales(frontmatter),
     content,
     wordCount: getWordCount(content),
     readingTime: getReadingTime(content),
@@ -220,7 +412,24 @@ export function getPublishedPosts() {
   return getAllPosts().filter((post) => isPublished(post));
 }
 
+export function hasPostLocale(post: BlogPost, locale: Locale) {
+  return (post.availableLocales ?? [post.locale ?? defaultLocale]).includes(locale);
+}
+
+export function getPublishedPostsForLocale(locale: Locale) {
+  return getPublishedPosts()
+    .filter((post) => hasPostLocale(post, locale))
+    .map((post) => applyLocaleOverride(post, locale));
+}
+
 export function getPostBySlug(slug: string) {
   const decodedSlug = decodeURIComponent(slug);
   return getAllPosts().find((post) => post.slug === decodedSlug) ?? null;
+}
+
+export function getPostBySlugForLocale(slug: string, locale: Locale) {
+  const post = getPostBySlug(slug);
+  return post && isPublished(post) && hasPostLocale(post, locale)
+    ? applyLocaleOverride(post, locale)
+    : null;
 }

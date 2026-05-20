@@ -1,21 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { getLocale } from "../../lib/i18n-server";
-import { getMessages } from "../../lib/i18n";
+import { defaultLocale, getMessages } from "../../lib/i18n";
+import { getLanguageAlternates } from "../../lib/seo";
 import { toAbsoluteUrl } from "../../lib/site-url";
-import { TEXT_SM_MUTED, TITLE_2XL } from "../../lib/typography";
-import { TimestampTool } from "./timestamp-tool";
+import { LabsClient } from "./labs-client";
 
 export const generateMetadata = (): Metadata => {
-  const locale = getLocale();
-  const { seo } = getMessages(locale);
+  const { seo } = getMessages(defaultLocale);
 
   return {
     title: seo.labsTitle,
     description: seo.labsDescription,
-    alternates: {
-      canonical: toAbsoluteUrl("/labs")
-    },
+    alternates: getLanguageAlternates("/labs"),
     openGraph: {
       title: seo.labsTitle,
       description: seo.labsDescription,
@@ -31,28 +26,5 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function Page() {
-  const locale = getLocale();
-  const { pages } = getMessages(locale);
-  const copy = pages.labs;
-  const common = pages.common;
-
-  return (
-    <main className="mx-auto w-full max-w-6xl space-y-8 px-4 py-14 sm:px-6 md:py-20">
-      <div className="panel-surface p-6 sm:p-9">
-        <p className={TEXT_SM_MUTED}>{copy.eyebrow}</p>
-        <h1 className={`mt-2 ${TITLE_2XL}`}>{copy.title}</h1>
-        <p className={`mt-4 max-w-2xl ${TEXT_SM_MUTED} leading-relaxed`}>{copy.description}</p>
-        <div className={`mt-6 flex flex-wrap items-center gap-5 ${TEXT_SM_MUTED}`}>
-          <Link href="/enter" className="link-accent font-medium">
-            {common.backToEnter}
-          </Link>
-          <Link href="/" className="link-muted font-medium">
-            {common.backToHome}
-          </Link>
-        </div>
-      </div>
-
-      <TimestampTool locale={locale} />
-    </main>
-  );
+  return <LabsClient />;
 }

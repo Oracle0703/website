@@ -10,6 +10,7 @@ import { openDb } from './db.js';
 import { startIngestLoop } from './ingest.js';
 import { registerApi } from './api.js';
 import { registerWeb } from './web.js';
+import { requireBasicAuth } from './auth.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ const db = openDb(cfg.dbPath);
 
 const app = express();
 app.disable('x-powered-by');
+app.use(requireBasicAuth(cfg.basicAuth));
 
 // API first, then static.
 registerApi(app, cfg, db);

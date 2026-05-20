@@ -9,6 +9,9 @@
     "start": "node --env-file=.env ./dist/server.js",
     "test": "npm run build && npm run build:test && node --test ./.test-dist/test/*.js"
   },
+  "engines": {
+    "node": ">=22 <23"
+  },
   "dependencies": {
     "better-sqlite3": "^11.7.0",
     "dotenv": "^16.4.5",

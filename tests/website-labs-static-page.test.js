@@ -1,0 +1,44 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const root = process.cwd();
+
+function read(relPath) {
+  return fs.readFileSync(path.join(root, relPath), 'utf8');
+}
+
+test('labs page avoids page-level locale cookie reads', () => {
+  const pageSource = read('apps/website/app/labs/page.tsx');
+  const clientSource = read('apps/website/app/labs/labs-client.tsx');
+
+  assert.doesNotMatch(pageSource, /i18n-server/);
+  assert.doesNotMatch(pageSource, /getLocale\(/);
+  assert.match(pageSource, /defaultLocale/);
+  assert.match(pageSource, /getMessages\(defaultLocale\)/);
+  assert.match(pageSource, /<LabsClient \/>/);
+
+  assert.match(clientSource, /"use client"/);
+  assert.match(clientSource, /useI18n/);
+  assert.match(clientSource, /messages\.pages\.labs/);
+  assert.match(clientSource, /messages\.pages\.common/);
+  assert.match(clientSource, /<TimestampTool \/>/);
+});
+
+test('timestamp tool reads locale from client i18n context', () => {
+  const source = read('apps/website/app/labs/timestamp-tool.tsx');
+
+  assert.match(source, /useI18n/);
+  assert.match(source, /const \{ locale \} = useI18n\(\)/);
+  assert.doesNotMatch(source, /export function TimestampTool\(\{\s*locale\s*\}/);
+  assert.doesNotMatch(source, /import type \{ Locale \}/);
+});
+
+test('static rendering document records labs as a migrated page', () => {
+  const source = read('docs/website/STATIC_RENDERING_SPIKE.md');
+
+  assert.match(source, /\/labs/);
+  assert.match(source, /LabsClient/);
+  assert.match(source, /TimestampTool/);
+});

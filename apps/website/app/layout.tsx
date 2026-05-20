@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LayoutShell } from "../components/layout-shell";
-import { getLocale } from "../lib/i18n-server";
-import { getHtmlLang, getMessages } from "../lib/i18n";
-import { getTheme } from "../lib/theme-server";
+import { PreferenceBootScript } from "./preference-boot-script";
+import { defaultLocale, getHtmlLang, getMessages } from "../lib/i18n";
+import { defaultTheme } from "../lib/theme";
 import { getSiteBaseUrl } from "../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
-  const locale = getLocale();
-  const { seo } = getMessages(locale);
+  const { seo } = getMessages(defaultLocale);
   const baseUrl = getSiteBaseUrl();
 
   return {
@@ -32,13 +31,11 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = getLocale();
-  const theme = getTheme();
-
   return (
-    <html lang={getHtmlLang(locale)} data-theme={theme}>
+    <html lang={getHtmlLang(defaultLocale)} data-theme={defaultTheme} suppressHydrationWarning>
       <body>
-        <LayoutShell initialLocale={locale} initialTheme={theme}>
+        <PreferenceBootScript />
+        <LayoutShell initialLocale={defaultLocale} initialTheme={defaultTheme}>
           {children}
         </LayoutShell>
       </body>

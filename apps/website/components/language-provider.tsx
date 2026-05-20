@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   defaultLocale,
   getHtmlLang,
@@ -11,6 +11,11 @@ import {
   type Locale,
   type Messages
 } from "../lib/i18n";
+import {
+  getAlternateLocalePath,
+  getLocalePath,
+  getRouteLocale
+} from "../lib/locale-routing";
 
 type I18nContextValue = {
   locale: Locale;
@@ -27,6 +32,12 @@ const persistLocale = (locale: Locale) => {
   if (typeof document === "undefined") return;
   document.cookie = `${LOCALE_COOKIE}=${locale};path=/;max-age=${COOKIE_MAX_AGE};samesite=lax`;
   document.documentElement.lang = getHtmlLang(locale);
+
+  try {
+    window.localStorage.setItem(LOCALE_COOKIE, locale);
+  } catch {
+    // Ignore storage failures in private or restricted browsing contexts.
+  }
 };
 
 export const LanguageProvider = ({
@@ -37,26 +48,37 @@ export const LanguageProvider = ({
   children: ReactNode;
 }) => {
   const router = useRouter();
-  const [locale, setLocale] = useState<Locale>(initialLocale ?? defaultLocale);
+  const pathname = usePathname();
+  const routePathname = pathname ?? "/";
+  const routeLocale = getRouteLocale(routePathname);
+  const [locale, setLocale] = useState<Locale>(routeLocale ?? initialLocale ?? defaultLocale);
 
   useEffect(() => {
-    persistLocale(locale);
-  }, [locale]);
+    setLocale(routeLocale);
+    persistLocale(routeLocale);
+  }, [routeLocale]);
 
   const updateLocale = useCallback((nextLocale: Locale) => {
     persistLocale(nextLocale);
     setLocale(nextLocale);
-    router.refresh();
-  }, [router]);
+    router.push(getLocalePath(routePathname, nextLocale));
+  }, [routePathname, router]);
+
+  const toggleLocale = useCallback(() => {
+    const nextLocale = routeLocale === "zh" ? "en" : "zh";
+    persistLocale(nextLocale);
+    setLocale(nextLocale);
+    router.push(getAlternateLocalePath(routePathname));
+  }, [routeLocale, routePathname, router]);
 
   const value = useMemo<I18nContextValue>(
     () => ({
       locale,
       messages: getMessages(locale),
       setLocale: updateLocale,
-      toggleLocale: () => updateLocale(locale === "zh" ? "en" : "zh")
+      toggleLocale
     }),
-    [locale, updateLocale]
+    [locale, toggleLocale, updateLocale]
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

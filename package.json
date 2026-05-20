@@ -19,10 +19,21 @@
     "start": "npm run start -w apps/website",
     "lint": "npm run lint -w apps/website",
     "lint:website": "npm run lint -w apps/website",
-    "test": "node --test tests/workspaces.test.js",
+    "validate:website-content": "node scripts/validate-website-content.mjs",
+    "audit:website-english-content": "node scripts/audit-website-english-content.mjs",
+    "verify:website-static": "node scripts/verify-website-static-entrypoints.mjs",
+    "verify:website-browser": "node scripts/verify-website-browser.mjs",
+    "test": "node --test tests/*.test.js",
     "test:workspace": "node --test tests/workspaces.test.js"
+  },
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=9"
   },
   "dependencies": {
     "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

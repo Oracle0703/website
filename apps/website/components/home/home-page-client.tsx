@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RevealSection } from "../reveal-section";
 import { useI18n } from "../language-provider";
+import { getLocalePath } from "../../lib/locale-routing";
 import {
   TEXT_BASE_SECONDARY,
   TEXT_SM_MUTED,
@@ -12,6 +13,7 @@ import {
   TITLE_BASE_SM_LG,
   TITLE_XL
 } from "../../lib/typography";
+import type { ProjectStatus } from "../../lib/projects";
 import { ParticleTime } from "./particle-time";
 
 type HomeLatestBlogItem = {
@@ -21,10 +23,35 @@ type HomeLatestBlogItem = {
   href: string;
 };
 
-export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: HomeLatestBlogItem[] }) {
-  const { messages } = useI18n();
+type HomeProjectItem = {
+  title: string;
+  subtitle: string;
+  status: ProjectStatus;
+  href: string;
+};
+
+type HomeSeriesItem = {
+  title: string;
+  count: number;
+  href: string;
+};
+
+type HomePageClientProps = {
+  latestBlogItems?: HomeLatestBlogItem[];
+  featuredProjects?: HomeProjectItem[];
+  featuredSeries?: HomeSeriesItem[];
+};
+
+export function HomePageClient({
+  latestBlogItems = [],
+  featuredProjects = [],
+  featuredSeries = []
+}: HomePageClientProps) {
+  const { locale, messages } = useI18n();
   const copy = messages.home;
   const common = messages.pages.common;
+  const projectStatusLabels = messages.pages.projects.status;
+  const getHref = (href: string) => getLocalePath(href, locale);
   const [isMounted, setIsMounted] = useState(false);
   const latestBlogSectionItems =
     latestBlogItems.length > 0
@@ -35,6 +62,7 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
           date: item.date,
           href: "/blog"
         }));
+  const featuredSeriesSectionItems = featuredSeries;
 
   useEffect(() => {
     setIsMounted(true);
@@ -65,13 +93,13 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
           </div>
           <div className={`flex flex-wrap gap-3 sm:gap-4 ${heroMotion("delay-300")}`}>
             <Link
-              href="/enter"
+              href={getHref("/projects")}
               className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:shadow-blue-500/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:px-6 sm:text-base"
             >
-              {copy.ctaEnter}
+              {copy.ctaProjects}
             </Link>
             <Link
-              href="/blog"
+              href={getHref("/blog")}
               className="inline-flex items-center gap-2 rounded-full border border-edge-strong bg-surface/75 px-5 py-3 text-sm font-semibold text-secondary transition hover:-translate-y-0.5 hover:border-edge-strong hover:bg-surface hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:px-6 sm:text-base"
               style={{ color: "rgb(var(--color-text-secondary) / 1)" }}
             >
@@ -94,7 +122,7 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
               {copy.primarySections.map((item) => (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={getHref(item.href)}
                   className="group card-interactive flex items-center justify-between rounded-xl border border-edge bg-base/40 px-4 py-3 text-sm"
                 >
                   <span>{item.label}</span>
@@ -108,70 +136,131 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
         </div>
       </section>
 
-      <section className={`mt-14 grid gap-4 sm:gap-6 md:grid-cols-3 ${heroMotion("delay-500")}`}>
-        {copy.entryCards.map((card) => (
-          <Link
-            key={card.title}
-            href={card.href}
-            className="group panel-surface card-interactive p-5 sm:p-6"
-          >
-            <h3 className={TITLE_BASE_SM_LG}>
-              {card.title}
-            </h3>
-            <p className={`mt-2 ${TEXT_SM_MUTED}`}>{card.subtitle}</p>
-          </Link>
-        ))}
-      </section>
-
-      <RevealSection className="mt-16 md:mt-20">
-        <div className="flex items-center justify-between">
-          <h2 className={TITLE_XL}>{copy.latestBlog}</h2>
-          <Link href="/blog" className="text-sm font-medium text-muted hover:text-primary">
-            {copy.viewAll}
-          </Link>
-        </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {latestBlogSectionItems.map((item) => (
-            <article
-              key={item.title}
-              className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
+      <RevealSection className="mt-14 md:mt-16">
+        <div className="panel-surface grid gap-5 p-5 sm:p-6 md:grid-cols-[0.85fr_1.15fr] md:items-center">
+          <div>
+            <p className={TEXT_XS_MUTED}>{copy.currentFocusMeta}</p>
+            <h2 className={`mt-2 ${TITLE_XL}`}>{copy.currentFocusTitle}</h2>
+          </div>
+          <div>
+            <p className={`${TEXT_SM_MUTED} leading-7`}>{copy.currentFocusDescription}</p>
+            <Link
+              href={getHref(copy.currentFocusHref)}
+              className="link-accent mt-4 inline-flex items-center gap-2 text-sm font-semibold"
             >
-              <p className={`${TEXT_XS_MUTED} group-hover:text-secondary`}>
-                {item.date}
-              </p>
-              <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>
-                <Link href={item.href} className="link-accent font-semibold">
-                  {item.title}
-                </Link>
-              </h3>
-              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
-                {item.subtitle}
-              </p>
-            </article>
-          ))}
+              {copy.currentFocusAction}
+              <span aria-hidden>{common.arrowRight}</span>
+            </Link>
+          </div>
         </div>
       </RevealSection>
 
+      {featuredProjects.length > 0 && (
+        <RevealSection className="mt-16 md:mt-20">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className={TITLE_XL}>{copy.featuredProjectsTitle}</h2>
+              <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.featuredProjectsDescription}</p>
+            </div>
+            <Link href={getHref("/projects")} className="text-sm font-medium text-muted hover:text-primary">
+              {copy.viewAll}
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {featuredProjects.map((project) => (
+              <Link
+                key={project.href}
+                href={getHref(project.href)}
+                className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
+              >
+                <p className={`${TEXT_XS_MUTED} group-hover:text-secondary`}>
+                  {projectStatusLabels[project.status]}
+                </p>
+                <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>{project.title}</h3>
+                <p className={`mt-2 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
+                  {project.subtitle}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </RevealSection>
+      )}
+
       <RevealSection className="mt-16 md:mt-20">
-        <div className="flex items-center justify-between">
-          <h2 className={TITLE_XL}>{copy.labsTitle}</h2>
-          <Link href="/labs" className="text-sm font-medium text-muted hover:text-primary">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className={TITLE_XL}>
+              {featuredSeriesSectionItems.length > 0 ? copy.featuredSeriesTitle : copy.latestFallbackTitle}
+            </h2>
+            <p className={`mt-2 ${TEXT_SM_MUTED}`}>
+              {featuredSeriesSectionItems.length > 0 ? copy.featuredSeriesDescription : copy.latestBlog}
+            </p>
+          </div>
+          <Link href={getHref("/blog")} className="text-sm font-medium text-muted hover:text-primary">
             {copy.viewAll}
           </Link>
         </div>
+        {featuredSeriesSectionItems.length > 0 ? (
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {featuredSeriesSectionItems.map((item) => (
+              <Link
+                key={item.href}
+                href={getHref(item.href)}
+                className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
+              >
+                <p className={`${TEXT_XS_MUTED} group-hover:text-secondary`}>
+                  {item.count} {messages.pages.blog.seriesCountSuffix}
+                </p>
+                <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>{item.title}</h3>
+                <span className="mt-3 inline-flex text-sm font-semibold text-accent">
+                  {messages.pages.blog.seriesFirstPost} {common.arrowRight}
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {latestBlogSectionItems.map((item) => (
+              <article
+                key={item.title}
+                className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
+              >
+                <p className={`${TEXT_XS_MUTED} group-hover:text-secondary`}>
+                  {item.date}
+                </p>
+                <h3 className={`mt-2 ${TITLE_BASE_SM_LG}`}>
+                  <Link href={getHref(item.href)} className="link-accent font-semibold">
+                    {item.title}
+                  </Link>
+                </h3>
+                <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
+                  {item.subtitle}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
+      </RevealSection>
+
+      <RevealSection className="mt-16 md:mt-20">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className={TITLE_XL}>{copy.labsTrackerTitle}</h2>
+            <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.labsTrackerDescription}</p>
+          </div>
+        </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {copy.labItems.map((item) => (
-            <div
-              key={item.title}
-              className="group panel-surface card-interactive rounded-xl p-4 sm:p-5"
+          {copy.entryCards.map((card) => (
+            <Link
+              key={card.title}
+              href={getHref(card.href)}
+              className="group panel-surface card-interactive p-5 sm:p-6"
             >
               <h3 className={TITLE_BASE_SM_LG}>
-                {item.title}
+                {card.title}
               </h3>
-              <p className={`mt-1 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
-                {item.subtitle}
-              </p>
-            </div>
+              <p className={`mt-2 ${TEXT_SM_MUTED}`}>{card.subtitle}</p>
+            </Link>
           ))}
         </div>
       </RevealSection>
@@ -192,7 +281,7 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
             ))}
           </ul>
           <Link
-            href="/tracker"
+            href={getHref("/tracker")}
             className="link-accent mt-6 inline-flex items-center gap-2 text-sm font-semibold"
           >
             {copy.trackerEnter}
@@ -200,8 +289,8 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
           </Link>
         </div>
         <div className="panel-surface bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/20 p-5 sm:p-6">
-          <h2 className={TITLE_XL}>{copy.aboutTitle}</h2>
-          <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.aboutDesc}</p>
+          <h2 className={TITLE_XL}>{copy.contactTitle}</h2>
+          <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.contactDescription}</p>
           <div className={`mt-4 flex flex-wrap gap-2 ${TEXT_XS_SUBTLE}`}>
             {copy.skillTags.map((skill) => (
               <span key={skill} className="rounded-full border border-edge-strong bg-base/35 px-3 py-1">
@@ -209,9 +298,15 @@ export function HomePageClient({ latestBlogItems = [] }: { latestBlogItems?: Hom
               </span>
             ))}
           </div>
+          <Link
+            href={getHref("/contact")}
+            className="link-accent mt-6 inline-flex items-center gap-2 text-sm font-semibold"
+          >
+            {copy.contactAction}
+            <span aria-hidden>{common.arrowRight}</span>
+          </Link>
         </div>
       </RevealSection>
     </main>
   );
 }
-
