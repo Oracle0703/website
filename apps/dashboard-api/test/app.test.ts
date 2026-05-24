@@ -70,6 +70,13 @@ async function login(base: string, password = "pw") {
   return { res, body };
 }
 
+function localYmd(t = new Date()): string {
+  const yyyy = t.getFullYear();
+  const mm = String(t.getMonth() + 1).padStart(2, "0");
+  const dd = String(t.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 test("login success and auth required", async () => {
   const { base, close } = await startServer();
   try {
@@ -186,7 +193,7 @@ test("logs append uses conditional writes and retries etag conflicts", async () 
   try {
     const { body } = await login(base);
     const token = body.token as string;
-    const key = `logs/${new Date().toISOString().slice(0, 10)}.json`;
+    const key = `logs/${localYmd()}.json`;
     store.seed(key, [{ ts: "2026-01-01T00:00:00.000Z", message: "existing" }], "etag-old");
     store.conflictOnceKeys.add(key);
 
@@ -200,6 +207,147 @@ test("logs append uses conditional writes and retries etag conflicts", async () 
     assert.ok(store.putCalls.some((call) => call.key === key && call.opts?.ifMatch));
     const stored = store.getRaw<Array<{ message: string }>>(key) ?? [];
     assert.deepEqual(stored.map((entry) => entry.message), ["existing", "new"]);
+  } finally {
+    await close();
+  }
+});
+
+test("state and status endpoints return stable authenticated documents", async () => {
+  const { base, close } = await startServer();
+  try {
+    const stateWithoutAuth = await fetch(`${base}/state`);
+    assert.equal(stateWithoutAuth.status, 401);
+
+    const { body } = await login(base);
+    const token = body.token as string;
+
+    const stateRes = await fetch(`${base}/state`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    assert.equal(stateRes.status, 200);
+    assert.deepEqual(await stateRes.json(), {
+      updatedAt: "1970-01-01T00:00:00.000Z",
+      now: null,
+      next: [],
+      recent: { done: [], failed: [] }
+    });
+
+    const statusGet1 = await fetch(`${base}/status`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    assert.equal(statusGet1.status, 200);
+    assert.deepEqual(await statusGet1.json(), {
+      updatedAt: "1970-01-01T00:00:00.000Z",
+      text: ""
+    });
+
+    const statusPost = await fetch(`${base}/status`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ text: "dashboard is green" })
+    });
+    assert.equal(statusPost.status, 201);
+
+    const statusGet2 = await fetch(`${base}/status`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    assert.equal(statusGet2.status, 200);
+    const status = await statusGet2.json();
+    assert.equal(status.text, "dashboard is green");
+    assert.match(status.updatedAt, /^\d{4}-\d{2}-\d{2}T/);
+  } finally {
+    await close();
+  }
+});
+
+test("ingest lifecycle updates next, now, progress, completion, and failure state", async () => {
+  process.env.INGEST_TOKEN = "it";
+
+  const { base, close } = await startServer();
+  try {
+    const { body } = await login(base);
+    const token = body.token as string;
+
+    async function ingest(idempotencyKey: string, body: Record<string, unknown>) {
+      const res = await fetch(`${base}/ingest/event`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer it",
+          "idempotency-key": idempotencyKey,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+      assert.equal(res.status, 201);
+      return res;
+    }
+
+    const createdTs = new Date().toISOString();
+    await ingest("created-1", {
+      ts: createdTs,
+      type: "task.created",
+      category: "content",
+      title: "Write next note",
+      summary: "queued item"
+    });
+
+    const startedTs = new Date().toISOString();
+    await ingest("started-1", {
+      ts: startedTs,
+      type: "task.started",
+      category: "ops",
+      title: "Ship ingest API",
+      summary: "starting"
+    });
+
+    const progressTs = new Date().toISOString();
+    await ingest("progress-1", {
+      ts: progressTs,
+      type: "task.progress",
+      category: "ops",
+      title: "Ship ingest API",
+      summary: "tests are running"
+    });
+
+    const progressStateRes = await fetch(`${base}/state`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    assert.equal(progressStateRes.status, 200);
+    const progressState = await progressStateRes.json();
+    assert.equal(progressState.now.title, "Ship ingest API");
+    assert.equal(progressState.now.summary, "tests are running");
+    assert.equal(progressState.now.since, startedTs);
+    assert.equal(progressState.next[0].title, "Write next note");
+
+    const completedTs = new Date().toISOString();
+    await ingest("completed-1", {
+      ts: completedTs,
+      type: "task.completed",
+      category: "ops",
+      title: "Ship ingest API",
+      summary: "done",
+      details: { commit: "abcd123" }
+    });
+
+    const failedTs = new Date().toISOString();
+    await ingest("failed-1", {
+      ts: failedTs,
+      type: "task.failed",
+      category: "deploy",
+      title: "Deploy dashboard",
+      summary: "health check failed"
+    });
+
+    const finalStateRes = await fetch(`${base}/state`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    assert.equal(finalStateRes.status, 200);
+    const finalState = await finalStateRes.json();
+    assert.equal(finalState.now, null);
+    assert.equal(finalState.recent.done[0].title, "Ship ingest API");
+    assert.equal(finalState.recent.done[0].commit, "abcd123");
+    assert.equal(finalState.recent.failed[0].title, "Deploy dashboard");
+    assert.equal(finalState.recent.failed[0].reason, "health check failed");
   } finally {
     await close();
   }
@@ -268,6 +416,62 @@ test("ingest event writes timeline and updates state", async () => {
     });
     const events2 = await eventsRes2.json();
     assert.equal(events2.events.length, 1);
+  } finally {
+    await close();
+  }
+});
+
+test("ingest idempotency key is the stored event id and deduplicates replays", async () => {
+  process.env.INGEST_TOKEN = "it";
+
+  const { base, close, store } = await startServer();
+  try {
+    const ts = "2026-02-24T06:20:00.000Z";
+
+    const first = await fetch(`${base}/ingest/event`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer it",
+        "idempotency-key": "stable-key",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        id: "body-id-1",
+        ts,
+        type: "task.started",
+        category: "ops",
+        title: "Start with explicit body id",
+        summary: "first write"
+      })
+    });
+    assert.equal(first.status, 201);
+    const firstBody = await first.json();
+    assert.equal(firstBody.id, "stable-key");
+
+    const replay = await fetch(`${base}/ingest/event`, {
+      method: "POST",
+      headers: {
+        authorization: "Bearer it",
+        "idempotency-key": "stable-key",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        id: "body-id-2",
+        ts,
+        type: "task.started",
+        category: "ops",
+        title: "Replay with a different body id",
+        summary: "second write"
+      })
+    });
+    assert.equal(replay.status, 200);
+    const replayBody = await replay.json();
+    assert.equal(replayBody.duplicate, true);
+
+    const stored = store.getRaw<Array<{ id: string; title: string }>>("events/2026-02-24.json") ?? [];
+    assert.equal(stored.length, 1);
+    assert.equal(stored[0]?.id, "stable-key");
+    assert.equal(stored[0]?.title, "Start with explicit body id");
   } finally {
     await close();
   }

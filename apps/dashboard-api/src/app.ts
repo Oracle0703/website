@@ -118,7 +118,7 @@ function requireIngestToken(reqToken: string | undefined) {
 function normalizeEventId(req: Request, body: any) {
   const headerKey = req.header("idempotency-key")?.trim();
   const bodyId = typeof body?.id === "string" ? body.id.trim() : "";
-  return bodyId || headerKey || crypto.randomUUID();
+  return headerKey || bodyId || crypto.randomUUID();
 }
 
 function isValidIngestType(v: unknown): v is IngestEventType {
@@ -211,7 +211,7 @@ export function createApp(params: { store: JsonObjectStore; auth: AuthConfig; pr
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Vary", "Origin");
       res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,Idempotency-Key");
     }
 
     if (req.method === "OPTIONS") return res.status(204).end();

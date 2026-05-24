@@ -134,16 +134,16 @@
 
 ## 6) 验收清单（你审核用）
 
-- [ ] `POST /ingest/event` 能写入 `events/YYYY-MM-DD.json`
-- [ ] `GET /state` 返回结构稳定，dashboard-web 可直接渲染
-- [ ] 幂等：同 `Idempotency-Key` 重放不重复写
-- [ ] 不破坏现有 dashboard-web 登录与 tasks/logs/status
-- [ ] 单元测试覆盖 ingest + state 更新（至少 2-3 个）
+- [x] `POST /ingest/event` 能写入 `events/YYYY-MM-DD.json`
+- [x] `GET /state` 返回结构稳定，dashboard-web 可直接渲染
+- [x] 幂等：同 `Idempotency-Key` 重放不重复写
+- [x] 不破坏现有 dashboard-web 登录与 tasks/logs/status
+- [x] 单元测试覆盖 ingest + state 更新（至少 2-3 个）
 
 ---
 
 ## 7) 实施顺序（建议）
 
 - MR A（本次）：只提交此 plan 文档，先让你 review 结构与接口。
-- MR B：实现 ingest/state/events + tests。
+- MR B：实现 ingest/state/events + tests。（已完成）
 - MR C：dashboard-web 增加 State + Timeline 页面（如果你需要）。
