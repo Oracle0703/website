@@ -42,14 +42,14 @@ const audits = [
     kind: "localized-source",
     route: "/en/projects",
     file: "apps/website/lib/projects.ts",
-    maxCjkCharacters: 1_200,
+    maxCjkCharacters: 2_500,
     note: "Source keeps zh/en project copy together; English ProjectView is checked separately."
   },
   {
     kind: "localized-source",
     route: "/en/ai-page-analysis",
     file: "apps/website/components/landing/ai-page-analysis-landing-client.tsx",
-    maxCjkCharacters: 1_600,
+    maxCjkCharacters: 1_700,
     note: "Source keeps zh/en landing copy together; English route-surface is checked separately."
   }
 ];

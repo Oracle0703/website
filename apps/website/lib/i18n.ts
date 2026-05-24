@@ -41,6 +41,21 @@ export const messages = {
       ctaEnter: "查看作品",
       ctaBlog: "阅读博客",
       ctaProjects: "查看作品",
+      heroEvidenceTitle: "当前证据链",
+      heroEvidenceItems: [
+        {
+          label: "产品化方向",
+          value: "AI 页面分析助手、打卡系统和 Dashboard Console 已沉淀成可浏览案例"
+        },
+        {
+          label: "工程基线",
+          value: "静态化、双语路由、SEO、内容校验和浏览器截图验收已接入发布流程"
+        },
+        {
+          label: "下一步沟通",
+          value: "先从作品、文章和 AI demo 对齐问题边界，再进入具体合作讨论"
+        }
+      ],
       primarySectionsLabel: "主要入口",
       primarySections: [
         { label: "作品", href: "/projects" },
@@ -198,6 +213,9 @@ export const messages = {
         currentPost: "当前文章",
         articleCtaTitle: "继续探索",
         articleCtaDescription: "把这篇文章延伸到作品、更多内容或直接沟通。",
+        articleEvidenceTitle: "从文章到项目证据",
+        articleEvidenceDescription:
+          "如果这篇文章里的方法与你的问题相关，可以继续查看作品案例，或带着具体页面、目标和约束进入沟通。",
         viewProjects: "查看作品",
         readMoreArticles: "阅读更多文章",
         contactMe: "联系沟通",
@@ -265,6 +283,82 @@ export const messages = {
           "不把自动生成内容直接当成最终表达，关键内容需要人工校准。",
           "不在范围不清时直接开工，先收敛问题和验收标准。"
         ],
+        contactPathTitle: "联系路径",
+        contactPathDescription:
+          "目前不公开邮箱和表单。建议先从公开作品或 AI 页面分析 Demo 判断合作方向，再带着目标、约束和期望交付物发起沟通。",
+        contactDecisionTitle: "联系闭环决策",
+        contactDecisionStatus: "D6 保持站内联系策略，不公开邮箱，不上线后端表单。",
+        contactDecisionDescription:
+          "当前没有经过确认的公开联系方式。为了避免假邮箱、占位表单和垃圾信息入口，D6 只把沟通前置路径说清楚；真实表单进入 D7 前置规格。",
+        formSpecTitle: "D7 表单规格",
+        formSpecAction:
+          "上线表单前必须先确认反垃圾、隐私字段、数据留存、删除方式、提交失败、重复提交和通知失败处理。",
+        contactChannels: [
+          {
+            label: "查看作品证据",
+            description: "适合先判断工程能力、产品方向和可交付边界。",
+            href: "/projects"
+          },
+          {
+            label: "体验 AI 页面分析 Demo",
+            description: "适合围绕页面诊断、改版 backlog 和 AI 应用原型对齐需求。",
+            href: "/ai-page-analysis"
+          },
+          {
+            label: "阅读文章背景",
+            description: "适合了解工程流程、内容系统和长期维护方式。",
+            href: "/blog"
+          }
+        ],
+        responseExpectation:
+          "发起沟通时请尽量带上项目目标、当前页面或产品链接、时间线、预算范围和你希望我负责的部分。",
+        contactForm: {
+          eyebrow: "项目 Intake",
+          title: "Contact form",
+          description:
+            "用这份表单提交一个具体、可判断边界的项目请求。提交内容只用于判断是否进入后续沟通，不会公开展示。",
+          fields: {
+            name: {
+              label: "姓名"
+            },
+            contact: {
+              label: "回复渠道"
+            },
+            project_goal: {
+              label: "项目目标",
+              hint: "至少写清当前状态、希望改善的问题和你期待的交付结果。"
+            },
+            timeline: {
+              label: "时间线"
+            },
+            budget_range: {
+              label: "预算范围"
+            },
+            links: {
+              label: "相关链接",
+              hint: "最多 3 个公开 HTTP/HTTPS 链接，可换行或用逗号分隔。"
+            }
+          },
+          privacyNotice: "Privacy: 表单保存姓名、回复渠道、项目目标、时间线、预算范围和公开链接，不保存原始 IP。",
+          retentionNotice: "Retention: 默认保留 90 天；未进入合作的记录到期清理。",
+          deletionNotice: "Deletion: 你可以通过已确认的回复渠道请求删除对应提交记录。",
+          submitIdle: "发送请求",
+          submitBusy: "发送中...",
+          successTitle: "请求已收到。",
+          submissionIdLabel: "提交编号",
+          errors: {
+            missing_required_field: "请补全姓名、回复渠道和项目目标。",
+            invalid_contact: "请填写真实可回复的联系方式，不要使用占位地址。",
+            low_quality_input: "Project goal 需要更多上下文，请补充当前状态、目标和期望交付物。",
+            invalid_link: "相关链接最多 3 个，且必须是 HTTP 或 HTTPS 链接。",
+            rate_limited: "提交过于频繁，请稍后再试。",
+            duplicate_submit: "已经收到相似请求，请不要重复提交。",
+            submit_failure: "提交失败，请稍后重试。你的输入会保留在表单中。",
+            storage_failure: "请求暂时无法保存，请稍后重试。你的输入会保留在表单中。",
+            notification_failure: "请求已保存，但通知发送失败，回复可能延迟。",
+            received_with_notification_failure: "请求已收到，但通知发送失败，回复可能延迟。"
+          }
+        },
         primaryAction: "先看作品",
         secondaryAction: "阅读文章"
       },
@@ -285,6 +379,16 @@ export const messages = {
         highlightsTitle: "亮点",
         limitationsTitle: "当前限制",
         nextStepsTitle: "下一步",
+        evidenceTitle: "证据",
+        assetTitle: "资产状态",
+        assetKindLabel: "资产类型",
+        assetUnavailableLabel: "暂无公开资产",
+        nextAssetStepLabel: "下一步资产计划",
+        architectureTitle: "架构与实现",
+        tradeoffsTitle: "取舍",
+        roadmapTitle: "Roadmap",
+        relatedEntryTitle: "相关入口",
+        updatedAtLabel: "更新",
         linksTitle: "相关入口",
         viewDetail: "查看详情",
         backToProjects: "返回作品",
@@ -303,6 +407,13 @@ export const messages = {
           infra: "基础设施",
           "frontend-tool": "前端工具",
           "product-system": "产品系统"
+        },
+        assetKind: {
+          screenshot: "真实截图",
+          mock: "Product mock",
+          diagram: "架构图",
+          doc: "文档链接",
+          none: "暂无公开资产"
         }
       }
     },
@@ -368,6 +479,21 @@ export const messages = {
       ctaEnter: "View projects",
       ctaBlog: "Read the Blog",
       ctaProjects: "View projects",
+      heroEvidenceTitle: "Current proof chain",
+      heroEvidenceItems: [
+        {
+          label: "Product direction",
+          value: "AI page analysis, Tracker, and Dashboard Console are shaped into browsable cases"
+        },
+        {
+          label: "Engineering baseline",
+          value: "Static rendering, bilingual routing, SEO, content validation, and browser screenshots are part of release checks"
+        },
+        {
+          label: "Next conversation",
+          value: "Use projects, writing, and the AI demo to align scope before discussing delivery"
+        }
+      ],
       primarySectionsLabel: "Primary sections",
       primarySections: [
         { label: "Projects", href: "/projects" },
@@ -526,6 +652,9 @@ export const messages = {
         currentPost: "Current post",
         articleCtaTitle: "Keep exploring",
         articleCtaDescription: "Connect this article to projects, more writing, or a direct conversation.",
+        articleEvidenceTitle: "From article to project proof",
+        articleEvidenceDescription:
+          "If the method in this article maps to your problem, continue into project cases or bring a specific page, goal, and constraint set into a conversation.",
         viewProjects: "View projects",
         readMoreArticles: "Read more articles",
         contactMe: "Contact",
@@ -593,6 +722,82 @@ export const messages = {
           "I do not treat generated content as final copy without human review.",
           "I do not start from vague scope; we narrow the problem and acceptance criteria first."
         ],
+        contactPathTitle: "Contact path",
+        contactPathDescription:
+          "No public inbox or backend form is exposed yet. Start from the public projects or the AI page analysis demo, then bring the goal, constraints, and expected deliverables into the conversation.",
+        contactDecisionTitle: "Contact-loop decision",
+        contactDecisionStatus: "D6 keeps the on-site contact path, with no public inbox and no backend form.",
+        contactDecisionDescription:
+          "There is no confirmed public contact channel yet. To avoid fake inboxes, placeholder forms, and spam entry points, D6 only clarifies the pre-contact path; a real form moves into the D7 specification first.",
+        formSpecTitle: "D7 form spec",
+        formSpecAction:
+          "Before a form ships, it must define anti-spam controls, privacy fields, retention, deletion, submit failure, duplicate submit, and notification failure behavior.",
+        contactChannels: [
+          {
+            label: "Review project evidence",
+            description: "Best for checking engineering capability, product direction, and delivery boundaries.",
+            href: "/projects"
+          },
+          {
+            label: "Try the AI page analysis demo",
+            description: "Best for page diagnosis, redesign backlog, and AI prototype conversations.",
+            href: "/ai-page-analysis"
+          },
+          {
+            label: "Read the writing",
+            description: "Best for understanding process, content systems, and long-term maintenance.",
+            href: "/blog"
+          }
+        ],
+        responseExpectation:
+          "When reaching out, include the project goal, current page or product link, timeline, budget range, and the part you want me to own.",
+        contactForm: {
+          eyebrow: "Project intake",
+          title: "Contact form",
+          description:
+            "Send a focused project request with enough context to judge scope, fit, and next steps. The submission is only used for follow-up decisions and is not published.",
+          fields: {
+            name: {
+              label: "Name"
+            },
+            contact: {
+              label: "Reply channel"
+            },
+            project_goal: {
+              label: "Project goal",
+              hint: "Include the current state, the problem to improve, and the outcome you expect."
+            },
+            timeline: {
+              label: "Timeline"
+            },
+            budget_range: {
+              label: "Budget range"
+            },
+            links: {
+              label: "Related links",
+              hint: "Up to 3 public HTTP or HTTPS links, separated by new lines or commas."
+            }
+          },
+          privacyNotice: "Privacy: the form stores name, reply channel, project goal, timeline, budget range, and public links. Raw IP addresses are not stored.",
+          retentionNotice: "Retention: submissions are kept for 90 days by default; records that do not move forward are cleaned up after that window.",
+          deletionNotice: "Deletion: you can request deletion through the confirmed reply channel for that submission.",
+          submitIdle: "Send request",
+          submitBusy: "Sending...",
+          successTitle: "Request received.",
+          submissionIdLabel: "Submission ID",
+          errors: {
+            missing_required_field: "Add your name, reply channel, and project goal.",
+            invalid_contact: "Use a real reply channel instead of a placeholder address.",
+            low_quality_input: "Add more context to the Project goal: current state, target outcome, and expected deliverables.",
+            invalid_link: "Related links must use HTTP or HTTPS and include no more than 3 URLs.",
+            rate_limited: "Too many attempts. Please retry later.",
+            duplicate_submit: "A similar request has already been received.",
+            submit_failure: "Submission failed. Your input is still here so you can retry.",
+            storage_failure: "The request could not be saved. Your input is still here so you can retry.",
+            notification_failure: "The request was saved, but notification delivery failed. Follow-up may take longer.",
+            received_with_notification_failure: "The request was received, but notification delivery failed. Follow-up may take longer."
+          }
+        },
         primaryAction: "View projects",
         secondaryAction: "Read writing"
       },
@@ -613,6 +818,16 @@ export const messages = {
         highlightsTitle: "Highlights",
         limitationsTitle: "Current limitations",
         nextStepsTitle: "Next steps",
+        evidenceTitle: "Evidence",
+        assetTitle: "Asset status",
+        assetKindLabel: "Asset type",
+        assetUnavailableLabel: "Asset unavailable",
+        nextAssetStepLabel: "Next asset step",
+        architectureTitle: "Architecture",
+        tradeoffsTitle: "Trade-offs",
+        roadmapTitle: "Roadmap",
+        relatedEntryTitle: "Related entry",
+        updatedAtLabel: "Updated",
         linksTitle: "Related links",
         viewDetail: "View details",
         backToProjects: "Back to projects",
@@ -631,6 +846,13 @@ export const messages = {
           infra: "Infra",
           "frontend-tool": "Frontend Tool",
           "product-system": "Product System"
+        },
+        assetKind: {
+          screenshot: "Screenshot",
+          mock: "Product mock",
+          diagram: "Architecture diagram",
+          doc: "Documentation",
+          none: "Asset unavailable"
         }
       }
     },

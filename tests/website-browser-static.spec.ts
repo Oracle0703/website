@@ -42,12 +42,17 @@ const englishContentChecks = [
   {
     path: "/en/projects/ai-page-analysis",
     heading: /AI Page Analysis and Redesign Assistant/,
-    text: /structured scoring/i
+    text: /Evidence|Asset status|Product mock|Roadmap/
   },
   {
     path: "/en/ai-page-analysis",
     heading: /AI Page Analysis and Redesign Assistant/,
-    text: /Generate redesign demo/
+    text: /V1 roadmap|Mock Pipeline limitation/
+  },
+  {
+    path: "/en/contact",
+    heading: /Contact/,
+    text: /Contact form|Project goal|Privacy/
   },
   {
     path: "/en/blog/ci-agent-guardrails",
@@ -146,6 +151,37 @@ test.describe("English content quality", () => {
       await expectNoCjk(page);
     });
   }
+});
+
+test("D5 contact page avoids placeholder contact channels", async ({ page }) => {
+  await page.goto("/contact");
+
+  await expect(page.locator("main")).not.toContainText(/hello@example\.com|mailto:hello|example\.com/);
+  await expect(page.locator("main")).toContainText(/联系路径|Contact path|下一步|Next step/);
+  await expect(page.locator("main")).toContainText(/联系闭环决策|Contact-loop decision|D7 表单规格|D7 form spec/);
+});
+
+test("D7 contact form keeps input after validation failure", async ({ page }) => {
+  await page.goto("/en/contact");
+
+  await page.getByLabel("Name").fill("Ada");
+  await page.getByLabel("Reply channel").fill("ada@lovelace.dev");
+  await page.getByLabel("Project goal").fill("Need help");
+  await page.getByRole("button", { name: /Send request/ }).click();
+
+  await expect(page.locator("main")).toContainText(/Add more context|Project goal/i);
+  await expect(page.getByLabel("Project goal")).toHaveValue("Need help");
+  await expect(page.locator("main")).not.toContainText(/hello@example\.com|mailto:hello|example\.com/);
+});
+
+test("D5 project detail evidence sections are visible", async ({ page }) => {
+  await page.goto("/en/projects/ai-page-analysis");
+
+  await expect(page.getByRole("heading", { name: /Evidence/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Asset status/ })).toBeVisible();
+  await expect(page.locator("main")).toContainText(/Product mock|Asset unavailable|Screenshot/);
+  await expect(page.getByRole("heading", { name: /Trade-offs/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Roadmap/ })).toBeVisible();
 });
 
 declare global {

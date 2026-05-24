@@ -9,6 +9,30 @@ export type ProjectType =
   | "frontend-tool"
   | "product-system";
 
+export type ProjectEvidence = {
+  label: string;
+  value: string;
+};
+
+export type ProjectAsset =
+  | {
+      kind: "screenshot" | "mock" | "diagram";
+      src: string;
+      alt: string;
+      caption: string;
+    }
+  | {
+      kind: "doc";
+      label: string;
+      href: string;
+      description: string;
+    }
+  | {
+      kind: "none";
+      reason: string;
+      nextAssetStep: string;
+    };
+
 export type Project = {
   slug: string;
   title: string;
@@ -22,6 +46,11 @@ export type Project = {
   role: string[];
   stack: string[];
   highlights: string[];
+  evidence: ProjectEvidence[];
+  asset: ProjectAsset;
+  architecture: string;
+  tradeoffs: string[];
+  roadmap: string[];
   limitations: string[];
   nextSteps: string[];
   links: Array<{ label: string; href: string; external?: boolean }>;
@@ -36,6 +65,11 @@ export type LocalizedProjectContent = {
   solution: string;
   role: string[];
   highlights: string[];
+  evidence: ProjectEvidence[];
+  asset: ProjectAsset;
+  architecture: string;
+  tradeoffs: string[];
+  roadmap: string[];
   limitations: string[];
   nextSteps: string[];
   links: Array<{ label: string; href: string; external?: boolean }>;
@@ -67,6 +101,26 @@ export const projects: Project[] = [
     role: ["产品范围定义", "信息架构设计", "Next.js 前端实现", "Mock 分析流水线", "交互状态设计"],
     stack: ["Next.js", "TypeScript", "Tailwind CSS", "Structured Output"],
     highlights: ["分析步骤可解释", "输出结构适合转任务", "失败与低置信度状态可扩展"],
+    evidence: [
+      { label: "可体验 Demo", value: "公开页面已覆盖输入、流水线、评分、问题、建议和 backlog" },
+      { label: "产品规格", value: "V1 规格记录 URL 抓取、Brief、错误码、SSRF 和输出 schema 边界" },
+      { label: "双语展示", value: "中文根路径和英文 /en 路径共用同一 locale-aware 页面组件" }
+    ],
+    asset: {
+      kind: "mock",
+      src: "/projects/ai-page-analysis-product-mock.svg",
+      alt: "AI 页面分析助手的 product mock，展示 URL 输入、评分、问题和 backlog 结构",
+      caption:
+        "Product mock：用于公开说明页面分析工作流，不代表已接入真实抓取或模型能力。"
+    },
+    architecture:
+      "当前采用单页 React client demo：输入模式、流水线状态、mock output 和本地化 copy 在组件内闭环；后续 V1 会把抓取、模型调用和结果 schema 下沉到 API。",
+    tradeoffs: [
+      "先用 mock pipeline 验证信息架构和输出格式，避免过早引入抓取、模型成本和安全风险。",
+      "不保存历史记录，减少隐私和账户系统复杂度，但也牺牲了复盘能力。",
+      "页面展示完整链路而非真实生产分析，文案必须明确 demo 与真实能力边界。"
+    ],
+    roadmap: ["补 URL 抓取服务和 SSRF 防护", "接入模型分析并稳定结构化输出", "增加结果分享、PDF 导出和历史记录"],
     limitations: ["当前未接真实模型", "暂不保存历史记录", "尚未支持登录后页面分析"],
     nextSteps: ["实现 URL 抓取服务", "接入真实模型分析", "增加分享页和 PDF 导出"],
     links: [{ label: "查看页面", href: "/ai-page-analysis" }],
@@ -88,6 +142,26 @@ export const projects: Project[] = [
     role: ["产品规则设计", "前端页面实现", "交互流程设计", "激励机制梳理"],
     stack: ["Next.js", "TypeScript", "Tailwind CSS"],
     highlights: ["规则表达清晰", "适合逐步接入账户和数据", "能作为内容主题持续展开"],
+    evidence: [
+      { label: "公开入口", value: "Tracker 页面已进入中英文公开路由、sitemap 和浏览器验收" },
+      { label: "规则闭环", value: "页面围绕目标、打卡、连续性、趋势和复盘组织信息" },
+      { label: "阶段边界", value: "当前明确为原型，不伪装已具备账户和持久化能力" }
+    ],
+    asset: {
+      kind: "mock",
+      src: "/projects/tracker-product-mock.svg",
+      alt: "修行打卡系统的 product mock，展示目标、打卡、连续性和复盘模块",
+      caption:
+        "Product mock：用于说明打卡产品的核心界面结构，当前不代表已接入账户或持久化数据。"
+    },
+    architecture:
+      "当前是静态产品原型页，先把规则、反馈和页面层级稳定下来；真实版本会拆出用户、习惯、打卡记录和统计视图的数据模型。",
+    tradeoffs: [
+      "先做规则展示而非登录系统，能更快验证产品叙事，但无法承载真实多人数据。",
+      "不接数据库让静态部署更稳，但连续打卡和复盘只能作为设计预览。",
+      "激励规则保持轻量，避免在没有真实行为数据时过度设计。"
+    ],
+    roadmap: ["定义用户与习惯数据模型", "补每日打卡和连续天数逻辑", "增加周报、复盘和隐私边界"],
     limitations: ["当前以展示和原型为主", "未接入持久化用户数据"],
     nextSteps: ["补充真实数据模型", "设计账户与隐私边界", "增加周报和复盘视图"],
     links: [{ label: "进入打卡", href: "/tracker" }],
@@ -109,6 +183,24 @@ export const projects: Project[] = [
     role: ["Node 服务实现", "日志解析", "Basic Auth 接入", "运行文档维护"],
     stack: ["Node.js", "TypeScript", "better-sqlite3", "node:test"],
     highlights: ["部署成本低", "鉴权配置清晰", "适合接入 Dashboard 汇总"],
+    evidence: [
+      { label: "MVP 形态", value: "已覆盖访问事件记录、日志解析和基础鉴权入口" },
+      { label: "测试边界", value: "Node 22 和原生模块 ABI 是当前本地验证前提" },
+      { label: "运营价值", value: "可作为 Dashboard Console 的运行摘要来源" }
+    ],
+    asset: {
+      kind: "none",
+      reason: "访问日志可能包含 IP、请求路径和运行时间线，当前不公开原始监控截图。",
+      nextAssetStep: "先生成脱敏运行摘要或架构图，再作为公开资产补充到项目详情。"
+    },
+    architecture:
+      "Knock 以 Node 服务接收和解析访问事件，使用本地 SQLite 存储轻量运行数据，并通过可选 Basic Auth 控制监控入口。",
+    tradeoffs: [
+      "SQLite 降低部署和维护成本，但不适合高并发或多实例写入。",
+      "Basic Auth 足够覆盖个人项目监控入口，但不是完整权限系统。",
+      "日志留存策略尚未自动化，需要避免无界增长。"
+    ],
+    roadmap: ["接入 Dashboard 摘要卡片", "增加日志保留和清理策略", "完善部署健康检查和告警信号"],
     limitations: ["完整测试依赖 Node 22 ABI", "当前仍是单机 SQLite 形态"],
     nextSteps: ["接入 Dashboard 摘要", "增加保留策略", "完善部署健康检查"],
     links: []
@@ -129,6 +221,24 @@ export const projects: Project[] = [
     role: ["API 设计", "OSS 存储接入", "冲突处理", "控制台信息架构"],
     stack: ["Node.js", "TypeScript", "React", "OSS"],
     highlights: ["读写路径有错误边界", "任务状态可追踪", "适合扩展内容运营模块"],
+    evidence: [
+      { label: "状态聚合", value: "任务、日志、事件和系统状态被收敛到统一控制台模型" },
+      { label: "冲突边界", value: "OSS 与 ETag 冲突作为设计约束被保留" },
+      { label: "扩展方向", value: "后续可承接内容运营、部署记录和 Knock 摘要" }
+    ],
+    asset: {
+      kind: "none",
+      reason: "内部控制台可能包含任务、日志、OSS 对象和部署状态，不适合直接公开截图。",
+      nextAssetStep: "先裁剪敏感字段或制作公开架构图，再进入项目资产展示。"
+    },
+    architecture:
+      "控制台由 dashboard-api 负责任务和事件读写，dashboard-web 渲染运营状态视图；存储层暂以 OSS 对象和 ETag 边界处理并发冲突。",
+    tradeoffs: [
+      "先做运营只读和状态管理，避免直接编辑 MDX 带来的内容破坏风险。",
+      "OSS 对象存储便于低成本部署，但并发编辑需要更严格冲突处理。",
+      "控制台聚合能力优先于复杂权限，权限与审计需要后续增强。"
+    ],
+    roadmap: ["增加 Content 只读模块", "接入部署记录和健康状态", "补权限、审计和 Knock 运行摘要"],
     limitations: ["当前不直接编辑 MDX", "权限与审计仍需继续增强"],
     nextSteps: ["增加 Content 只读模块", "接入部署记录", "聚合 Knock 运行摘要"],
     links: []
@@ -149,6 +259,24 @@ export const projects: Project[] = [
     role: ["前端实现", "输入校验", "交互反馈", "Labs 工具整合"],
     stack: ["React", "TypeScript", "Tailwind CSS", "Intl API"],
     highlights: ["直接可用", "交互反馈完整", "适合作为后续工具模板"],
+    evidence: [
+      { label: "已上线入口", value: "工具已作为 Labs 页面的一部分可直接访问" },
+      { label: "浏览器能力", value: "使用 Intl API 处理日期、时区和本地格式展示" },
+      { label: "模板价值", value: "输入、校验、结果和复制反馈可复用于后续小工具" }
+    ],
+    asset: {
+      kind: "none",
+      reason: "Labs 工具可公开访问，但 D6 尚未截取经人工检查的真实工具截图。",
+      nextAssetStep: "在浏览器验收后补真实工具截图，并替换当前 none 状态。"
+    },
+    architecture:
+      "工具以客户端组件承载输入、转换、校验和反馈状态，依赖浏览器 Intl API 完成日期和时区格式化，不需要后端服务。",
+    tradeoffs: [
+      "单页客户端实现让工具打开即用，但不适合处理批量或持久化任务。",
+      "优先覆盖高频时间戳场景，暂不把时区数据库和复杂日历规则拉入首版。",
+      "作为 Labs 工具保持轻量，避免为了一个小功能引入共享表单框架。"
+    ],
+    roadmap: ["增加批量转换", "支持更多时区比较", "抽取 Labs 工具页通用组件"],
     limitations: ["当前仅覆盖时间戳场景", "未提供批量转换"],
     nextSteps: ["增加批量输入", "支持更多时区比较", "沉淀通用工具页面组件"],
     links: [{ label: "打开工具", href: "/labs" }],
@@ -168,6 +296,26 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       "Start with a controlled mock pipeline that stabilizes input, diagnosis, recommendations, and backlog output, then evolve toward real crawling, visual understanding, and model-generated analysis.",
     role: ["Product scope", "Information architecture", "Next.js frontend", "Mock analysis pipeline", "Interaction states"],
     highlights: ["Explainable analysis steps", "Outputs shaped for task planning", "Extensible failure and low-confidence states"],
+    evidence: [
+      { label: "Interactive demo", value: "The public page covers input, pipeline, scoring, issues, recommendations, and backlog" },
+      { label: "Product spec", value: "The V1 spec defines URL capture, brief input, error codes, SSRF boundaries, and output schema" },
+      { label: "Bilingual surface", value: "Chinese root routes and English /en routes share one locale-aware client component" }
+    ],
+    asset: {
+      kind: "mock",
+      src: "/projects/ai-page-analysis-product-mock.svg",
+      alt: "Product mock for the AI page analysis assistant showing URL input, scores, issues, and backlog",
+      caption:
+        "Product mock: it documents the intended analysis workflow and does not claim live crawling or model integration."
+    },
+    architecture:
+      "The current version is a single-page React client demo: input modes, pipeline state, mock output, and localized copy stay in the component. V1 would move capture, model calls, and result schema into an API boundary.",
+    tradeoffs: [
+      "The mock pipeline validates information architecture and output format before adding capture cost, model cost, and security risk.",
+      "No saved history keeps privacy and account scope small, but removes review and comparison workflows.",
+      "The page shows the full workflow instead of real production analysis, so the copy must keep demo and live capability separate."
+    ],
+    roadmap: ["Add URL capture and SSRF protection", "Integrate model analysis with stable structured output", "Add share pages, PDF export, and analysis history"],
     limitations: ["No live model integration yet", "No saved history yet", "Logged-in page analysis is not supported"],
     nextSteps: ["Build the URL capture service", "Integrate real model analysis", "Add share pages and PDF export"],
     links: [{ label: "Open demo", href: "/ai-page-analysis" }]
@@ -183,6 +331,26 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       "Use daily check-ins as the core loop, then expose streaks, progress trends, and rules so personal growth becomes observable and reviewable.",
     role: ["Product rule design", "Frontend implementation", "Interaction flow", "Incentive model"],
     highlights: ["Clear rule expression", "Ready for accounts and persisted data", "Can grow into a long-running content theme"],
+    evidence: [
+      { label: "Public route", value: "The Tracker page is covered by bilingual public routes, sitemap, and browser verification" },
+      { label: "Rule loop", value: "The page frames goals, check-ins, streaks, trends, and review as one product loop" },
+      { label: "Stage boundary", value: "The current surface is explicitly a prototype, not an account-backed tracker" }
+    ],
+    asset: {
+      kind: "mock",
+      src: "/projects/tracker-product-mock.svg",
+      alt: "Product mock for the Practice Tracker showing goals, check-ins, streaks, and review modules",
+      caption:
+        "Product mock: it shows the intended tracker interface without claiming accounts or persisted user data."
+    },
+    architecture:
+      "The current route is a static product prototype that stabilizes rules, feedback, and page hierarchy first. A real version would split user, habit, check-in, and statistics data models.",
+    tradeoffs: [
+      "Starting with rule communication validates the product story faster than building an account system.",
+      "Static deployment stays simple, but streaks and reviews remain a design preview until data is persisted.",
+      "Incentive rules stay lightweight until real behavior data exists."
+    ],
+    roadmap: ["Define user and habit data models", "Add daily check-in and streak logic", "Add weekly reviews and privacy boundaries"],
     limitations: ["Currently a public prototype", "No persisted user data yet"],
     nextSteps: ["Add a real data model", "Design account and privacy boundaries", "Add weekly review views"],
     links: [{ label: "Open tracker", href: "/tracker" }]
@@ -198,6 +366,24 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       "Collect, parse, and present key access events through a Node service, with optional Basic Auth for the monitoring surface.",
     role: ["Node service implementation", "Log parsing", "Basic Auth integration", "Runbook maintenance"],
     highlights: ["Low deployment cost", "Clear authentication configuration", "Ready to feed Dashboard summaries"],
+    evidence: [
+      { label: "MVP shape", value: "The module covers access event recording, log parsing, and a basic authenticated surface" },
+      { label: "Test boundary", value: "Node 22 and the native module ABI are explicit local verification constraints" },
+      { label: "Operations value", value: "It can become a runtime summary source for Dashboard Console" }
+    ],
+    asset: {
+      kind: "none",
+      reason: "Access logs can expose IPs, request paths, and runtime timelines, so raw monitoring screenshots are not public.",
+      nextAssetStep: "Publish a redacted runtime summary or architecture diagram before adding a visual asset."
+    },
+    architecture:
+      "Knock uses a Node service to collect and parse access events, stores lightweight runtime data in local SQLite, and gates the monitoring surface with optional Basic Auth.",
+    tradeoffs: [
+      "SQLite keeps deployment simple, but it is not meant for high-concurrency or multi-writer deployments.",
+      "Basic Auth is enough for a personal monitoring surface, but it is not a full permissions system.",
+      "Retention is not automated yet, so log growth still needs an explicit policy."
+    ],
+    roadmap: ["Connect Dashboard summary cards", "Add log retention and cleanup", "Improve deployment health checks and alert signals"],
     limitations: ["Full tests depend on the Node 22 native module ABI", "Still a single-machine SQLite setup"],
     nextSteps: ["Connect Dashboard summaries", "Add retention policy", "Improve deployment health checks"],
     links: []
@@ -213,6 +399,24 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       "Use dashboard-api to read and write tasks and events, while dashboard-web presents actionable state views with OSS and ETag conflict boundaries.",
     role: ["API design", "OSS storage integration", "Conflict handling", "Console information architecture"],
     highlights: ["Clear read/write error boundaries", "Trackable task state", "Expandable into content operations"],
+    evidence: [
+      { label: "State aggregation", value: "Tasks, logs, events, and system status are shaped into one console model" },
+      { label: "Conflict boundary", value: "OSS and ETag conflicts remain explicit design constraints" },
+      { label: "Expansion path", value: "The console can host content operations, deployment records, and Knock summaries" }
+    ],
+    asset: {
+      kind: "none",
+      reason: "The internal console can include tasks, logs, object storage state, and deployment signals that should not be exposed directly.",
+      nextAssetStep: "Redact sensitive fields or publish an architecture diagram before showing it as a public asset."
+    },
+    architecture:
+      "dashboard-api owns task and event reads and writes while dashboard-web renders operational status views. The storage layer currently uses OSS objects with ETag checks for conflict boundaries.",
+    tradeoffs: [
+      "Read-only operations and state management come before direct MDX editing to reduce content corruption risk.",
+      "OSS storage is inexpensive to deploy, but concurrent editing needs strict conflict handling.",
+      "Aggregation is prioritized before complex permissions; audit and access control need another pass."
+    ],
+    roadmap: ["Add a read-only Content module", "Connect deployment records and health status", "Add permissions, audit trails, and Knock summaries"],
     limitations: ["Does not edit MDX directly", "Permissions and audit trails need more work"],
     nextSteps: ["Add a read-only Content module", "Connect deployment records", "Aggregate Knock runtime summaries"],
     links: []
@@ -228,6 +432,24 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       "Put common conversions, copy feedback, and boundary hints into one lightweight page that can become a template for future Labs tools.",
     role: ["Frontend implementation", "Input validation", "Interaction feedback", "Labs integration"],
     highlights: ["Immediately usable", "Complete interaction feedback", "Reusable as a future tool template"],
+    evidence: [
+      { label: "Live entry", value: "The tool is accessible as part of the Labs page" },
+      { label: "Browser capability", value: "Intl API handles date, timezone, and local format display" },
+      { label: "Template value", value: "Input, validation, result, and copy feedback can be reused by future small tools" }
+    ],
+    asset: {
+      kind: "none",
+      reason: "The Labs tool is public, but D6 has not captured and reviewed a real tool screenshot yet.",
+      nextAssetStep: "Capture the real Labs tool after browser verification, then replace the current none state."
+    },
+    architecture:
+      "The tool uses a client component for input, conversion, validation, and feedback state. It relies on the browser Intl API for date and timezone formatting, with no backend service required.",
+    tradeoffs: [
+      "A single client-side tool opens quickly, but it is not designed for batch or persisted workflows.",
+      "The first version covers common timestamp needs instead of adding timezone databases and complex calendar rules.",
+      "Keeping it lightweight avoids pulling a shared form framework into one small Labs utility."
+    ],
+    roadmap: ["Add batch conversion", "Support more timezone comparisons", "Extract shared Labs tool page components"],
     limitations: ["Currently focused on timestamps only", "No batch conversion yet"],
     nextSteps: ["Add batch input", "Support more timezone comparisons", "Extract shared tool-page components"],
     links: [{ label: "Open tool", href: "/labs" }]
@@ -243,6 +465,11 @@ function getChineseProjectContent(project: Project): LocalizedProjectContent {
     solution: project.solution,
     role: project.role,
     highlights: project.highlights,
+    evidence: project.evidence,
+    asset: project.asset,
+    architecture: project.architecture,
+    tradeoffs: project.tradeoffs,
+    roadmap: project.roadmap,
     limitations: project.limitations,
     nextSteps: project.nextSteps,
     links: project.links

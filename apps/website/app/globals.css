@@ -70,6 +70,22 @@ a {
     @apply transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none;
   }
 
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-blue-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transform-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-edge-strong bg-surface/75 px-5 py-2.5 text-sm font-semibold text-secondary transition hover:-translate-y-0.5 hover:bg-surface hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent motion-reduce:transform-none;
+  }
+
+  .evidence-card {
+    @apply rounded-xl border border-edge bg-base/40 p-4 shadow-sm shadow-black/5;
+  }
+
+  .section-kicker {
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-accent;
+  }
+
   .link-muted {
     @apply rounded-sm px-1 -mx-1 text-muted transition-colors hover:bg-primary;
   }
@@ -82,6 +98,23 @@ a {
   .hover-text-base:hover,
   .hover-text-base:hover:visited {
     color: rgb(var(--ui-base-rgb) / 1) !important;
+  }
+
+  .btn-primary,
+  .btn-primary:visited,
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    color: #fff !important;
+  }
+
+  .btn-secondary,
+  .btn-secondary:visited {
+    color: rgb(var(--ui-text-secondary-rgb) / 1) !important;
+  }
+
+  .btn-secondary:hover,
+  .btn-secondary:focus-visible {
+    color: rgb(var(--ui-text-primary-rgb) / 1) !important;
   }
 }
 
@@ -168,4 +201,3 @@ a {
     transform: none;
   }
 }
-

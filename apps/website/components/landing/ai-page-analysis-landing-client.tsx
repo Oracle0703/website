@@ -60,6 +60,46 @@ type BacklogTask = {
   priority: Priority;
 };
 
+type ApiAnalysisResult = {
+  analysis_id: string;
+  status: "succeeded";
+  needs_review: boolean;
+  confidence: number;
+  source: {
+    url: string;
+    title: string;
+    captured_at: string;
+  };
+  scores: {
+    key: string;
+    label: string;
+    score: number;
+    reason: string;
+  }[];
+  issues: {
+    severity: "high" | "medium" | "low";
+    evidence: string;
+    impact: string;
+    recommendation: string;
+  }[];
+  recommendations: {
+    module: string;
+    action: string;
+    priority: Priority;
+    expected_outcome: string;
+  }[];
+  backlog: BacklogTask[];
+  safe_mock_api: true;
+};
+
+type ApiAnalysisError = {
+  status: "failed";
+  error: {
+    code: string;
+    message: string;
+  };
+};
+
 type DemoOutput = {
   analysisId: string;
   generatedAt: string;
@@ -105,6 +145,10 @@ type AiPageAnalysisCopy = {
   showcaseTitle: string;
   deliveryTitle: string;
   backlogTitle: string;
+  limitationsTitle: string;
+  limitationsItems: string[];
+  roadmapTitle: string;
+  roadmapItems: string[];
   valueTitle: string;
   scenesTitle: string;
   finalTitle: string;
@@ -113,6 +157,8 @@ type AiPageAnalysisCopy = {
   finalContactCta: string;
   acceptedLog: string;
   doneLog: string;
+  apiAcceptedLog: string;
+  apiFailurePrefix: string;
   status: Record<StageStatus, string>;
   labels: {
     evidence: string;
@@ -334,6 +380,18 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     showcaseTitle: "改版后预期效果展示",
     deliveryTitle: "交付节奏",
     backlogTitle: "可执行 Backlog",
+    limitationsTitle: "Mock Pipeline 限制",
+    limitationsItems: [
+      "当前演示不调用真实模型，也不抓取真实网页内容。",
+      "示例评分和建议来自固定 mock output，只用于验证页面层级和输出结构。",
+      "暂不保存输入、历史记录或生成结果，适合展示流程，不适合作为生产分析结论。"
+    ],
+    roadmapTitle: "V1 roadmap",
+    roadmapItems: [
+      "实现 URL 抓取服务，并加入 SSRF、超时和登录页边界。",
+      "加入业务 Brief 输入校验，让受众、目标和当前问题参与分析。",
+      "接入真实模型分析，稳定输出评分、问题、建议和 backlog schema。"
+    ],
     valueTitle: "价值",
     scenesTitle: "适用场景",
     finalTitle: "准备开始完整作品演示？",
@@ -343,6 +401,8 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     finalContactCta: "联系沟通需求",
     acceptedLog: "已接收输入，诊断流水线启动",
     doneLog: "结果已生成，可继续切换输入重跑完整演示",
+    apiAcceptedLog: "Safe Mock API 已接收 URL 请求，将返回结构化 D9 结果",
+    apiFailurePrefix: "Safe Mock API 返回错误",
     status: {
       done: "完成",
       running: "进行中",
@@ -391,6 +451,18 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     showcaseTitle: "Expected redesign impact",
     deliveryTitle: "Delivery phases",
     backlogTitle: "Actionable backlog",
+    limitationsTitle: "Mock Pipeline limitation",
+    limitationsItems: [
+      "No live model integration is connected on this page.",
+      "Scores and recommendations come from fixed mock output, used to validate page hierarchy and result structure.",
+      "Inputs, history, and generated results are not stored, so this is a demo workflow rather than production analysis."
+    ],
+    roadmapTitle: "V1 roadmap",
+    roadmapItems: [
+      "Build URL capture with SSRF protection, timeout handling, and authenticated-page boundaries.",
+      "Add product brief validation so audience, goal, and current problem shape the analysis.",
+      "Integrate model analysis with a stable schema for scores, issues, recommendations, and backlog."
+    ],
     valueTitle: "Value",
     scenesTitle: "Use cases",
     finalTitle: "Ready to review the full product demo?",
@@ -400,6 +472,8 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     finalContactCta: "Discuss a project",
     acceptedLog: "Input received. Diagnosis pipeline started.",
     doneLog: "Output generated. You can change the input and rerun the demo.",
+    apiAcceptedLog: "Safe Mock API accepted the URL request and will return the D9 structured result.",
+    apiFailurePrefix: "Safe Mock API returned an error",
     status: {
       done: "Done",
       running: "Running",
@@ -723,6 +797,77 @@ function getMockOutput(mode: DemoMode, input: string, locale: Locale): DemoOutpu
   };
 }
 
+function buildDemoBrief(input: string, locale: Locale) {
+  const trimmedInput = input.trim();
+
+  if (locale === "en") {
+    return {
+      audience: "Independent builders and product teams",
+      goal: "Improve the clarity and conversion path of this public page",
+      problem: trimmedInput
+        ? `The submitted page needs a sharper value proposition and clearer next action: ${trimmedInput.slice(0, 96)}`
+        : "The submitted page needs a sharper value proposition and clearer next action"
+    };
+  }
+
+  return {
+    audience: "独立开发者和早期产品团队",
+    goal: "提升公开页面的信息清晰度和转化路径",
+    problem: trimmedInput
+      ? `提交页面需要更清晰的价值表达和下一步行动：${trimmedInput.slice(0, 96)}`
+      : "提交页面需要更清晰的价值表达和下一步行动"
+  };
+}
+
+function formatApiTimestamp(value: string, locale: Locale) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return formatTimestamp(date, locale);
+}
+
+function toTitleCase(value: string) {
+  return value.slice(0, 1).toUpperCase() + value.slice(1);
+}
+
+function mapApiResultToDemoOutput(result: ApiAnalysisResult, locale: Locale): DemoOutput {
+  const confidencePercent = `${Math.round(result.confidence * 100)}%`;
+  const safeMockLabel = locale === "en" ? "Safe Mock API" : "Safe Mock API";
+  const baseOutput = getMockOutput("url", result.source.url, locale);
+
+  return {
+    analysisId: result.analysis_id,
+    generatedAt: formatApiTimestamp(result.source.captured_at, locale),
+    headline: locale === "en"
+      ? `D9 Safe Mock API result for ${result.source.url}`
+      : `D9 Safe Mock API 已生成分析：${result.source.url}`,
+    confidence: locale === "en"
+      ? `${confidencePercent} confidence (${safeMockLabel})`
+      : `置信度 ${confidencePercent}（${safeMockLabel}）`,
+    scores: result.scores.map((score) => ({
+      label: score.label,
+      score: score.score
+    })),
+    issues: result.issues.map((issue) => ({
+      title: locale === "en" ? toTitleCase(issue.severity) : issue.severity,
+      severity: toTitleCase(issue.severity) as Severity,
+      evidence: issue.evidence,
+      impact: issue.impact
+    })),
+    recommendations: result.recommendations.map((item) => ({
+      module: item.module,
+      action: item.action,
+      priority: item.priority,
+      expectedImpact: item.expected_outcome
+    })),
+    showcaseCards: baseOutput.showcaseCards,
+    deliveryPhases: baseOutput.deliveryPhases,
+    backlog: result.backlog
+  };
+}
+
 export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
   const copy = aiPageAnalysisCopy[locale];
   const currentModeOptions = modeOptions[locale];
@@ -739,6 +884,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
   const [completedStageCount, setCompletedStageCount] = useState(0);
   const [stageLogs, setStageLogs] = useState<string[]>([]);
   const [output, setOutput] = useState<DemoOutput | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const timersRef = useRef<number[]>([]);
 
@@ -776,6 +922,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
   const handleChangeMode = (nextMode: DemoMode) => {
     setMode(nextMode);
     setInput(currentModePlaceholders[nextMode]);
+    setErrorMessage(null);
   };
 
   const handleGenerate = () => {
@@ -791,6 +938,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
     setCompletedStageCount(0);
     setStageLogs([copy.acceptedLog]);
     setOutput(null);
+    setErrorMessage(null);
 
     let elapsed = 0;
     currentPipelineStages.forEach((stage, index) => {
@@ -803,10 +951,50 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
       timersRef.current.push(timer);
     });
 
-    const doneTimer = window.setTimeout(() => {
-      setOutput(getMockOutput(mode, effectiveInput, locale));
-      setIsGenerating(false);
-      setStageLogs((prev) => [...prev, copy.doneLog]);
+    const doneTimer = window.setTimeout(async () => {
+      if (mode !== "url") {
+        setOutput(getMockOutput(mode, effectiveInput, locale));
+        setIsGenerating(false);
+        setStageLogs((prev) => [...prev, copy.doneLog]);
+        return;
+      }
+
+      setStageLogs((prev) => [...prev, copy.apiAcceptedLog]);
+
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            mode: "url",
+            input: effectiveInput,
+            language: locale,
+            brief: buildDemoBrief(effectiveInput, locale)
+          })
+        });
+        const payload = await response.json() as ApiAnalysisResult | ApiAnalysisError;
+
+        if (!response.ok || "error" in payload) {
+          const error = "error" in payload ? payload.error : {
+            code: "submit_failure",
+            message: "The Safe Mock API response could not be read."
+          };
+          setErrorMessage(`${copy.apiFailurePrefix}: ${error.code}. ${error.message}`);
+          setStageLogs((prev) => [...prev, `${copy.apiFailurePrefix}: ${error.code}`]);
+          setIsGenerating(false);
+          return;
+        }
+
+        setOutput(mapApiResultToDemoOutput(payload, locale));
+        setStageLogs((prev) => [...prev, copy.doneLog]);
+      } catch {
+        setErrorMessage(`${copy.apiFailurePrefix}: submit_failure.`);
+        setStageLogs((prev) => [...prev, `${copy.apiFailurePrefix}: submit_failure`]);
+      } finally {
+        setIsGenerating(false);
+      }
     }, elapsed + 360);
 
     timersRef.current.push(doneTimer);
@@ -824,13 +1012,13 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
           <div className="flex flex-wrap gap-3">
             <a
               href="#demo"
-              className="inline-flex items-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5"
+              className="btn-primary"
             >
               {copy.primaryCta}
             </a>
             <a
               href="#sample"
-              className="inline-flex items-center rounded-full border border-edge-strong bg-surface/75 px-5 py-2.5 text-sm font-semibold text-secondary transition hover:-translate-y-0.5 hover:bg-surface"
+              className="btn-secondary"
             >
               {copy.secondaryCta}
             </a>
@@ -917,11 +1105,17 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
               <p className={TEXT_XS_MUTED}>{copy.inputHint}</p>
             </div>
 
+            {errorMessage ? (
+              <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                {errorMessage}
+              </div>
+            ) : null}
+
             <button
               type="button"
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="mt-4 inline-flex items-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+              className="btn-primary mt-4 px-4 py-2"
             >
               {isGenerating ? copy.generateBusy : copy.generateIdle}
             </button>
@@ -1097,6 +1291,33 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
         </div>
       </section>
 
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="panel-surface p-5 sm:p-6">
+          <p className="section-kicker">{copy.limitationsTitle}</p>
+          <h2 className={`mt-2 ${TITLE_XL}`}>{copy.limitationsTitle}</h2>
+          <ul className="mt-4 space-y-3 text-sm leading-6 text-secondary">
+            {copy.limitationsItems.map((item) => (
+              <li key={item} className="evidence-card">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="panel-surface p-5 sm:p-6">
+          <p className="section-kicker">{copy.roadmapTitle}</p>
+          <h2 className={`mt-2 ${TITLE_XL}`}>{copy.roadmapTitle}</h2>
+          <ol className="mt-4 space-y-3 text-sm leading-6 text-secondary">
+            {copy.roadmapItems.map((item, index) => (
+              <li key={item} className="evidence-card">
+                <span className="mr-2 font-semibold text-accent">{index + 1}.</span>
+                {item}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       <section className="space-y-4">
         <h2 className={TITLE_XL}>{copy.scenesTitle}</h2>
         <div className="flex flex-wrap gap-2">
@@ -1116,13 +1337,13 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
         <div className="mt-5 flex flex-wrap gap-3">
           <a
             href="#demo"
-            className="inline-flex items-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5"
+            className="btn-primary px-4 py-2"
           >
             {copy.finalDemoCta}
           </a>
           <Link
             href="/contact"
-            className="inline-flex items-center rounded-full border border-edge-strong bg-surface/75 px-4 py-2 text-sm font-semibold text-secondary transition hover:-translate-y-0.5 hover:bg-surface"
+            className="btn-secondary px-4 py-2"
           >
             {copy.finalContactCta}
           </Link>

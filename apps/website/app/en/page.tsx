@@ -49,6 +49,8 @@ export default function HomePage() {
       title: project.title,
       subtitle: project.subtitle,
       status: project.status,
+      type: project.type,
+      stack: project.stack,
       href: `/en/projects/${encodeURIComponent(project.slug)}`
     }));
   const featuredSeries = getPublishedSeriesForLocale(locale)

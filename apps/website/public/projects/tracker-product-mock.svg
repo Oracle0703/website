@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Practice tracker product mock</title>
+  <desc id="desc">A product mock with goals, check-in cards, streak metrics, and review modules.</desc>
+  <rect width="1280" height="720" fill="#f7f8fb"/>
+  <rect x="70" y="58" width="1140" height="604" rx="28" fill="#ffffff" stroke="#d8dee9" stroke-width="2"/>
+  <rect x="110" y="100" width="280" height="520" rx="24" fill="#111827"/>
+  <text x="142" y="152" fill="#f9fafb" font-family="Arial, sans-serif" font-size="28" font-weight="700">Tracker</text>
+  <text x="142" y="188" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="17">Product mock</text>
+  <rect x="142" y="244" width="210" height="48" rx="14" fill="#334155"/>
+  <rect x="142" y="316" width="170" height="18" rx="9" fill="#64748b"/>
+  <rect x="142" y="356" width="200" height="18" rx="9" fill="#475569"/>
+  <rect x="430" y="100" width="312" height="160" rx="24" fill="#ecfeff" stroke="#a5f3fc"/>
+  <text x="466" y="152" fill="#155e75" font-family="Arial, sans-serif" font-size="22" font-weight="700">Goal</text>
+  <rect x="466" y="184" width="220" height="20" rx="10" fill="#67e8f9"/>
+  <rect x="466" y="220" width="160" height="20" rx="10" fill="#a5f3fc"/>
+  <rect x="782" y="100" width="388" height="160" rx="24" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text x="818" y="152" fill="#166534" font-family="Arial, sans-serif" font-size="22" font-weight="700">Streak</text>
+  <text x="818" y="220" fill="#166534" font-family="Arial, sans-serif" font-size="56" font-weight="700">21 days</text>
+  <rect x="430" y="300" width="740" height="150" rx="24" fill="#fff7ed" stroke="#fed7aa"/>
+  <text x="466" y="352" fill="#7c2d12" font-family="Arial, sans-serif" font-size="22" font-weight="700">Daily check-in</text>
+  <rect x="466" y="386" width="150" height="34" rx="12" fill="#fdba74"/>
+  <rect x="642" y="386" width="150" height="34" rx="12" fill="#fed7aa"/>
+  <rect x="818" y="386" width="150" height="34" rx="12" fill="#ffedd5"/>
+  <rect x="430" y="490" width="352" height="130" rx="24" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="466" y="542" fill="#3730a3" font-family="Arial, sans-serif" font-size="22" font-weight="700">Review</text>
+  <rect x="466" y="574" width="240" height="18" rx="9" fill="#a5b4fc"/>
+  <rect x="818" y="490" width="352" height="130" rx="24" fill="#f8fafc" stroke="#d8dee9"/>
+  <text x="854" y="542" fill="#334155" font-family="Arial, sans-serif" font-size="22" font-weight="700">Next action</text>
+  <rect x="854" y="574" width="220" height="18" rx="9" fill="#94a3b8"/>
+</svg>

@@ -21,6 +21,8 @@ function ProjectCard({
   copy: ReturnType<typeof useI18n>["messages"]["pages"]["projects"];
 }) {
   const href = getLocalePath(`/projects/${encodeURIComponent(project.slug)}`, locale);
+  const evidencePreview = project.evidence.slice(0, 2);
+  const stackPreview = project.stack.slice(0, 3);
 
   return (
     <Link
@@ -43,10 +45,34 @@ function ProjectCard({
           {project.subtitle}
         </p>
         <p className="text-sm leading-6 text-muted">{project.summary}</p>
+        {stackPreview.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {stackPreview.map((item) => (
+              <span key={item} className="rounded-full border border-edge bg-surface/70 px-2 py-0.5 text-[11px] font-semibold text-muted">
+                {item}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {evidencePreview.length > 0 ? (
+          <div className="mt-1 space-y-2">
+            {evidencePreview.map((item) => (
+              <div key={item.label} className="rounded-lg border border-edge/70 bg-surface/50 px-3 py-2">
+                <p className="text-xs font-semibold text-secondary">{item.label}</p>
+                <p className="mt-1 text-xs leading-5 text-muted">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
-      <span className="mt-5 inline-flex text-sm font-semibold text-accent transition-colors group-hover:text-accent-strong">
-        {copy.viewDetail}
-      </span>
+      <div className="mt-5 flex items-center justify-between gap-3 text-sm">
+        <span className="font-semibold text-accent transition-colors group-hover:text-accent-strong">
+          {copy.viewDetail}
+        </span>
+        <span className="text-xs text-muted">
+          {copy.updatedAtLabel}: {project.updatedAt}
+        </span>
+      </div>
     </Link>
   );
 }

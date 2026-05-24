@@ -114,8 +114,33 @@ test("Projects expose locale-aware English view data without CJK body fields", a
     }
   }
 
+  for (const item of view.evidence) {
+    assertNoCjk(item.label, "project view evidence label");
+    assertNoCjk(item.value, "project view evidence value");
+  }
+
+  assertNoCjk(view.architecture, "project view architecture");
+
+  for (const listField of ["tradeoffs", "roadmap"]) {
+    for (const item of view[listField]) {
+      assertNoCjk(item, `project view ${listField}`);
+    }
+  }
+
   for (const link of view.links) {
     assertNoCjk(link.label, "project link label");
+  }
+
+  if (["screenshot", "mock", "diagram"].includes(view.asset.kind)) {
+    assertNoCjk(view.asset.alt, "project asset alt");
+    assertNoCjk(view.asset.caption, "project asset caption");
+  } else if (view.asset.kind === "doc") {
+    assertNoCjk(view.asset.label, "project asset label");
+    assertNoCjk(view.asset.description, "project asset description");
+  } else {
+    assert.equal(view.asset.kind, "none");
+    assertNoCjk(view.asset.reason, "project asset unavailable reason");
+    assertNoCjk(view.asset.nextAssetStep, "project asset next step");
   }
 
   assert.equal(getAllProjects().length, 5);
@@ -170,6 +195,50 @@ test("AI page analysis client receives route locale and English copy", () => {
   assert.match(client, /aiPageAnalysisCopy/);
   assert.match(client, /AI Page Analysis and Redesign Assistant/);
   assert.match(client, /Generate redesign demo/);
+});
+
+test("AI page analysis product page states mock limitations and V1 roadmap in English", () => {
+  const client = read("apps/website/components/landing/ai-page-analysis-landing-client.tsx");
+
+  assert.match(client, /roadmapTitle/);
+  assert.match(client, /roadmapItems/);
+  assert.match(client, /limitationsTitle/);
+  assert.match(client, /limitationsItems/);
+  assert.match(client, /V1 roadmap/);
+  assert.match(client, /Mock Pipeline limitation/);
+  assert.match(client, /No live model integration/);
+  assert.doesNotMatch(client, /production-ready AI analysis/);
+});
+
+test("D6 AI page analysis V1 tech spec defines backend safety and schema gates", () => {
+  const techSpec = read("docs/website/AI_PAGE_ANALYSIS_V1_TECH_SPEC.md");
+  const productSpec = read("docs/website/AI_PAGE_ANALYSIS_V1_PRODUCT_SPEC.md");
+  const client = read("apps/website/components/landing/ai-page-analysis-landing-client.tsx");
+
+  for (const expected of [
+    /SSRF/,
+    /localhost/,
+    /内网/,
+    /cloud metadata|云元数据/i,
+    /169\.254\.169\.254/,
+    /input schema/i,
+    /output schema/i,
+    /invalid_url/,
+    /url_unreachable/,
+    /auth_required_page/,
+    /capture_timeout/,
+    /analysis_timeout/,
+    /invalid_model_output/,
+    /needs_review/,
+    /D6 不实现|D6 only defines/i
+  ]) {
+    assert.match(techSpec, expected);
+  }
+
+  assert.match(productSpec, /AI_PAGE_ANALYSIS_V1_TECH_SPEC\.md/);
+  assert.match(client, /Mock Pipeline limitation/);
+  assert.match(client, /No live model integration/);
+  assert.doesNotMatch(client, /production-ready AI analysis/);
 });
 
 test("D4 browser verification and release checklist cover English content quality", () => {

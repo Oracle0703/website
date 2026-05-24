@@ -7,13 +7,14 @@ import { useI18n } from "../language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
 import {
   TEXT_BASE_SECONDARY,
+  TEXT_SM_SECONDARY,
   TEXT_SM_MUTED,
   TEXT_XS_MUTED,
   TEXT_XS_SUBTLE,
   TITLE_BASE_SM_LG,
   TITLE_XL
 } from "../../lib/typography";
-import type { ProjectStatus } from "../../lib/projects";
+import type { ProjectStatus, ProjectType } from "../../lib/projects";
 import { ParticleTime } from "./particle-time";
 
 type HomeLatestBlogItem = {
@@ -27,6 +28,8 @@ type HomeProjectItem = {
   title: string;
   subtitle: string;
   status: ProjectStatus;
+  type?: ProjectType;
+  stack?: string[];
   href: string;
 };
 
@@ -94,14 +97,13 @@ export function HomePageClient({
           <div className={`flex flex-wrap gap-3 sm:gap-4 ${heroMotion("delay-300")}`}>
             <Link
               href={getHref("/projects")}
-              className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:shadow-blue-500/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:px-6 sm:text-base"
+              className="btn-primary px-5 py-3 sm:px-6 sm:text-base"
             >
               {copy.ctaProjects}
             </Link>
             <Link
               href={getHref("/blog")}
-              className="inline-flex items-center gap-2 rounded-full border border-edge-strong bg-surface/75 px-5 py-3 text-sm font-semibold text-secondary transition hover:-translate-y-0.5 hover:border-edge-strong hover:bg-surface hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:px-6 sm:text-base"
-              style={{ color: "rgb(var(--color-text-secondary) / 1)" }}
+              className="btn-secondary px-5 py-3 sm:px-6 sm:text-base"
             >
               {copy.ctaBlog}
             </Link>
@@ -110,28 +112,29 @@ export function HomePageClient({
         <div
           className={`${heroMotion(
             "delay-200"
-          )} panel-surface relative min-w-0 p-5 sm:p-6`}
+          )} min-w-0 space-y-4`}
         >
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
-          <div className="relative space-y-4">
+          <div className="evidence-card bg-surface/70 backdrop-blur-sm">
             <ParticleTime />
-            <p className={TEXT_SM_MUTED}>
-              {copy.primarySectionsLabel}
+            <p className="section-kicker mt-4">
+              {copy.heroEvidenceTitle}
             </p>
-            <div className="grid gap-3">
-              {copy.primarySections.map((item) => (
-                <Link
-                  key={item.href}
-                  href={getHref(item.href)}
-                  className="group card-interactive flex items-center justify-between rounded-xl border border-edge bg-base/40 px-4 py-3 text-sm"
-                >
-                  <span>{item.label}</span>
-                  <span className={TEXT_XS_MUTED}>
-                    {common.arrowRight}
-                  </span>
-                </Link>
-              ))}
-            </div>
+          </div>
+          <div className="grid gap-3">
+            {copy.heroEvidenceItems.map((item) => (
+              <article key={item.label} className="evidence-card">
+                <p className="text-sm font-semibold text-primary">{item.label}</p>
+                <p className={`mt-1 ${TEXT_SM_MUTED} leading-6`}>{item.value}</p>
+              </article>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            <span className={TEXT_XS_MUTED}>{copy.primarySectionsLabel}</span>
+            {copy.primarySections.map((item) => (
+              <Link key={item.href} href={getHref(item.href)} className="link-accent font-semibold">
+                {item.label}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -180,6 +183,11 @@ export function HomePageClient({
                 <p className={`mt-2 ${TEXT_SM_MUTED} group-hover:text-secondary`}>
                   {project.subtitle}
                 </p>
+                {project.stack && project.stack.length > 0 ? (
+                  <p className={`mt-3 ${TEXT_SM_SECONDARY}`}>
+                    {project.stack.slice(0, 2).join(" · ")}
+                  </p>
+                ) : null}
               </Link>
             ))}
           </div>

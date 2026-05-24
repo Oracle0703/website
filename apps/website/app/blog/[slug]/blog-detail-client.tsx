@@ -267,9 +267,12 @@ export function BlogDetailClient({
 
       <section className="panel-surface p-6 sm:p-8">
         <h2 className="text-xl font-semibold text-primary sm:text-2xl">
-          {copy.articleCtaTitle}
+          {copy.articleEvidenceTitle}
         </h2>
         <p className="mt-2 text-base leading-7 text-secondary">
+          {copy.articleEvidenceDescription}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-muted">
           {copy.articleCtaDescription}
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
