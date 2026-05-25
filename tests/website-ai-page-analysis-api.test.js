@@ -214,7 +214,7 @@ test("D9 AI page analysis API routes, frontend, and docs are wired", () => {
 
   assert.match(route, /analyzePageRequest/);
   assert.match(route, /service:\s*"ai-page-analysis"/);
-  assert.match(route, /version:\s*"d9"/);
+  assert.match(route, /version:\s*"v1"/);
   assert.match(healthz, /service:\s*"ai-page-analysis"/);
   assert.match(client, /fetch\("\/api\/analyze"/);
   assert.match(client, /Safe Mock API|safe mock API/i);

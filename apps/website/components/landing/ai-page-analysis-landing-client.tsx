@@ -20,6 +20,12 @@ type Severity = "High" | "Medium" | "Low";
 type Priority = "P0" | "P1" | "P2";
 type StageStatus = "pending" | "running" | "done";
 
+type StructuredBrief = {
+  audience: string;
+  goal: string;
+  problem: string;
+};
+
 type ScoreItem = {
   label: string;
   score: number;
@@ -132,7 +138,12 @@ type AiPageAnalysisCopy = {
   demoTitle: string;
   demoNote: string;
   inputTitle: string;
+  urlLabel: string;
+  materialLabel: string;
   inputHint: string;
+  briefTitle: string;
+  briefHint: string;
+  briefLabels: StructuredBrief;
   generateIdle: string;
   generateBusy: string;
   pipelineTitle: string;
@@ -159,6 +170,7 @@ type AiPageAnalysisCopy = {
   doneLog: string;
   apiAcceptedLog: string;
   apiFailurePrefix: string;
+  errorRecovery: Record<string, string>;
   status: Record<StageStatus, string>;
   labels: {
     evidence: string;
@@ -197,6 +209,19 @@ const modePlaceholders: Record<Locale, Record<DemoMode, string>> = {
     url: "https://example.com/saas-pricing",
     screenshot: "Homepage screenshot: the primary CTA sits below the fold, proof points appear late, and the visual focus is scattered.",
     brief: "Goal: improve trial requests within two weeks. Audience: mid-market team leads. Current issue: unclear hero value and weak form completion."
+  }
+};
+
+const defaultStructuredBriefs: Record<Locale, StructuredBrief> = {
+  zh: {
+    audience: "团队负责人",
+    goal: "提升试用申请率",
+    problem: "首屏模糊，证据较晚，CTA 不突出"
+  },
+  en: {
+    audience: "Mid-market team leads",
+    goal: "Increase trial requests",
+    problem: "Hero copy is vague, proof appears too late, and the primary CTA is weak"
   }
 };
 
@@ -367,7 +392,16 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     demoTitle: "交互 Demo（Mock Pipeline）",
     demoNote: "单页演示，不调用真实模型",
     inputTitle: "输入区",
+    urlLabel: "URL",
+    materialLabel: "素材",
     inputHint: "本次演示将串行执行 4 个阶段，完成后自动展示改版结果。",
+    briefTitle: "Brief",
+    briefHint: "URL 发送 /api/analyze；截图/Brief 本地演示。",
+    briefLabels: {
+      audience: "受众",
+      goal: "目标",
+      problem: "问题"
+    },
     generateIdle: "生成完整改版演示",
     generateBusy: "生成中...",
     pipelineTitle: "生成流水线",
@@ -401,8 +435,13 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     finalContactCta: "联系沟通需求",
     acceptedLog: "已接收输入，诊断流水线启动",
     doneLog: "结果已生成，可继续切换输入重跑完整演示",
-    apiAcceptedLog: "Safe Mock API 已接收 URL 请求，将返回结构化 D9 结果",
+    apiAcceptedLog: "Safe Mock API 已接收 URL 与 Brief，返回 V1 结果",
     apiFailurePrefix: "Safe Mock API 返回错误",
+    errorRecovery: {
+      analysis_timeout: "模型超时，输入已保留，可稍后重试。",
+      invalid_model_output: "模型输出未通过校验，请补充 Brief 后重试。",
+      default: "检查后重试。"
+    },
     status: {
       done: "完成",
       running: "进行中",
@@ -438,7 +477,16 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     demoTitle: "Interactive Demo (Mock Pipeline)",
     demoNote: "Single-page demo, no live model call",
     inputTitle: "Input",
+    urlLabel: "Public URL",
+    materialLabel: "Page material notes",
     inputHint: "This demo runs four stages in sequence and then displays the redesign output.",
+    briefTitle: "Product brief",
+    briefHint: "URL mode sends these three fields to /api/analyze. Screenshot and brief modes stay local demos.",
+    briefLabels: {
+      audience: "Audience",
+      goal: "Goal",
+      problem: "Current problem"
+    },
     generateIdle: "Generate redesign demo",
     generateBusy: "Generating...",
     pipelineTitle: "Generation pipeline",
@@ -472,8 +520,13 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     finalContactCta: "Discuss a project",
     acceptedLog: "Input received. Diagnosis pipeline started.",
     doneLog: "Output generated. You can change the input and rerun the demo.",
-    apiAcceptedLog: "Safe Mock API accepted the URL request and will return the D9 structured result.",
+    apiAcceptedLog: "Safe Mock API accepted the URL and brief, then returns the V1 structured result.",
     apiFailurePrefix: "Safe Mock API returned an error",
+    errorRecovery: {
+      analysis_timeout: "The model analysis timed out. Your URL and brief are kept so you can retry.",
+      invalid_model_output: "The model output failed schema validation. Retry later or add more brief context.",
+      default: "Check the URL and brief, then retry."
+    },
     status: {
       done: "Done",
       running: "Running",
@@ -797,28 +850,6 @@ function getMockOutput(mode: DemoMode, input: string, locale: Locale): DemoOutpu
   };
 }
 
-function buildDemoBrief(input: string, locale: Locale) {
-  const trimmedInput = input.trim();
-
-  if (locale === "en") {
-    return {
-      audience: "Independent builders and product teams",
-      goal: "Improve the clarity and conversion path of this public page",
-      problem: trimmedInput
-        ? `The submitted page needs a sharper value proposition and clearer next action: ${trimmedInput.slice(0, 96)}`
-        : "The submitted page needs a sharper value proposition and clearer next action"
-    };
-  }
-
-  return {
-    audience: "独立开发者和早期产品团队",
-    goal: "提升公开页面的信息清晰度和转化路径",
-    problem: trimmedInput
-      ? `提交页面需要更清晰的价值表达和下一步行动：${trimmedInput.slice(0, 96)}`
-      : "提交页面需要更清晰的价值表达和下一步行动"
-  };
-}
-
 function formatApiTimestamp(value: string, locale: Locale) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -826,6 +857,14 @@ function formatApiTimestamp(value: string, locale: Locale) {
   }
 
   return formatTimestamp(date, locale);
+}
+
+function getApiErrorMessage(
+  error: ApiAnalysisError["error"],
+  copy: AiPageAnalysisCopy
+) {
+  const recovery = copy.errorRecovery[error.code] ?? copy.errorRecovery.default;
+  return `${copy.apiFailurePrefix}: ${error.code}. ${error.message} ${recovery}`;
 }
 
 function toTitleCase(value: string) {
@@ -879,6 +918,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
   const currentPipelineStages = pipelineStages[locale];
   const [mode, setMode] = useState<DemoMode>("url");
   const [input, setInput] = useState<string>(currentModePlaceholders.url);
+  const [structuredBrief, setStructuredBrief] = useState<StructuredBrief>(defaultStructuredBriefs[locale]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeStageIndex, setActiveStageIndex] = useState<number | null>(null);
   const [completedStageCount, setCompletedStageCount] = useState(0);
@@ -923,6 +963,13 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
     setMode(nextMode);
     setInput(currentModePlaceholders[nextMode]);
     setErrorMessage(null);
+  };
+
+  const updateStructuredBrief = (field: keyof StructuredBrief, value: string) => {
+    setStructuredBrief((prev) => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleGenerate = () => {
@@ -971,7 +1018,11 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
             mode: "url",
             input: effectiveInput,
             language: locale,
-            brief: buildDemoBrief(effectiveInput, locale)
+            brief: {
+              audience: structuredBrief.audience,
+              goal: structuredBrief.goal,
+              problem: structuredBrief.problem
+            }
           })
         });
         const payload = await response.json() as ApiAnalysisResult | ApiAnalysisError;
@@ -981,7 +1032,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
             code: "submit_failure",
             message: "The Safe Mock API response could not be read."
           };
-          setErrorMessage(`${copy.apiFailurePrefix}: ${error.code}. ${error.message}`);
+          setErrorMessage(getApiErrorMessage(error, copy));
           setStageLogs((prev) => [...prev, `${copy.apiFailurePrefix}: ${error.code}`]);
           setIsGenerating(false);
           return;
@@ -1094,12 +1145,57 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
 
             <p className={`mt-3 ${TEXT_XS_MUTED}`}>{modeLabel?.helper}</p>
 
-            <textarea
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              disabled={isGenerating}
-              className="mt-3 min-h-40 w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
-            />
+            <label className="mt-3 block">
+              <span className={TEXT_XS_MUTED}>{mode === "url" ? copy.urlLabel : copy.materialLabel}</span>
+              <textarea
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                disabled={isGenerating}
+                className="mt-1 min-h-28 w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
+              />
+            </label>
+
+            {mode === "url" ? (
+              <div className="mt-4 rounded-xl border border-edge/70 bg-base/35 p-3">
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <p className={TEXT_SM_SECONDARY}>{copy.briefTitle}</p>
+                    <p className={`mt-1 ${TEXT_XS_MUTED}`}>{copy.briefHint}</p>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-3">
+                  <label className="block">
+                    <span className={TEXT_XS_MUTED}>{copy.briefLabels.audience}</span>
+                    <input
+                      type="text"
+                      value={structuredBrief.audience}
+                      onChange={(event) => updateStructuredBrief("audience", event.target.value)}
+                      disabled={isGenerating}
+                      className="mt-1 w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className={TEXT_XS_MUTED}>{copy.briefLabels.goal}</span>
+                    <input
+                      type="text"
+                      value={structuredBrief.goal}
+                      onChange={(event) => updateStructuredBrief("goal", event.target.value)}
+                      disabled={isGenerating}
+                      className="mt-1 w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className={TEXT_XS_MUTED}>{copy.briefLabels.problem}</span>
+                    <textarea
+                      value={structuredBrief.problem}
+                      onChange={(event) => updateStructuredBrief("problem", event.target.value)}
+                      disabled={isGenerating}
+                      className="mt-1 min-h-24 w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-secondary outline-none transition focus:border-accent"
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : null}
 
             <div className="mt-4 rounded-xl border border-edge/70 bg-base/35 p-3">
               <p className={TEXT_XS_MUTED}>{copy.inputHint}</p>

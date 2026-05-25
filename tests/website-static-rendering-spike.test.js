@@ -339,3 +339,54 @@ test('D7 contact form plan and acceptance report define implemented API guardrai
   assert.match(checklist, /D7 Contact API/);
   assert.match(checklist, /CONTACT_SUBMISSIONS_DIR/);
 });
+
+test('P3A AI page analysis V1 docs record implemented adapter, output gate, and acceptance', () => {
+  const productSpec = read('docs/website/AI_PAGE_ANALYSIS_V1_PRODUCT_SPEC.md');
+  const techSpec = read('docs/website/AI_PAGE_ANALYSIS_V1_TECH_SPEC.md');
+  const checklist = read('docs/website/RELEASE_CHECKLIST.md');
+  const report = read('docs/website/P3A_ACCEPTANCE_REPORT.md');
+
+  for (const expected of [
+    /P3A 已实现|P3A implemented/i,
+    /model adapter|模型适配器/i,
+    /output schema gate|输出 schema gate/i,
+    /safe fallback|安全 fallback/i,
+    /不做登录|no login/i,
+    /不做历史记录|no history/i,
+    /不做 PDF|no PDF/i,
+    /不做截图上传|no screenshot upload/i
+  ]) {
+    assert.match(productSpec, expected);
+  }
+
+  for (const expected of [
+    /AnalysisModelAdapter/,
+    /validateModelAnalysisOutput/,
+    /createSafeMockAnalysisAdapter/,
+    /runAnalysisPipeline/,
+    /invalid_model_output/,
+    /analysis_timeout/,
+    /fallback/i
+  ]) {
+    assert.match(techSpec, expected);
+  }
+
+  assert.match(checklist, /P3A AI Page Analysis V1/);
+  assert.match(checklist, /output schema gate/);
+  assert.match(checklist, /model adapter/);
+  assert.match(checklist, /structured brief/i);
+
+  for (const expected of [
+    /# Website P3A AI Page Analysis V1 Acceptance Report/,
+    /实现范围/,
+    /非目标/,
+    /验证/,
+    /剩余风险/,
+    /npm test/,
+    /npm run build:website/
+  ]) {
+    assert.match(report, expected);
+  }
+
+  assert.doesNotMatch(report, /TBD|TODO|implement later|fill in details/);
+});

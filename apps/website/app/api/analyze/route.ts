@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { analyzePageRequest } from "../../../lib/ai-page-analysis";
+import {
+  analyzePageRequest,
+  createSafeMockAnalysisAdapter,
+  type AnalysisModelAdapter
+} from "../../../lib/ai-page-analysis";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +15,21 @@ function getClientIdentity(request: NextRequest) {
   );
 }
 
+function createRouteModelAdapter(): AnalysisModelAdapter | undefined {
+  const provider = process.env.AI_PAGE_ANALYSIS_MODEL_PROVIDER?.trim().toLowerCase();
+
+  if (!provider || provider === "safe_mock") {
+    return createSafeMockAnalysisAdapter();
+  }
+
+  return undefined;
+}
+
 export async function GET() {
   return NextResponse.json({
     ok: true,
     service: "ai-page-analysis",
-    version: "d9"
+    version: "v1"
   });
 }
 
@@ -38,7 +52,8 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await analyzePageRequest(payload, {
-    identityKey: getClientIdentity(request)
+    identityKey: getClientIdentity(request),
+    modelAdapter: createRouteModelAdapter()
   });
 
   if (!result.ok) {

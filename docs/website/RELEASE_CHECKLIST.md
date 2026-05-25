@@ -13,6 +13,7 @@
 | D8 Contact Operations 改动 | 是 | 涉及 Contact JSONL retention cleanup、存储目录护栏或运维脚本时必须跑测试、`contact:ops` dry run、构建和 whitespace 检查 |
 | D9 AI Page Analysis API 改动 | 是 | 涉及 `/api/analyze`、AI 页面分析 schema、SSRF guard 或 Safe Mock API 前端调用时必须跑测试、英文审计、构建和 whitespace 检查 |
 | D10 AI Page Analysis Capture Harness 改动 | 是 | 涉及 DNS resolve、redirect guard、HTML size limit、auth/content capture 或 `/api/analyze` capture pipeline 时必须跑测试、英文审计、构建和 whitespace 检查 |
+| P3A AI Page Analysis V1 改动 | 是 | 涉及 model adapter、output schema gate、structured brief、safe fallback 或 route adapter factory 时必须跑测试、英文审计、内容校验、构建和 whitespace 检查 |
 | 服务器部署操作 | 否 | 服务器上线、Nginx、NSSM、回滚流程见 `docs/website/GO_LIVE_CHECKLIST.md` |
 | D2 状态审计 | 参考 | D2 当前验收结论见 `docs/website/D2_ACCEPTANCE_REPORT.md` |
 | D4 英文内容审计 | 参考 | D4 当前验收结论见 `docs/website/D4_ACCEPTANCE_REPORT.md` |
@@ -42,6 +43,7 @@
 | 改动 D8 Contact Operations、retention cleanup 或 storage guard | `npm test` + `npm run contact:ops -- --check-storage` + `npm run contact:ops -- --cleanup --dry-run` + `npm run build:website` + `git diff --check` | `unsafe_storage_directory` 护栏有效；cleanup dry run 不改文件；malformed JSONL 行保留；默认 retention 为 90 天 |
 | 改动 D9 AI Page Analysis API、SSRF guard、mock output schema 或前端 API 调用链 | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | `/api/analyze` 只接受 URL mode；localhost、内网和 cloud metadata 被拒绝；Safe Mock API 不抓取真实网页、不调用模型、不保存历史 |
 | 改动 D10 AI Page Analysis capture、DNS resolver、redirect guard、size limit 或 content extraction | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | DNS 解析后复检 SSRF；redirect 每跳复检；2 MB 上限生效；登录页、内容不足、超时和不可达错误码稳定 |
+| 改动 P3A AI Page Analysis V1 model adapter、output schema gate、structured brief 或 safe fallback | `npm test` + `npm run audit:website-english-content` + `npm run validate:website-content` + `npm run build:website` + `git diff --check` | `AnalysisModelAdapter` 可注入；`validateModelAnalysisOutput` 拒绝坏结构；`analysis_timeout`/`invalid_model_output` 映射稳定；URL mode 发送 structured brief；无模型 env 时 safe fallback 不伪装真实模型 |
 | 改动 AI 页面分析 V1 后端规格或计划接入真实模型 | `npm test` + `npm run audit:website-english-content` | `AI_PAGE_ANALYSIS_V1_TECH_SPEC.md` 覆盖 SSRF、内网、cloud metadata、input schema、output schema、错误码和 D6 非实现边界 |
 | 改动截图预期或视觉设计被确认接受 | `npm run verify:website-browser -- --update-snapshots` | 新截图基线符合预期，并在 review 中说明原因 |
 | 改动静态入口清单、sitemap、公开页面新增/删除 | `npm test` + `npm run verify:website-static` + `npm run verify:website-browser` | `PUBLIC_WEBSITE_ROUTES` 保持中文根路径，`PUBLIC_WEBSITE_LOCALE_ROUTES`、sitemap、HTML 验收和浏览器验收保持一致 |

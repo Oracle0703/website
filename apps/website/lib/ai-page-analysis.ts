@@ -21,7 +21,9 @@ export type AnalysisErrorCode =
   | "auth_required_page"
   | "insufficient_page_content"
   | "page_too_large"
-  | "capture_timeout";
+  | "capture_timeout"
+  | "analysis_timeout"
+  | "invalid_model_output";
 
 export type AnalysisError = {
   code: AnalysisErrorCode;
@@ -85,6 +87,26 @@ export type PageAnalysisResult = {
   backlog: AnalysisBacklogItem[];
   safe_mock_api: true;
 };
+
+export type RawModelAnalysisOutput = {
+  confidence: number;
+  scores: {
+    key: AnalysisScoreKey;
+    score: number;
+    reason: string;
+  }[];
+  issues: AnalysisIssue[];
+  recommendations: AnalysisRecommendation[];
+  backlog: AnalysisBacklogItem[];
+};
+
+export type AnalysisModelInput = {
+  request: NormalizedAnalysisRequest;
+  page: PageCaptureSummary;
+  language: AnalysisLanguage;
+};
+
+export type AnalysisModelAdapter = (input: AnalysisModelInput) => Promise<unknown>;
 
 export type AnalysisRequestGate = {
   attemptsByIdentity: Map<string, number[]>;
@@ -383,6 +405,225 @@ function buildAnalysisId(input: NormalizedAnalysisRequest, now: Date) {
   return `ana_${datePart}_${digest}`;
 }
 
+function normalizeModelOutput(output: unknown): Record<string, unknown> | null {
+  if (typeof output === "string") {
+    try {
+      const parsed = JSON.parse(output);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : null;
+    } catch {
+      return null;
+    }
+  }
+
+  if (!output || typeof output !== "object" || Array.isArray(output)) {
+    return null;
+  }
+
+  return output as Record<string, unknown>;
+}
+
+function getRecord(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function getRequiredString(value: unknown) {
+  const text = getString(value);
+  return text.length > 0 ? text : null;
+}
+
+function getPriority(value: unknown): AnalysisRecommendation["priority"] | null {
+  return value === "P0" || value === "P1" || value === "P2" ? value : null;
+}
+
+function getSeverity(value: unknown): AnalysisIssue["severity"] | null {
+  return value === "high" || value === "medium" || value === "low" ? value : null;
+}
+
+function parseScores(value: unknown, language: AnalysisLanguage): AnalysisScore[] | null {
+  if (!Array.isArray(value) || value.length !== ANALYSIS_SCORE_KEYS.length) {
+    return null;
+  }
+
+  const seen = new Set<string>();
+  const scoresByKey = new Map<AnalysisScoreKey, AnalysisScore>();
+
+  for (const item of value) {
+    const record = getRecord(item);
+    if (!record) return null;
+
+    const key = record.key;
+    if (!ANALYSIS_SCORE_KEYS.includes(key as AnalysisScoreKey) || seen.has(String(key))) {
+      return null;
+    }
+
+    const score = record.score;
+    const reason = getRequiredString(record.reason);
+    if (typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > 100 || !reason) {
+      return null;
+    }
+
+    const typedKey = key as AnalysisScoreKey;
+    seen.add(typedKey);
+    scoresByKey.set(typedKey, {
+      key: typedKey,
+      label: labelFor(typedKey, language),
+      score: Math.round(score),
+      reason
+    });
+  }
+
+  if (ANALYSIS_SCORE_KEYS.some((key) => !scoresByKey.has(key))) {
+    return null;
+  }
+
+  return ANALYSIS_SCORE_KEYS.map((key) => scoresByKey.get(key)!);
+}
+
+function parseIssues(value: unknown): AnalysisIssue[] | null {
+  if (!Array.isArray(value) || value.length === 0) {
+    return null;
+  }
+
+  const issues: AnalysisIssue[] = [];
+
+  for (const item of value) {
+    const record = getRecord(item);
+    if (!record) return null;
+
+    const severity = getSeverity(record.severity);
+    const evidence = getRequiredString(record.evidence);
+    const impact = getRequiredString(record.impact);
+    const recommendation = getRequiredString(record.recommendation);
+
+    if (!severity || !evidence || !impact || !recommendation) {
+      return null;
+    }
+
+    issues.push({
+      severity,
+      evidence,
+      impact,
+      recommendation
+    });
+  }
+
+  return issues;
+}
+
+function parseRecommendations(value: unknown): AnalysisRecommendation[] | null {
+  if (!Array.isArray(value) || value.length === 0) {
+    return null;
+  }
+
+  const recommendations: AnalysisRecommendation[] = [];
+
+  for (const item of value) {
+    const record = getRecord(item);
+    if (!record) return null;
+
+    const moduleName = getRequiredString(record.module);
+    const action = getRequiredString(record.action);
+    const priority = getPriority(record.priority);
+    const expectedOutcome = getRequiredString(record.expected_outcome);
+
+    if (!moduleName || !action || !priority || !expectedOutcome) {
+      return null;
+    }
+
+    recommendations.push({
+      module: moduleName,
+      action,
+      priority,
+      expected_outcome: expectedOutcome
+    });
+  }
+
+  return recommendations;
+}
+
+function parseBacklog(value: unknown): AnalysisBacklogItem[] | null {
+  if (!Array.isArray(value) || value.length === 0) {
+    return null;
+  }
+
+  const backlog: AnalysisBacklogItem[] = [];
+
+  for (const item of value) {
+    const record = getRecord(item);
+    if (!record) return null;
+
+    const task = getRequiredString(record.task);
+    const owner = getRequiredString(record.owner);
+    const priority = getPriority(record.priority);
+    const eta = getRequiredString(record.eta);
+
+    if (!task || !owner || !priority || !eta) {
+      return null;
+    }
+
+    backlog.push({
+      task,
+      owner,
+      priority,
+      eta
+    });
+  }
+
+  return backlog;
+}
+
+export function validateModelAnalysisOutput(
+  output: unknown,
+  context: {
+    input: NormalizedAnalysisRequest;
+    now?: Date;
+    capturedTitle?: string;
+  }
+): { ok: true; value: PageAnalysisResult } | { ok: false; error: AnalysisError } {
+  const record = normalizeModelOutput(output);
+  if (!record) {
+    return failure("invalid_model_output", "Model output must be a valid JSON object.");
+  }
+
+  const confidence = record.confidence;
+  if (typeof confidence !== "number" || !Number.isFinite(confidence)) {
+    return failure("invalid_model_output", "Model output confidence must be numeric.");
+  }
+  const normalizedConfidence = Math.min(1, Math.max(0, confidence));
+
+  const scores = parseScores(record.scores, context.input.language);
+  const issues = parseIssues(record.issues);
+  const recommendations = parseRecommendations(record.recommendations);
+  const backlog = parseBacklog(record.backlog);
+
+  if (!scores || !issues || !recommendations || !backlog) {
+    return failure("invalid_model_output", "Model output does not match the required analysis schema.");
+  }
+
+  const now = context.now ?? new Date();
+  const hostname = new URL(context.input.input).hostname;
+
+  return {
+    ok: true,
+    value: {
+      analysis_id: buildAnalysisId(context.input, now),
+      status: "succeeded",
+      needs_review: normalizedConfidence < 0.65,
+      confidence: normalizedConfidence,
+      source: {
+        url: context.input.input,
+        title: context.capturedTitle ?? hostname,
+        captured_at: now.toISOString()
+      },
+      scores,
+      issues,
+      recommendations,
+      backlog,
+      safe_mock_api: true
+    }
+  };
+}
+
 function getHeaderValue(headers: AnalysisFetchResponse["headers"], name: string) {
   if (!headers) return "";
   const lowerName = name.toLowerCase();
@@ -612,16 +853,15 @@ export async function capturePageForAnalysis(
   return failure("url_unreachable", "The target page redirected too many times.");
 }
 
-export function createMockPageAnalysis(
-  input: NormalizedAnalysisRequest,
-  options: { now?: Date; capturedTitle?: string } = {}
-): PageAnalysisResult {
-  const now = options.now ?? new Date();
+function safeMockTitle(input: NormalizedAnalysisRequest) {
   const hostname = new URL(input.input).hostname;
+  return input.language === "en" ? `Safe mock capture for ${hostname}` : `${hostname} 的安全 Mock 捕获`;
+}
+
+function createSafeMockRawOutput(input: NormalizedAnalysisRequest): RawModelAnalysisOutput {
   const language = input.language;
-  const scores: AnalysisScore[] = ANALYSIS_SCORE_KEYS.map((key, index) => ({
+  const scores: RawModelAnalysisOutput["scores"] = ANALYSIS_SCORE_KEYS.map((key, index) => ({
     key,
-    label: labelFor(key, language),
     score: [68, 63, 59, 61, 66][index],
     reason: reasonFor(key, language, input.brief)
   }));
@@ -629,15 +869,7 @@ export function createMockPageAnalysis(
   const isEnglish = language === "en";
 
   return {
-    analysis_id: buildAnalysisId(input, now),
-    status: "succeeded",
-    needs_review: false,
     confidence: 0.82,
-    source: {
-      url: input.input,
-      title: options.capturedTitle ?? (isEnglish ? `Safe mock capture for ${hostname}` : `${hostname} 的安全 Mock 捕获`),
-      captured_at: now.toISOString()
-    },
     scores,
     issues: isEnglish
       ? [
@@ -725,15 +957,68 @@ export function createMockPageAnalysis(
             priority: "P1",
             eta: "1d"
           }
-        ],
-    safe_mock_api: true
+        ]
   };
+}
+
+export function createSafeMockAnalysisAdapter(): AnalysisModelAdapter {
+  return async ({ request }) => createSafeMockRawOutput(request);
+}
+
+export async function runAnalysisPipeline(
+  input: NormalizedAnalysisRequest,
+  page: PageCaptureSummary,
+  options: {
+    now?: Date;
+    modelAdapter?: AnalysisModelAdapter;
+  } = {}
+): Promise<{ ok: true; value: PageAnalysisResult } | { ok: false; error: AnalysisError }> {
+  const adapter = options.modelAdapter ?? createSafeMockAnalysisAdapter();
+
+  let rawOutput: unknown;
+  try {
+    rawOutput = await adapter({
+      request: input,
+      page,
+      language: input.language
+    });
+  } catch (error) {
+    if (isTimeoutLikeError(error)) {
+      return failure("analysis_timeout", "The analysis model timed out.");
+    }
+
+    return failure("invalid_model_output", "The analysis model did not return a usable output.");
+  }
+
+  return validateModelAnalysisOutput(rawOutput, {
+    input,
+    now: options.now,
+    capturedTitle: page.title
+  });
+}
+
+export function createMockPageAnalysis(
+  input: NormalizedAnalysisRequest,
+  options: { now?: Date; capturedTitle?: string } = {}
+): PageAnalysisResult {
+  const result = validateModelAnalysisOutput(createSafeMockRawOutput(input), {
+    input,
+    now: options.now,
+    capturedTitle: options.capturedTitle ?? safeMockTitle(input)
+  });
+
+  if (!result.ok) {
+    throw new Error(result.error.message);
+  }
+
+  return result.value;
 }
 
 function statusForError(code: AnalysisErrorCode) {
   if (code === "rate_limited") return 429;
   if (code === "page_too_large") return 413;
-  if (code === "capture_timeout") return 504;
+  if (code === "capture_timeout" || code === "analysis_timeout") return 504;
+  if (code === "invalid_model_output") return 502;
   if (code === "url_unreachable" || code === "auth_required_page" || code === "insufficient_page_content") return 422;
   return 400;
 }
@@ -748,6 +1033,7 @@ export async function analyzePageRequest(
     resolver?: AnalysisResolver;
     fetcher?: AnalysisFetcher;
     capture?: boolean;
+    modelAdapter?: AnalysisModelAdapter;
   } = {}
 ): Promise<
   | { ok: true; httpStatus: 200; value: PageAnalysisResult }
@@ -785,7 +1071,7 @@ export async function analyzePageRequest(
     };
   }
 
-  let capturedTitle: string | undefined;
+  let pageSummary: PageCaptureSummary;
   if (options.capture !== false) {
     const capture = await capturePageForAnalysis(validation.value.input, {
       resolver: options.resolver,
@@ -800,15 +1086,31 @@ export async function analyzePageRequest(
       };
     }
 
-    capturedTitle = capture.value.title;
+    pageSummary = capture.value;
+  } else {
+    pageSummary = {
+      finalUrl: validation.value.input,
+      title: safeMockTitle(validation.value),
+      text: validation.value.brief.problem
+    };
+  }
+
+  const analysis = await runAnalysisPipeline(validation.value, pageSummary, {
+    now: options.now,
+    modelAdapter: options.modelAdapter
+  });
+
+  if (!analysis.ok) {
+    return {
+      ok: false,
+      httpStatus: statusForError(analysis.error.code),
+      error: analysis.error
+    };
   }
 
   return {
     ok: true,
     httpStatus: 200,
-    value: createMockPageAnalysis(validation.value, {
-      now: options.now,
-      capturedTitle
-    })
+    value: analysis.value
   };
 }

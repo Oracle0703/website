@@ -1,15 +1,17 @@
 # AI Page Analysis V1 Tech Spec
 
-> D6 only defines the backend safety and schema gates. D6 不实现 `/api/analyze`，不新增模型 key、队列、数据库、登录或历史记录。
+> P3A implements the V1 MVP boundary for `/api/analyze`: capture harness, model adapter, output schema gate, and safe fallback. It still does not add model keys, queues, databases, login, or history.
+
+Historical note: D6 only defines the backend safety and schema gates; P3A is the implementation stage that turns those gates into the V1 MVP.
 
 ## 1. Scope
 
 | 项目 | 规格 |
 |---|---|
 | 对应产品文档 | `docs/website/AI_PAGE_ANALYSIS_V1_PRODUCT_SPEC.md` |
-| V1 技术目标 | 将 URL 抓取、页面摘要、模型分析和结构化结果放进可测试边界 |
-| D6 交付 | SSRF 规则、input schema、output schema、错误码、超时和非实现边界 |
-| D6 不做 | 不接真实抓取服务，不调用模型，不保存历史，不上线 API |
+| V1 技术目标 | 将 URL 抓取、页面摘要、model adapter、output schema gate 和结构化结果放进可测试边界 |
+| P3A 交付 | SSRF 规则、capture harness、`AnalysisModelAdapter`、`validateModelAnalysisOutput`、safe fallback、错误码和前端 structured brief |
+| P3A 不做 | 不接真实模型 key，不保存历史，不新增队列，不新增登录，不做截图上传或浏览器渲染抓取 |
 
 ## 2. Input Schema
 
@@ -56,7 +58,18 @@
 | analyze | page summary + brief | model output draft | `analysis_timeout` |
 | parse | model output draft | output schema | `invalid_model_output` |
 
-## 5. Output Schema
+## 5. Model Adapter Boundary
+
+| API | 职责 |
+|---|---|
+| `AnalysisModelInput` | 包含 normalized request、page summary 和 language |
+| `AnalysisModelAdapter` | 接收 `AnalysisModelInput` 并返回 unknown raw output |
+| `createSafeMockAnalysisAdapter` | 在未配置真实模型时生成 deterministic raw output |
+| `runAnalysisPipeline` | 调用 adapter、处理 timeout、执行 output schema gate 并返回 `PageAnalysisResult` |
+
+Route-level adapter selection stays inside `apps/website/app/api/analyze/route.ts`. If no supported model environment is configured, `createRouteModelAdapter()` returns a safe fallback adapter. Environment values are not returned to the client or logged.
+
+## 6. Output Schema
 
 ```json
 {
@@ -104,7 +117,7 @@
 }
 ```
 
-## 6. Error Codes
+## 7. Error Codes
 
 | 错误码 | HTTP | 含义 | 用户恢复 |
 |---|---:|---|---|
@@ -119,33 +132,47 @@
 | `analysis_timeout` | 504 | 模型分析超时 | 重试 |
 | `invalid_model_output` | 502 | 模型输出不能解析成 output schema | 记录分析 ID，允许稍后重试 |
 
-## 7. Model Output Gate
+## 8. Model Output Gate
 
 | 规则 | 处理 |
 |---|---|
 | JSON parse 失败 | 返回 `invalid_model_output` |
-| 必填数组为空 | 返回 `invalid_model_output` |
+| score keys 缺失、重复或不是完整 `ANALYSIS_SCORE_KEYS` | 返回 `invalid_model_output` |
+| score 非 0 到 100 数字或缺少 reason | 返回 `invalid_model_output` |
+| issues 缺少 severity、evidence、impact 或 recommendation | 返回 `invalid_model_output` |
+| recommendations/backlog 为空或缺少必填字段 | 返回 `invalid_model_output` |
+| confidence 缺失、非数字或不在 0 到 1 | 返回 `invalid_model_output` |
 | `confidence < 0.65` | 返回成功但设置 `needs_review: true` |
-| 缺少 evidence 或 impact | 该 issue 无效；若全部无效则 `invalid_model_output` |
-| recommendation 不关联页面证据 | 降低置信度并标记人工复核 |
-| 输出包含未抓取到的事实断言 | 标记 `needs_review: true` |
 
-## 8. D6 Non-Implementation Boundary
+`validateModelAnalysisOutput` accepts object output or JSON string output. It normalizes only validated fields into `PageAnalysisResult`; malformed output never reaches frontend rendering.
 
-| D6 不实现 | 原因 |
+## 9. Safe Fallback Behavior
+
+| 场景 | 行为 |
 |---|---|
-| 不新增 `/api/analyze` | 安全边界和 schema 先验收 |
-| 不新增模型 key | 避免把凭据和成本引入当前阶段 |
-| 不新增队列 | V1 超时和重试策略尚未实现 |
+| model env absent | Use `createSafeMockAnalysisAdapter()` and return deterministic output |
+| unsupported provider configured | Return undefined adapter and let helper use safe fallback |
+| adapter timeout-like error | Map to `analysis_timeout`, HTTP 504 |
+| adapter malformed output | Map to `invalid_model_output`, HTTP 502 |
+| successful fallback | Keep `safe_mock_api: true` so UI does not imply a live model |
+
+## 10. P3A Non-Implementation Boundary
+
+| P3A 不实现 | 原因 |
+|---|---|
+| 不新增模型 key | 先固化 adapter 和 schema gate，避免凭据、成本和供应商耦合 |
+| 不新增队列 | 当前请求仍是同步 MVP，队列属于后续稳定性阶段 |
 | 不新增数据库 | 历史记录、删除和权限属于后续阶段 |
 | 不新增登录 | V1 先验证单次公开页面分析 |
+| 不做 PDF 或截图上传 | 文件安全、存储和导出属于 V2 |
+| 不使用浏览器渲染爬虫 | 当前仅使用 HTML capture harness，降低安全面和运行成本 |
 | 不抓取登录后页面 | 认证数据和隐私风险过高 |
 
-## 9. Verification Plan
+## 11. Verification Plan
 
 | 类型 | 验收 |
 |---|---|
-| 单元测试 | URL parser、SSRF denylist、redirect guard、input schema、output schema |
+| 单元测试 | URL parser、SSRF denylist、redirect guard、input schema、output schema gate、adapter fallback |
 | 集成测试 | `url_unreachable`、`auth_required_page`、`capture_timeout`、`analysis_timeout`、`invalid_model_output` |
-| 浏览器测试 | 页面继续标记 Mock Pipeline limitation，不暗示 production-ready AI analysis |
-| 发布检查 | D6 阶段只能更新规格和 mock 页面，不新增 API route |
+| 前端测试 | URL mode sends structured brief；英文 route visible copy no CJK |
+| 发布检查 | `npm test`、`npm run audit:website-english-content`、`npm run validate:website-content`、`npm run build:website`、`git diff --check` |
