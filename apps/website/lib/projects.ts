@@ -14,6 +14,15 @@ export type ProjectEvidence = {
   value: string;
 };
 
+export type ProjectCaseStudy = {
+  problem: string;
+  constraints: string[];
+  decisions: string[];
+  implementation: string[];
+  result: string[];
+  next: string[];
+};
+
 export type ProjectAsset =
   | {
       kind: "screenshot" | "mock" | "diagram";
@@ -48,6 +57,7 @@ export type Project = {
   highlights: string[];
   evidence: ProjectEvidence[];
   asset: ProjectAsset;
+  caseStudy: ProjectCaseStudy;
   architecture: string;
   tradeoffs: string[];
   roadmap: string[];
@@ -67,6 +77,7 @@ export type LocalizedProjectContent = {
   highlights: string[];
   evidence: ProjectEvidence[];
   asset: ProjectAsset;
+  caseStudy: ProjectCaseStudy;
   architecture: string;
   tradeoffs: string[];
   roadmap: string[];
@@ -113,6 +124,35 @@ export const projects: Project[] = [
       caption:
         "Product mock：用于公开说明页面分析工作流，不代表已接入真实抓取或模型能力。"
     },
+    caseStudy: {
+      problem:
+        "页面改版讨论需要把目标受众、业务目标、页面证据和执行 backlog 串起来，否则很容易停留在主观审美和零散建议。",
+      constraints: [
+        "公开 demo 不能抓取登录后页面，也不能把 SSRF、模型成本和隐私风险一次性推到前端体验里。",
+        "输出必须稳定成评分、问题、建议和 backlog，不能让模型自由文本直接进入用户界面。",
+        "中英文路由要共用同一产品能力边界，避免英文页面暗示已经具备未上线的真实模型能力。"
+      ],
+      decisions: [
+        "先把 URL 输入、结构化 brief、分析步骤和安全 fallback 固化为可测试的 V1 体验。",
+        "把模型能力放到服务端 adapter 边界，前端只消费经过 schema gate 的结果。",
+        "低置信度和脏输出不强行展示为确定结论，而是通过 `needs_review` 和错误码保留人工复核空间。"
+      ],
+      implementation: [
+        "使用 Next.js 页面承载输入、流水线状态、错误恢复和结果渲染，并通过 `/api/analyze` 连接后端分析流程。",
+        "后端复用 capture harness、输出 schema 校验和 safe mock adapter，让没有模型环境时仍能稳定演示。",
+        "产品规格、技术规格、英文审计和 release checklist 同步记录 SSRF、错误码、结构化输出和非目标边界。"
+      ],
+      result: [
+        "公开页面已经能展示从 URL 与 brief 到评分、问题、建议和 backlog 的完整任务转化链路。",
+        "测试覆盖 capture、adapter、output gate、API route、前端结构化 brief 和英文内容护栏。",
+        "当前仍明确标记为 prototype，不伪装成已经接入真实网页抓取和生产模型分析的完整产品。"
+      ],
+      next: [
+        "接入经过成本、限流和隐私评估的真实模型 provider，并保留 safe fallback。",
+        "增加可分享结果页或导出能力前，先验证结果结构和用户复盘价值。",
+        "补充真实页面样本的人工验收集，避免模型建议偏离产品目标。"
+      ]
+    },
     architecture:
       "当前采用单页 React client demo：输入模式、流水线状态、mock output 和本地化 copy 在组件内闭环；后续 V1 会把抓取、模型调用和结果 schema 下沉到 API。",
     tradeoffs: [
@@ -154,6 +194,35 @@ export const projects: Project[] = [
       caption:
         "Product mock：用于说明打卡产品的核心界面结构，当前不代表已接入账户或持久化数据。"
     },
+    caseStudy: {
+      problem:
+        "打卡产品如果只记录完成与否，很难解释目标、连续性、复盘和激励之间的关系，也难以判断后续账户和数据能力应该先做什么。",
+      constraints: [
+        "当前阶段没有账户和持久化数据，不能把静态页面包装成真实多人系统。",
+        "打卡激励容易过度设计，必须先保持规则轻量，避免在没有行为数据时引入复杂积分或惩罚机制。",
+        "作为个人网站项目案例，页面要能说明产品判断，而不是只展示一张好看的习惯列表。"
+      ],
+      decisions: [
+        "先把目标、每日动作、连续性、趋势和复盘组织成一个可理解的产品闭环。",
+        "使用 product mock 表达核心界面结构，并明确它不代表已接入账户或真实历史数据。",
+        "把下一步拆成数据模型、隐私边界和周报复盘，而不是直接扩展社交或排行榜。"
+      ],
+      implementation: [
+        "用 Next.js 静态页面展示 tracker 产品叙事，保留中英文路由、sitemap 和浏览器验收。",
+        "项目模型中把 evidence、asset、tradeoffs、roadmap 和 limitations 分开，避免把原型写成已上线系统。",
+        "详情页通过案例结构解释为什么先验证规则闭环，再进入账户、持久化和统计视图。"
+      ],
+      result: [
+        "Tracker 已成为网站里可访问的产品系统原型，访客能理解它的目标、边界和演进方向。",
+        "公开 mock 让界面结构可视化，同时避免暴露不存在的数据能力。",
+        "项目案例能支撑后续围绕习惯系统、个人成长产品和内容主题继续扩展。"
+      ],
+      next: [
+        "定义用户、习惯、打卡记录和统计摘要的数据模型。",
+        "补充隐私、删除、连续天数重算和重复打卡的边界条件。",
+        "在真实数据模型稳定后，再考虑周报、复盘和激励规则。"
+      ]
+    },
     architecture:
       "当前是静态产品原型页，先把规则、反馈和页面层级稳定下来；真实版本会拆出用户、习惯、打卡记录和统计视图的数据模型。",
     tradeoffs: [
@@ -193,6 +262,35 @@ export const projects: Project[] = [
       reason: "访问日志可能包含 IP、请求路径和运行时间线，当前不公开原始监控截图。",
       nextAssetStep: "先生成脱敏运行摘要或架构图，再作为公开资产补充到项目详情。"
     },
+    caseStudy: {
+      problem:
+        "个人项目上线后需要最小可用的访问观察能力，否则异常访问、配置错误和公开入口风险只能靠零散日志回溯。",
+      constraints: [
+        "访问日志天然包含地址、路径和时间线，公开案例不能展示原始监控截图。",
+        "个人项目部署成本要低，不能为了早期观察能力引入复杂日志平台。",
+        "当前测试依赖 Node 22 与原生模块 ABI，本地验证前提需要被明确写出。"
+      ],
+      decisions: [
+        "先用 Node 服务、本地 SQLite 和 Basic Auth 做最小监控闭环。",
+        "公开项目页只展示能力边界和脱敏证明，不展示原始访问事件。",
+        "把 Knock 定位成 Dashboard Console 的运行摘要来源，而不是单独扩展成完整观测平台。"
+      ],
+      implementation: [
+        "服务端负责记录访问事件、解析日志并提供受保护的监控入口。",
+        "项目详情页使用 `none` 资产策略解释为什么暂不公开截图，并记录下一步脱敏资产计划。",
+        "测试和文档保留 Node 版本、SQLite 单机形态、鉴权边界和日志保留风险。"
+      ],
+      result: [
+        "项目已经具备 MVP 级访问事件记录、日志解析和基础鉴权说明。",
+        "公开案例能说明监控价值，同时不泄露运行环境、访问者信息或内部路径。",
+        "后续可以把脱敏摘要接入 Dashboard，而不需要重写监控数据来源。"
+      ],
+      next: [
+        "生成只包含聚合计数、状态和时间窗口的脱敏运行摘要。",
+        "增加日志保留、清理和异常告警策略，避免数据无界增长。",
+        "把 Knock 摘要接入 Dashboard Console 的运维视图。"
+      ]
+    },
     architecture:
       "Knock 以 Node 服务接收和解析访问事件，使用本地 SQLite 存储轻量运行数据，并通过可选 Basic Auth 控制监控入口。",
     tradeoffs: [
@@ -231,6 +329,35 @@ export const projects: Project[] = [
       reason: "内部控制台可能包含任务、日志、OSS 对象和部署状态，不适合直接公开截图。",
       nextAssetStep: "先裁剪敏感字段或制作公开架构图，再进入项目资产展示。"
     },
+    caseStudy: {
+      problem:
+        "个人网站长期维护时，内容状态、部署记录、任务和运行事件散落在不同位置，容易让下一步优先级依赖人工记忆。",
+      constraints: [
+        "内部控制台可能包含任务、日志、对象存储状态和部署信号，不能直接公开截图。",
+        "当前阶段不应直接编辑 MDX 内容，否则会引入 Git、review、部署和回滚全链路风险。",
+        "OSS 对象与 ETag 冲突是设计约束，不能假设单人操作就没有并发问题。"
+      ],
+      decisions: [
+        "先做状态聚合和任务事件管理，再考虑内容编辑和复杂权限。",
+        "把 Dashboard 作为个人网站运营中枢，后续承接内容健康度、Contact Ops 和 Knock 摘要。",
+        "公开案例只描述架构和脱敏证明，不展示内部任务、日志或对象键。"
+      ],
+      implementation: [
+        "dashboard-api 负责读写任务与事件，dashboard-web 负责展示可操作的运营状态视图。",
+        "存储层保留 OSS 与 ETag 冲突边界，让失败状态可以被文档和后续测试覆盖。",
+        "项目页通过 evidence、tradeoffs 和 case study 解释为什么先聚合状态，而不是直接上线 CMS。"
+      ],
+      result: [
+        "任务、日志、事件和系统状态已经被抽象为统一控制台模型。",
+        "公开作品页能说明运维价值与隐私边界，不暴露内部运行数据。",
+        "该项目为 P3-C Content Operations 提供了自然承接点。"
+      ],
+      next: [
+        "新增内容健康度只读模块，展示 published、draft、metadata 和 series coverage。",
+        "接入部署记录、健康状态和 Knock 运行摘要。",
+        "在真实使用稳定后，再补权限、审计和更细粒度的数据脱敏策略。"
+      ]
+    },
     architecture:
       "控制台由 dashboard-api 负责任务和事件读写，dashboard-web 渲染运营状态视图；存储层暂以 OSS 对象和 ETag 边界处理并发冲突。",
     tradeoffs: [
@@ -268,6 +395,35 @@ export const projects: Project[] = [
       kind: "none",
       reason: "Labs 工具可公开访问，但 D6 尚未截取经人工检查的真实工具截图。",
       nextAssetStep: "在浏览器验收后补真实工具截图，并替换当前 none 状态。"
+    },
+    caseStudy: {
+      problem:
+        "开发和排障时经常需要快速转换时间戳，但常见工具干扰多、反馈弱，也很难沉淀成个人网站里可复用的小工具模板。",
+      constraints: [
+        "工具必须打开即用，不能为了一个小功能引入后端、账户或复杂状态管理。",
+        "时间和时区边界容易产生误解，首版要优先覆盖高频时间戳转换，而不是承诺完整日历系统。",
+        "Labs 页面需要保持轻量，不能让单个工具压过其他实验入口。"
+      ],
+      decisions: [
+        "用客户端组件承载输入、校验、转换结果和复制反馈。",
+        "依赖浏览器 Intl API 处理本地格式和时区展示，避免引入额外时区数据库。",
+        "把工具作为 Labs 模板样本，后续小工具可复用输入、结果、错误和反馈结构。"
+      ],
+      implementation: [
+        "在 Labs 页面内实现时间戳输入、日期格式展示、时区信息和复制状态。",
+        "使用 TypeScript 和 React 状态处理边界输入，保持不需要后端服务的静态部署能力。",
+        "项目详情页明确当前未提供批量转换，避免把小工具描述成完整时间处理平台。"
+      ],
+      result: [
+        "时间戳工具已经作为 Labs 的一部分公开可访问，能够展示可直接使用的小工具方向。",
+        "输入、校验、结果和复制反馈形成了后续 Labs 工具的最小模板。",
+        "项目案例让这个小工具不只是入口列表，而是能说明实现取舍和演进边界。"
+      ],
+      next: [
+        "补真实浏览器截图并替换当前 asset none 状态。",
+        "增加批量转换和更多时区比较，但继续保持无需账户和后端。",
+        "抽取 Labs 工具通用页面结构，降低新增小工具成本。"
+      ]
     },
     architecture:
       "工具以客户端组件承载输入、转换、校验和反馈状态，依赖浏览器 Intl API 完成日期和时区格式化，不需要后端服务。",
@@ -308,6 +464,35 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       caption:
         "Product mock: it documents the intended analysis workflow and does not claim live crawling or model integration."
     },
+    caseStudy: {
+      problem:
+        "Page redesign work needs a shared path from audience, business goal, page evidence, and execution backlog; otherwise the discussion collapses into taste and scattered suggestions.",
+      constraints: [
+        "The public demo cannot analyze logged-in pages or push SSRF, model cost, and privacy risk into the client experience.",
+        "The output must stay shaped as scores, issues, recommendations, and backlog instead of rendering free-form model text.",
+        "Chinese and English routes must describe the same capability boundary without implying live model analysis before it ships."
+      ],
+      decisions: [
+        "Stabilize URL input, structured brief fields, analysis steps, and safe fallback before adding real providers.",
+        "Keep model behavior behind a server-side adapter so the frontend only consumes schema-gated results.",
+        "Treat low confidence and malformed output as review or error states instead of presenting them as certain conclusions."
+      ],
+      implementation: [
+        "A Next.js surface handles input, pipeline states, recoverable errors, and result rendering through the `/api/analyze` endpoint.",
+        "The backend reuses the capture harness, output schema validation, and safe mock adapter so the demo remains stable without model credentials.",
+        "Product and technical specs, English audits, and release checks document SSRF limits, error codes, structured output, and non-goals."
+      ],
+      result: [
+        "The public page now demonstrates the full path from URL and brief to scores, issues, recommendations, and backlog.",
+        "Tests cover capture, adapter behavior, output gating, API routing, structured brief payloads, and English content guardrails.",
+        "The project remains labeled as a prototype and does not claim production crawling or live model analysis."
+      ],
+      next: [
+        "Connect a real model provider only after cost, rate limit, and privacy boundaries are defined.",
+        "Validate result reuse before adding share pages or export workflows.",
+        "Build a small reviewed sample set so model recommendations stay tied to product goals."
+      ]
+    },
     architecture:
       "The current version is a single-page React client demo: input modes, pipeline state, mock output, and localized copy stay in the component. V1 would move capture, model calls, and result schema into an API boundary.",
     tradeoffs: [
@@ -343,6 +528,35 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       caption:
         "Product mock: it shows the intended tracker interface without claiming accounts or persisted user data."
     },
+    caseStudy: {
+      problem:
+        "A tracker that only stores done or not done cannot explain how goals, streaks, review, and incentive rules should work together.",
+      constraints: [
+        "The current stage has no account system or persisted user data, so the page cannot pretend to be a live multi-user product.",
+        "Incentive design can become heavy quickly, so the first version must avoid complex points, penalties, or social ranking without behavior data.",
+        "As a portfolio case, the page needs to explain product judgment rather than only show a polished habit list."
+      ],
+      decisions: [
+        "Frame goals, daily action, streaks, trends, and review as one understandable product loop.",
+        "Use a product mock to show the interface structure while clearly marking that accounts and history are not live.",
+        "Keep the next work focused on data model, privacy boundaries, and weekly review before adding social mechanics."
+      ],
+      implementation: [
+        "A static Next.js route presents the tracker product story with bilingual routing, sitemap coverage, and browser verification.",
+        "The project model separates evidence, assets, trade-offs, roadmap, and limitations so the prototype is not overstated.",
+        "The detail case explains why the rule loop is validated before account, persistence, and statistics views."
+      ],
+      result: [
+        "Tracker is now a browsable product-system prototype with a clear goal, boundary, and evolution path.",
+        "The public mock visualizes the core interface without exposing or inventing user data.",
+        "The case can support future writing around habit systems, personal growth products, and product rule design."
+      ],
+      next: [
+        "Define user, habit, check-in, and statistics summary data models.",
+        "Document privacy, deletion, streak recalculation, and duplicate check-in rules.",
+        "Add weekly review and incentive views after the data model becomes real."
+      ]
+    },
     architecture:
       "The current route is a static product prototype that stabilizes rules, feedback, and page hierarchy first. A real version would split user, habit, check-in, and statistics data models.",
     tradeoffs: [
@@ -375,6 +589,35 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       kind: "none",
       reason: "Access logs can expose IPs, request paths, and runtime timelines, so raw monitoring screenshots are not public.",
       nextAssetStep: "Publish a redacted runtime summary or architecture diagram before adding a visual asset."
+    },
+    caseStudy: {
+      problem:
+        "Personal projects need minimal access visibility after launch; otherwise abnormal traffic, configuration mistakes, and exposed endpoints are hard to diagnose.",
+      constraints: [
+        "Access logs can contain addresses, paths, and timelines, so the public case cannot show raw monitoring screenshots.",
+        "The deployment cost must stay low for a personal project instead of introducing a full observability platform too early.",
+        "Local verification depends on Node 22 and the native module ABI, so the test boundary must stay explicit."
+      ],
+      decisions: [
+        "Use a Node service, local SQLite storage, and Basic Auth as the first monitoring loop.",
+        "Show capability boundaries and redacted proof publicly, not raw access events.",
+        "Position Knock as a future runtime summary source for Dashboard Console rather than a standalone observability suite."
+      ],
+      implementation: [
+        "The service records access events, parses logs, and exposes a protected monitoring surface.",
+        "The project detail uses a `none` asset strategy to explain why screenshots are withheld and what redacted asset comes next.",
+        "Tests and documentation keep Node version, single-machine SQLite, authentication, and retention risks visible."
+      ],
+      result: [
+        "The project has an MVP shape for access event recording, log parsing, and basic authenticated monitoring.",
+        "The public case explains operational value without exposing runtime environment details, visitor data, or internal paths.",
+        "A future Dashboard integration can reuse the summary source without rebuilding the monitor."
+      ],
+      next: [
+        "Generate a redacted runtime summary with only aggregate counts, status, and time windows.",
+        "Add retention, cleanup, and alerting policy so logs cannot grow without bounds.",
+        "Feed Knock summaries into the Dashboard Console operations view."
+      ]
     },
     architecture:
       "Knock uses a Node service to collect and parse access events, stores lightweight runtime data in local SQLite, and gates the monitoring surface with optional Basic Auth.",
@@ -409,6 +652,35 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       reason: "The internal console can include tasks, logs, object storage state, and deployment signals that should not be exposed directly.",
       nextAssetStep: "Redact sensitive fields or publish an architecture diagram before showing it as a public asset."
     },
+    caseStudy: {
+      problem:
+        "As the personal site grows, content state, deployment records, tasks, and runtime events become scattered, making prioritization depend on memory.",
+      constraints: [
+        "The internal console can contain tasks, logs, storage state, and deployment signals, so raw screenshots are not public assets.",
+        "Direct MDX editing would require a full Git, review, deploy, and rollback workflow, which is too much for this stage.",
+        "Object storage and ETag conflicts are real design constraints even when the system is mostly used by one person."
+      ],
+      decisions: [
+        "Build state aggregation and task-event management before adding content editing or complex permissions.",
+        "Use Dashboard as the operations hub that can later host content health, Contact Ops, and Knock summaries.",
+        "Keep the public case at the architecture and redacted-proof level instead of exposing internal task or storage details."
+      ],
+      implementation: [
+        "dashboard-api owns task and event reads and writes while dashboard-web renders actionable operations views.",
+        "The storage layer preserves object storage and ETag conflict boundaries so failure states can be documented and tested later.",
+        "The project page uses evidence, trade-offs, and the case study to explain why state aggregation comes before a CMS."
+      ],
+      result: [
+        "Tasks, logs, events, and system status are shaped into one console model.",
+        "The public project page can explain operations value and privacy boundaries without leaking internal data.",
+        "The project provides a natural landing point for P3-C Content Operations."
+      ],
+      next: [
+        "Add a read-only content health module for published posts, drafts, metadata, and series coverage.",
+        "Connect deployment records, health status, and Knock runtime summaries.",
+        "Add permissions, audit trails, and stronger redaction rules after real usage stabilizes."
+      ]
+    },
     architecture:
       "dashboard-api owns task and event reads and writes while dashboard-web renders operational status views. The storage layer currently uses OSS objects with ETag checks for conflict boundaries.",
     tradeoffs: [
@@ -442,6 +714,35 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       reason: "The Labs tool is public, but D6 has not captured and reviewed a real tool screenshot yet.",
       nextAssetStep: "Capture the real Labs tool after browser verification, then replace the current none state."
     },
+    caseStudy: {
+      problem:
+        "Development and debugging often need quick timestamp conversion, but many tools are noisy, weak on feedback, and disconnected from the working context.",
+      constraints: [
+        "The tool must open instantly without accounts, backend services, or heavy state management.",
+        "Time and timezone rules can be misunderstood, so the first version should cover common timestamp cases instead of claiming a full calendar system.",
+        "Labs needs to stay lightweight, so one utility should not dominate the whole experiments section."
+      ],
+      decisions: [
+        "Use a client component for input, validation, converted output, and copy feedback.",
+        "Rely on the browser Intl API for local format and timezone display instead of adding a timezone database.",
+        "Treat the tool as a template for future Labs utilities with reusable input, result, error, and feedback patterns."
+      ],
+      implementation: [
+        "The Labs page includes timestamp input, date-format output, timezone context, and copy state.",
+        "React and TypeScript handle invalid input and interactive feedback while preserving static deployment.",
+        "The detail page states that batch conversion is not included yet, keeping the tool scoped and honest."
+      ],
+      result: [
+        "The timestamp tool is publicly available inside Labs and demonstrates a directly usable utility direction.",
+        "Its input, validation, result, and copy feedback create a small template for future Labs tools.",
+        "The case study turns the utility from a simple link into a documented implementation and trade-off example."
+      ],
+      next: [
+        "Capture a reviewed browser screenshot and replace the current unavailable asset state.",
+        "Add batch conversion and timezone comparison while keeping the tool account-free.",
+        "Extract shared Labs tool page structure to reduce the cost of adding more utilities."
+      ]
+    },
     architecture:
       "The tool uses a client component for input, conversion, validation, and feedback state. It relies on the browser Intl API for date and timezone formatting, with no backend service required.",
     tradeoffs: [
@@ -467,6 +768,7 @@ function getChineseProjectContent(project: Project): LocalizedProjectContent {
     highlights: project.highlights,
     evidence: project.evidence,
     asset: project.asset,
+    caseStudy: project.caseStudy,
     architecture: project.architecture,
     tradeoffs: project.tradeoffs,
     roadmap: project.roadmap,

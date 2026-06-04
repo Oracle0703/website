@@ -66,6 +66,50 @@ function EvidenceSection({
   );
 }
 
+function CaseStudySection({
+  caseStudy,
+  copy
+}: {
+  caseStudy: ProjectView["caseStudy"];
+  copy: ReturnType<typeof useI18n>["messages"]["pages"]["projects"];
+}) {
+  const groups = [
+    { title: copy.caseStudyConstraintsTitle, items: caseStudy.constraints },
+    { title: copy.caseStudyDecisionsTitle, items: caseStudy.decisions },
+    { title: copy.caseStudyImplementationTitle, items: caseStudy.implementation },
+    { title: copy.caseStudyResultTitle, items: caseStudy.result },
+    { title: copy.caseStudyNextTitle, items: caseStudy.next }
+  ];
+
+  return (
+    <section className="panel-surface p-5 sm:p-6">
+      <h2 className="text-xl font-semibold text-primary sm:text-2xl">
+        {copy.caseStudyTitle}
+      </h2>
+      <div className="mt-3">
+        <h3 className="text-sm font-semibold text-primary">
+          {copy.caseStudyProblemTitle}
+        </h3>
+        <p className="mt-4 text-base leading-8 text-secondary">{caseStudy.problem}</p>
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {groups.map((group) => (
+          <article key={group.title} className="evidence-card">
+            <h3 className="text-sm font-semibold text-primary">{group.title}</h3>
+            <ul className="mt-3 space-y-2">
+              {group.items.map((item) => (
+                <li key={item} className="text-sm leading-6 text-muted">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function AssetSection({
   asset,
   copy
@@ -218,6 +262,7 @@ export function ProjectDetailClient({ project }: { project: ProjectView }) {
       <ListSection title={copy.highlightsTitle} items={project.highlights} />
       <EvidenceSection title={copy.evidenceTitle} items={project.evidence} />
       <AssetSection asset={project.asset} copy={copy} />
+      <CaseStudySection caseStudy={project.caseStudy} copy={copy} />
       <TextSection title={copy.architectureTitle}>{project.architecture}</TextSection>
       <ListSection title={copy.tradeoffsTitle} items={project.tradeoffs} />
       <ListSection title={copy.roadmapTitle} items={project.roadmap} />

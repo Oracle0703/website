@@ -98,6 +98,39 @@ test("D6 project detail renders asset status, labels, and safe asset variants", 
   }
 });
 
+test("P3B project detail renders a structured case study section", () => {
+  const clientSource = read("apps/website/app/projects/[slug]/project-detail-client.tsx");
+  const i18nSource = read("apps/website/lib/i18n.ts");
+
+  assert.match(clientSource, /function CaseStudySection/);
+  assert.match(clientSource, /copy\.caseStudyTitle/);
+  assert.match(clientSource, /project\.caseStudy/);
+  assert.match(clientSource, /caseStudy\.problem/);
+  assert.match(clientSource, /caseStudy\.constraints/);
+  assert.match(clientSource, /caseStudy\.decisions/);
+  assert.match(clientSource, /caseStudy\.implementation/);
+  assert.match(clientSource, /caseStudy\.result/);
+  assert.match(clientSource, /caseStudy\.next/);
+  assert.match(clientSource, /copy\.caseStudyProblemTitle/);
+  assert.match(clientSource, /copy\.caseStudyConstraintsTitle/);
+  assert.match(clientSource, /copy\.caseStudyDecisionsTitle/);
+  assert.match(clientSource, /copy\.caseStudyImplementationTitle/);
+  assert.match(clientSource, /copy\.caseStudyResultTitle/);
+  assert.match(clientSource, /copy\.caseStudyNextTitle/);
+
+  for (const key of [
+    "caseStudyTitle",
+    "caseStudyProblemTitle",
+    "caseStudyConstraintsTitle",
+    "caseStudyDecisionsTitle",
+    "caseStudyImplementationTitle",
+    "caseStudyResultTitle",
+    "caseStudyNextTitle"
+  ]) {
+    assert.match(i18nSource, new RegExp(`${key}:`));
+  }
+});
+
 test("D5 blog detail names the article-to-project evidence bridge", () => {
   const clientSource = read("apps/website/app/blog/[slug]/blog-detail-client.tsx");
   const i18nSource = read("apps/website/lib/i18n.ts");

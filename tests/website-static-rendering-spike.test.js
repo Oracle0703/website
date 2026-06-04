@@ -390,3 +390,38 @@ test('P3A AI page analysis V1 docs record implemented adapter, output gate, and 
 
   assert.doesNotMatch(report, /TBD|TODO|implement later|fill in details/);
 });
+
+test('P3B case study docs record structured case depth and release guardrails', () => {
+  const plan = read('docs/website/P3B_CASE_STUDY_DEPTH_IMPLEMENTATION_PLAN.md');
+  const checklist = read('docs/website/RELEASE_CHECKLIST.md');
+  const report = read('docs/website/P3B_ACCEPTANCE_REPORT.md');
+
+  for (const expected of [
+    /# Website P3B Case Study Depth Implementation Plan/,
+    /ProjectCaseStudy/,
+    /caseStudy/,
+    /redacted proof|脱敏/i,
+    /audit:website-english-content/,
+    /verify:website-browser/
+  ]) {
+    assert.match(plan, expected);
+  }
+
+  assert.match(checklist, /P3B Case Study/);
+  assert.match(checklist, /ProjectCaseStudy/);
+  assert.match(checklist, /caseStudy/);
+
+  for (const expected of [
+    /# Website P3B Case Study Depth Acceptance Report/,
+    /实现范围/,
+    /非目标/,
+    /验证/,
+    /剩余风险/,
+    /P3-C|Content Operations/
+  ]) {
+    assert.match(report, expected);
+  }
+
+  assert.doesNotMatch(plan, /TBD|TODO|implement later|fill in details/);
+  assert.doesNotMatch(report, /TBD|TODO|implement later|fill in details/);
+});

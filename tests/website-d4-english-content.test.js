@@ -127,6 +127,13 @@ test("Projects expose locale-aware English view data without CJK body fields", a
     }
   }
 
+  assertNoCjk(view.caseStudy.problem, "project view caseStudy problem");
+  for (const listField of ["constraints", "decisions", "implementation", "result", "next"]) {
+    for (const item of view.caseStudy[listField]) {
+      assertNoCjk(item, `project view caseStudy ${listField}`);
+    }
+  }
+
   for (const link of view.links) {
     assertNoCjk(link.label, "project link label");
   }

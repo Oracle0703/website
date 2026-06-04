@@ -136,6 +136,53 @@ test('D6 project model carries an explicit public asset strategy for every proje
   }
 });
 
+test('P3B project model carries complete case study structure with redacted proof boundaries', async () => {
+  const projectsSource = read('apps/website/lib/projects.ts');
+
+  assert.match(projectsSource, /export type ProjectCaseStudy/);
+  assert.match(projectsSource, /caseStudy:\s*ProjectCaseStudy/);
+  assert.match(projectsSource, /caseStudy:\s*project\.caseStudy/);
+
+  const { getAllProjects, getProjectView } = await importFresh('apps/website/lib/projects.ts');
+  const projects = getAllProjects();
+
+  assert.equal(projects.length, 5);
+
+  for (const project of projects) {
+    assert.ok(project.caseStudy, `${project.slug} should define a case study`);
+    assert.equal(typeof project.caseStudy.problem, 'string', `${project.slug} should define a case study problem`);
+    assert.ok(
+      project.caseStudy.problem.trim().length >= 24,
+      `${project.slug} case study problem should be specific`
+    );
+
+    for (const field of ['constraints', 'decisions', 'implementation', 'result', 'next']) {
+      assert.ok(Array.isArray(project.caseStudy[field]), `${project.slug} ${field} should be a list`);
+      assert.ok(project.caseStudy[field].length >= 2, `${project.slug} ${field} should include at least two items`);
+
+      for (const item of project.caseStudy[field]) {
+        assert.equal(typeof item, 'string', `${project.slug} ${field} item should be text`);
+        assert.ok(item.trim().length >= 12, `${project.slug} ${field} item should be meaningful`);
+      }
+    }
+
+    const zhView = getProjectView(project, 'zh');
+    assert.equal(zhView.caseStudy, project.caseStudy, `${project.slug} zh view should expose the project case study`);
+  }
+
+  for (const slug of ['knock', 'dashboard-console']) {
+    const project = projects.find((item) => item.slug === slug);
+    assert.ok(project, `${slug} should exist`);
+
+    const publicText = JSON.stringify(project.caseStudy);
+    assert.doesNotMatch(publicText, /\b(?:\d{1,3}\.){3}\d{1,3}\b/, `${slug} should not expose raw IP addresses`);
+    assert.doesNotMatch(publicText, /[A-Z]:\\\\/i, `${slug} should not expose Windows paths`);
+    assert.doesNotMatch(publicText, /\/var\/log/i, `${slug} should not expose server log paths`);
+    assert.doesNotMatch(publicText, /oss:\/\//i, `${slug} should not expose OSS object paths`);
+    assert.doesNotMatch(publicText, /CONTACT_SUBMISSIONS_DIR|SECRET|TOKEN|PASSWORD/i, `${slug} should not expose private config keys`);
+  }
+});
+
 test('projects list exposes summary-level evidence without turning cards into detail pages', () => {
   const clientSource = read('apps/website/app/projects/projects-client.tsx');
 

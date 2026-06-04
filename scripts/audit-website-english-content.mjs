@@ -42,7 +42,7 @@ const audits = [
     kind: "localized-source",
     route: "/en/projects",
     file: "apps/website/lib/projects.ts",
-    maxCjkCharacters: 2_500,
+    maxCjkCharacters: 4_700,
     note: "Source keeps zh/en project copy together; English ProjectView is checked separately."
   },
   {

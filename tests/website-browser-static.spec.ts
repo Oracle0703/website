@@ -42,7 +42,7 @@ const englishContentChecks = [
   {
     path: "/en/projects/ai-page-analysis",
     heading: /AI Page Analysis and Redesign Assistant/,
-    text: /Evidence|Asset status|Product mock|Roadmap/
+    text: /Case study|Evidence|Asset status|Product mock|Roadmap/
   },
   {
     path: "/en/ai-page-analysis",
@@ -179,6 +179,7 @@ test("D5 project detail evidence sections are visible", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: /Evidence/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Asset status/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Case study/ })).toBeVisible();
   await expect(page.locator("main")).toContainText(/Product mock|Asset unavailable|Screenshot/);
   await expect(page.getByRole("heading", { name: /Trade-offs/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Roadmap/ })).toBeVisible();
