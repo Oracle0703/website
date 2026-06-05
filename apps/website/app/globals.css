@@ -5,6 +5,8 @@
   --color-surface: rgb(var(--ui-surface-rgb));
   --color-accent: rgb(var(--ui-accent-rgb));
   --color-accent-strong: rgb(var(--ui-accent-strong-rgb));
+  --color-accent-button: rgb(var(--ui-accent-button-rgb));
+  --color-accent-button-hover: rgb(var(--ui-accent-button-hover-rgb));
   --color-primary: rgb(var(--ui-text-primary-rgb));
   --color-secondary: rgb(var(--ui-text-secondary-rgb));
   --color-muted: rgb(var(--ui-text-muted-rgb));
@@ -23,6 +25,9 @@
   --ui-text-muted-rgb: 148 163 184;
   --ui-accent-rgb: 91 140 255;
   --ui-accent-strong-rgb: 147 197 253;
+  /* Button background needs >=4.5:1 with white text (the bright link accent is only 3.16:1). */
+  --ui-accent-button-rgb: 37 99 235;
+  --ui-accent-button-hover-rgb: 29 78 216;
   --code-keyword-rgb: 147 197 253;
   --code-string-rgb: 126 231 135;
   --code-number-rgb: 255 166 87;
@@ -41,6 +46,8 @@
   --ui-text-muted-rgb: 100 116 139;
   --ui-accent-rgb: 37 99 235;
   --ui-accent-strong-rgb: 29 78 216;
+  --ui-accent-button-rgb: 37 99 235;
+  --ui-accent-button-hover-rgb: 29 78 216;
   --code-keyword-rgb: 29 78 216;
   --code-string-rgb: 21 128 61;
   --code-number-rgb: 154 52 18;
@@ -78,7 +85,7 @@ a {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-blue-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transform-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent-button px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:bg-accent-button-hover hover:shadow-blue-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transform-none;
   }
 
   .btn-secondary {

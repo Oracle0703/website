@@ -403,7 +403,7 @@ export function TrackerClient() {
               type="button"
               onClick={() => setCheckedIn(true)}
               disabled={checkedIn}
-              className="w-full rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+              className="btn-primary w-full sm:w-auto"
             >
               {checkedIn ? content.panel.buttonDone : content.panel.button}
             </button>
