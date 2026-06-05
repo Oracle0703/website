@@ -260,6 +260,9 @@ export function TimestampTool() {
 
   return (
     <section className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-8">
+      <span className="sr-only" role="status" aria-live="polite">
+        {copiedKey ? copy.copiedLabel : ""}
+      </span>
       <div className="space-y-2">
         <p className={EYEBROW_ACCENT}>{copy.eyebrow}</p>
         <h2 className={TITLE_XL}>{copy.title}</h2>

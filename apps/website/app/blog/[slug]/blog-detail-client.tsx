@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import type { BlogPost } from "../../../lib/blog";
 import type { BlogSeries } from "../../../lib/blog-series";
@@ -66,6 +66,30 @@ export function BlogDetailClient({
   const copy = messages.pages.blog;
   const common = messages.pages.common;
   const getHref = (href: string) => getLocalePath(href, locale);
+  const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
+
+  // Scroll-spy: highlight the table-of-contents entry for the section in view.
+  useEffect(() => {
+    if (tocHeadings.length === 0) return;
+    const elements = tocHeadings
+      .map((heading) => document.getElementById(heading.id))
+      .filter((element): element is HTMLElement => Boolean(element));
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length === 0) return;
+        const topMost = visible.reduce((a, b) =>
+          a.boundingClientRect.top <= b.boundingClientRect.top ? a : b
+        );
+        setActiveHeadingId(topMost.target.id);
+      },
+      { rootMargin: "-80px 0px -70% 0px", threshold: 0 }
+    );
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, [tocHeadings]);
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-14 sm:px-6 md:space-y-10 md:py-20">
@@ -108,18 +132,22 @@ export function BlogDetailClient({
       {tocHeadings.length > 0 && (
         <section className="panel-surface p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-primary sm:text-xl">{copy.tableOfContents}</h2>
-          <nav className="mt-3 space-y-1.5">
-            {tocHeadings.map((heading, index) => (
-              <a
-                key={`${heading.id}-${index}`}
-                href={`#${heading.id}`}
-                className={`block rounded-md px-2 py-1 text-sm text-muted transition-colors hover:bg-primary hover-text-base ${
-                  heading.depth === 3 ? "ml-4" : ""
-                }`}
-              >
-                {heading.title}
-              </a>
-            ))}
+          <nav className="mt-3 space-y-1.5" aria-label={copy.tableOfContents}>
+            {tocHeadings.map((heading, index) => {
+              const isActive = activeHeadingId === heading.id;
+              return (
+                <a
+                  key={`${heading.id}-${index}`}
+                  href={`#${heading.id}`}
+                  aria-current={isActive ? "true" : undefined}
+                  className={`block rounded-md px-2 py-1 text-sm transition-colors hover:bg-primary hover-text-base ${
+                    heading.depth === 3 ? "ml-4 " : ""
+                  }${isActive ? "bg-accent/10 font-semibold text-accent" : "text-muted"}`}
+                >
+                  {heading.title}
+                </a>
+              );
+            })}
           </nav>
         </section>
       )}
@@ -137,7 +165,7 @@ export function BlogDetailClient({
               {currentSeries.posts.length} {copy.seriesCountSuffix}
             </span>
           </div>
-          <nav className="mt-4 space-y-2">
+          <nav className="mt-4 space-y-2" aria-label={copy.seriesNavigationTitle}>
             {currentSeries.posts.map((seriesPost) => {
               const isCurrent = seriesPost.slug === post.slug;
               return (

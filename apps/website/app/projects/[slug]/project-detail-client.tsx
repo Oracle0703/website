@@ -154,7 +154,8 @@ function AssetSection({
             alt={asset.alt}
             width={1280}
             height={720}
-            className="h-full w-full object-cover"
+            sizes="(max-width: 1024px) 100vw, 768px"
+            className={`h-full w-full ${asset.kind === "screenshot" ? "object-cover" : "object-contain p-2"}`}
           />
         </div>
         <figcaption className="mt-3 text-sm leading-6 text-muted">
@@ -236,6 +237,11 @@ export function ProjectDetailClient({ project }: { project: ProjectView }) {
         <p className="mt-5 max-w-3xl text-base leading-8 text-secondary">
           {project.summary}
         </p>
+        <div className="mt-6">
+          <Link href={getHref("/contact")} className="btn-primary">
+            {messages.pages.contact.title}
+          </Link>
+        </div>
       </header>
 
       {tocItems.length > 0 ? (

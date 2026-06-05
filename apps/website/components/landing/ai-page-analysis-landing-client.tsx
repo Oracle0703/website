@@ -932,8 +932,13 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
   };
 
   const handleChangeMode = (nextMode: DemoMode) => {
+    // Keep what the user typed; only swap in the next placeholder when the field
+    // is still pristine (empty or the current mode's untouched example).
+    setInput((current) => {
+      const isPristine = current.trim() === "" || current === currentModePlaceholders[mode];
+      return isPristine ? currentModePlaceholders[nextMode] : current;
+    });
     setMode(nextMode);
-    setInput(currentModePlaceholders[nextMode]);
     setErrorMessage(null);
   };
 

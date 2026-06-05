@@ -60,6 +60,7 @@ type TrackerContent = {
   exchange: { title: string; items: string[] };
   footerNote: string;
   announcements: string[];
+  ticker: { badge: string; label: string; empty: string };
 };
 
 const trackerContent: Record<Locale, TrackerContent> = {
@@ -191,7 +192,8 @@ const trackerContent: Record<Locale, TrackerContent> = {
       "陆行完成三连签 · 获得灵石奖励",
       "青禾达成周度全勤 · 修为大幅提升",
       "星河提交功法总结 · 获得功德 +1"
-    ]
+    ],
+    ticker: { badge: "天机", label: "修行公告", empty: "暂无最新动态" }
   },
   en: {
     panel: {
@@ -324,7 +326,8 @@ const trackerContent: Record<Locale, TrackerContent> = {
       "Lu Xing hit a 3-day streak · earned bonus stones",
       "Qing He achieved weekly full attendance",
       "Xing He submitted a practice recap · +1 merit"
-    ]
+    ],
+    ticker: { badge: "Signals", label: "Tracker announcements", empty: "No updates yet" }
   }
 };
 
@@ -388,7 +391,12 @@ export function TrackerClient() {
       </header>
 
       <section className="mt-4">
-        <AnnouncementTicker items={content.announcements} />
+        <AnnouncementTicker
+          items={content.announcements}
+          badge={content.ticker.badge}
+          label={content.ticker.label}
+          emptyText={content.ticker.empty}
+        />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -502,7 +510,19 @@ export function TrackerClient() {
 
       <section>
         <Card title={content.realms.title}>
-          <div className="overflow-x-auto">
+          <ul className="space-y-3 sm:hidden">
+            {content.realms.rows.map((row) => (
+              <li key={row.level} className="rounded-xl border border-edge/60 bg-base/40 p-3">
+                <p className="text-sm font-semibold text-primary">{row.level}</p>
+                <p className={`mt-1 ${TEXT_XS_MUTED}`}>
+                  <span className="text-secondary">{content.realms.columns[1]}：</span>
+                  {row.range}
+                </p>
+                <p className={`mt-1 ${TEXT_XS_MUTED}`}>{row.note}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden sm:block">
             <table className={`w-full text-left ${TEXT_SM_MUTED}`}>
               <thead>
                 <tr className="border-b border-edge">

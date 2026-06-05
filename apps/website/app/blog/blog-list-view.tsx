@@ -180,6 +180,11 @@ export function BlogListView({
               {copy.emptyTitle}
             </p>
             <p className="mt-2 text-lg text-muted">{copy.emptyDescription}</p>
+            {hasSelectedTag ? (
+              <Link href={getHref("/blog")} className="link-accent mt-4 inline-flex font-semibold">
+                {copy.allTags}
+              </Link>
+            ) : null}
           </div>
         ) : (
           <div className="mt-5 space-y-3">
@@ -194,18 +199,15 @@ export function BlogListView({
                   <div className="grid gap-5 md:grid-cols-[1.2fr_0.8fr] md:items-stretch">
                     <div className="flex flex-col gap-5 md:h-full">
                       <div className="space-y-4 sm:space-y-5">
-                        <Link
-                          href={getHref(`/blog/${encodeURIComponent(post.slug)}`)}
-                          className="-mx-1 rounded-sm px-1 text-lg font-semibold leading-snug text-primary transition-colors hover:bg-accent/15 hover:text-accent-strong sm:text-xl"
-                        >
-                          {post.title}
-                        </Link>
-                        <p
-                          className="mt-4 text-sm leading-6 sm:text-base sm:leading-8"
-                          style={{
-                            color: "rgb(var(--ui-text-secondary-rgb) / 1)"
-                          }}
-                        >
+                        <h2 className="text-lg font-semibold leading-snug sm:text-xl">
+                          <Link
+                            href={getHref(`/blog/${encodeURIComponent(post.slug)}`)}
+                            className="-mx-1 rounded-sm px-1 text-primary transition-colors hover:bg-accent/15 hover:text-accent-strong"
+                          >
+                            {post.title}
+                          </Link>
+                        </h2>
+                        <p className="mt-4 text-sm leading-6 text-secondary sm:text-base sm:leading-8">
                           {post.summary}
                         </p>
                       </div>

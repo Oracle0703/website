@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useI18n } from "../../components/language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
 import { TEXT_SM_MUTED, TITLE_2XL, TITLE_BASE } from "../../lib/typography";
@@ -72,6 +72,19 @@ export function ContactClient() {
   const getHref = (href: string) => getLocalePath(href, locale);
   const [formState, setFormState] = useState<ContactFormState>(initialFormState);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  // Move focus to the result after a terminal submit state so keyboard/screen-
+  // reader users land on the outcome instead of the (reset) form.
+  useEffect(() => {
+    if (
+      submitState.status === "received" ||
+      submitState.status === "received_with_notification_failure" ||
+      submitState.status === "error"
+    ) {
+      resultRef.current?.focus();
+    }
+  }, [submitState.status]);
 
   const updateField = (field: keyof ContactFormState, value: string) => {
     setFormState((current) => ({
@@ -209,8 +222,7 @@ export function ContactClient() {
       </section>
 
       <section className="panel-surface p-5 sm:p-6">
-        <p className="section-kicker">{copy.contactPathTitle}</p>
-        <h2 className={`mt-2 ${TITLE_BASE}`}>{copy.contactPathTitle}</h2>
+        <h2 className={TITLE_BASE}>{copy.contactPathTitle}</h2>
         <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{copy.contactPathDescription}</p>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <article className="evidence-card">
@@ -364,23 +376,37 @@ export function ContactClient() {
             </p>
           </div>
 
-          {submitState.status === "error" && erroredField === null ? (
-            <p className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm leading-6 text-red-200" role="alert">
-              {submitState.message}
-            </p>
-          ) : null}
+          <div ref={resultRef} tabIndex={-1} className="outline-none">
+            {isSubmitting ? (
+              <p className="text-sm text-muted" role="status">
+                {formCopy.submitBusy}
+              </p>
+            ) : null}
 
-          {submitState.status === "received" ? (
-            <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm leading-6 text-emerald-200" role="status">
-              {formCopy.successTitle} {formCopy.submissionIdLabel}: {submitState.submissionId}
-            </p>
-          ) : null}
+            {submitState.status === "error" && erroredField === null ? (
+              <p className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm leading-6 text-red-200" role="alert">
+                {submitState.message}
+              </p>
+            ) : null}
 
-          {submitState.status === "received_with_notification_failure" ? (
-            <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm leading-6 text-amber-100" role="status">
-              {formCopy.errors.received_with_notification_failure} {formCopy.submissionIdLabel}: {submitState.submissionId}
-            </p>
-          ) : null}
+            {submitState.status === "received" ? (
+              <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm leading-6 text-emerald-200" role="status">
+                <span className="font-semibold">{formCopy.successTitle}</span>
+                <span className="mt-1 block text-emerald-200/80">
+                  {formCopy.submissionIdLabel}: {submitState.submissionId}
+                </span>
+              </p>
+            ) : null}
+
+            {submitState.status === "received_with_notification_failure" ? (
+              <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm leading-6 text-amber-100" role="status">
+                <span className="block">{formCopy.errors.received_with_notification_failure}</span>
+                <span className="mt-1 block text-amber-100/80">
+                  {formCopy.submissionIdLabel}: {submitState.submissionId}
+                </span>
+              </p>
+            ) : null}
+          </div>
 
           <button type="submit" className="btn-primary px-5 py-2.5" disabled={isSubmitting}>
             {isSubmitting ? formCopy.submitBusy : formCopy.submitIdle}

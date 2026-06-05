@@ -235,7 +235,7 @@ export const messages = {
       labs: {
         eyebrow: "实验室",
         title: "实验室",
-        description: "交互实验与原型的集合。"
+        description: "可直接上手的交互工具与原型,持续扩充中。"
       },
       tracker: {
         eyebrow: "打卡平台",
@@ -691,7 +691,7 @@ export const messages = {
       labs: {
         eyebrow: "Labs",
         title: "Labs",
-        description: "Experiments and prototypes in progress."
+        description: "Hands-on interactive tools and prototypes, with more on the way."
       },
       tracker: {
         eyebrow: "Tracker",

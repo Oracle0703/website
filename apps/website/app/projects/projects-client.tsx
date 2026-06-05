@@ -171,12 +171,17 @@ export function ProjectsClient({ projects, featuredProjects }: ProjectsClientPro
 
       <section className="panel-surface p-5 sm:p-6">
         <h2 className="text-lg font-semibold text-primary">{copy.backLinksTitle}</h2>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Link href={getHref("/contact")} className="btn-primary">
+            {messages.pages.contact.title}
+          </Link>
+          <Link href={getHref("/blog")} className="btn-secondary">
+            {messages.pages.blog.title}
+          </Link>
+        </div>
         <div className="mt-4 flex flex-wrap items-center gap-5 text-base text-muted">
           <Link href={getHref("/")} className="link-muted font-medium">
             {common.backToHome}
-          </Link>
-          <Link href={getHref("/blog")} className="link-accent font-medium">
-            {messages.pages.blog.title}
           </Link>
           <Link href={getHref("/labs")} className="link-accent font-medium">
             {messages.pages.labs.title}
