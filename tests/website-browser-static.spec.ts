@@ -158,7 +158,7 @@ test("D5 contact page avoids placeholder contact channels", async ({ page }) => 
 
   await expect(page.locator("main")).not.toContainText(/hello@example\.com|mailto:hello|example\.com/);
   await expect(page.locator("main")).toContainText(/联系路径|Contact path|下一步|Next step/);
-  await expect(page.locator("main")).toContainText(/联系闭环决策|Contact-loop decision|D7 表单规格|D7 form spec/);
+  await expect(page.locator("main")).toContainText(/怎样的请求最容易推进|What moves fastest|隐私与数据|Privacy & data/);
 });
 
 test("D7 contact form keeps input after validation failure", async ({ page }) => {

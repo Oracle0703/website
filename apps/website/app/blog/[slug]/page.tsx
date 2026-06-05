@@ -3,10 +3,11 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import type { BlogPost } from "../../../lib/blog";
 import { defaultLocale, getMessages } from "../../../lib/i18n";
-import { getPostBySlug, getPublishedPosts, isPublished } from "../../../lib/blog";
-import { getSeriesByPostSlug } from "../../../lib/blog-series";
+import { getPostBySlugForLocale, getPublishedPostsForLocale } from "../../../lib/blog";
+import { getSeriesByPostSlugForLocale } from "../../../lib/blog-series";
 import { getJsonLdLanguage, getLanguageAlternates } from "../../../lib/seo";
 import { toAbsoluteUrl } from "../../../lib/site-url";
 import { mdxComponents } from "../../../components/mdx-components";
@@ -18,7 +19,7 @@ type PageProps = {
 };
 
 export const generateStaticParams = () => {
-  return getPublishedPosts().map((post) => ({
+  return getPublishedPostsForLocale(defaultLocale).map((post) => ({
     slug: post.slug
   }));
 };
@@ -66,9 +67,9 @@ function getRelatedPosts(currentPost: BlogPost, allPosts: BlogPost[], limit = 3)
 
 export const generateMetadata = ({ params }: PageProps): Metadata => {
   const { seo } = getMessages(defaultLocale);
-  const post = getPostBySlug(params.slug);
+  const post = getPostBySlugForLocale(params.slug, defaultLocale);
 
-  if (!post || !isPublished(post)) {
+  if (!post) {
     return {
       title: seo.blogTitle,
       description: seo.blogDescription
@@ -104,10 +105,10 @@ export const generateMetadata = ({ params }: PageProps): Metadata => {
 };
 
 export default async function Page({ params }: PageProps) {
-  const publishedPosts = getPublishedPosts();
-  const post = getPostBySlug(params.slug);
+  const publishedPosts = getPublishedPostsForLocale(defaultLocale);
+  const post = getPostBySlugForLocale(params.slug, defaultLocale);
 
-  if (!post || !isPublished(post)) {
+  if (!post) {
     notFound();
   }
 
@@ -120,7 +121,8 @@ export default async function Page({ params }: PageProps) {
       components: mdxComponents,
       options: {
         mdxOptions: {
-          remarkPlugins: [remarkGfm]
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [[rehypeHighlight, { detect: true, ignoreMissing: true }]]
         }
       }
     });
@@ -137,7 +139,7 @@ export default async function Page({ params }: PageProps) {
   const showUpdated = Boolean(post.updatedAt && post.updatedAt !== post.date);
   const tocHeadings = extractTocHeadings(post.content);
   const relatedPosts = getRelatedPosts(post, publishedPosts);
-  const currentSeries = getSeriesByPostSlug(post.slug);
+  const currentSeries = getSeriesByPostSlugForLocale(post.slug, defaultLocale);
   const seriesIndex =
     currentSeries?.posts.findIndex((seriesPost) => seriesPost.slug === post.slug) ?? -1;
   const previousSeriesPost =

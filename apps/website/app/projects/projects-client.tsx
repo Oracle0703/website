@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "../../components/language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
@@ -23,12 +24,32 @@ function ProjectCard({
   const href = getLocalePath(`/projects/${encodeURIComponent(project.slug)}`, locale);
   const evidencePreview = project.evidence.slice(0, 2);
   const stackPreview = project.stack.slice(0, 3);
+  // Show a visual thumbnail when the project has one. mock/diagram are framed
+  // with object-contain to avoid cropping; screenshots fill with object-cover.
+  const asset = project.asset;
+  const thumbnail =
+    asset.kind === "screenshot" || asset.kind === "mock" || asset.kind === "diagram"
+      ? asset
+      : null;
 
   return (
     <Link
       href={href}
       className="group card-interactive flex h-full flex-col rounded-2xl border border-edge bg-base/40 p-5 sm:p-6"
     >
+      {thumbnail ? (
+        <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-xl border border-edge/70 bg-surface/40">
+          <Image
+            src={thumbnail.src}
+            alt={thumbnail.alt}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className={
+              thumbnail.kind === "screenshot" ? "object-cover" : "object-contain p-2"
+            }
+          />
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-secondary">
         <span className="rounded-full border border-edge-strong px-2.5 py-1">
           {copy.status[project.status]}
@@ -83,6 +104,16 @@ export function ProjectsClient({ projects, featuredProjects }: ProjectsClientPro
   const common = messages.pages.common;
   const getHref = (href: string) => getLocalePath(href, locale);
 
+  // Avoid rendering the same card twice: when a Featured section is shown,
+  // the second grid lists only the remaining (non-featured) projects.
+  const hasFeatured = featuredProjects.length > 0;
+  const featuredSlugs = new Set(featuredProjects.map((project) => project.slug));
+  const restProjects = hasFeatured
+    ? projects.filter((project) => !featuredSlugs.has(project.slug))
+    : projects;
+  const restTitle = hasFeatured ? copy.otherTitle : copy.allTitle;
+  const restDescription = hasFeatured ? copy.otherDescription : copy.allDescription;
+
   return (
     <main className="mx-auto w-full max-w-6xl space-y-10 px-4 py-14 sm:px-6 md:space-y-12 md:py-20">
       <header className="space-y-5">
@@ -100,7 +131,7 @@ export function ProjectsClient({ projects, featuredProjects }: ProjectsClientPro
         </section>
       ) : (
         <>
-          {featuredProjects.length > 0 && (
+          {hasFeatured && (
             <section className="panel-surface p-5 sm:p-6">
               <div className="max-w-3xl">
                 <h2 className="text-xl font-semibold text-primary sm:text-2xl">
@@ -118,21 +149,23 @@ export function ProjectsClient({ projects, featuredProjects }: ProjectsClientPro
             </section>
           )}
 
-          <section className="panel-surface p-5 sm:p-6">
-            <div className="max-w-3xl">
-              <h2 className="text-xl font-semibold text-primary sm:text-2xl">
-                {copy.allTitle}
-              </h2>
-              <p className="mt-2 text-base leading-7 text-secondary">
-                {copy.allDescription}
-              </p>
-            </div>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
-                <ProjectCard key={project.slug} project={project} locale={locale} copy={copy} />
-              ))}
-            </div>
-          </section>
+          {restProjects.length > 0 && (
+            <section className="panel-surface p-5 sm:p-6">
+              <div className="max-w-3xl">
+                <h2 className="text-xl font-semibold text-primary sm:text-2xl">
+                  {restTitle}
+                </h2>
+                <p className="mt-2 text-base leading-7 text-secondary">
+                  {restDescription}
+                </p>
+              </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {restProjects.map((project) => (
+                  <ProjectCard key={project.slug} project={project} locale={locale} copy={copy} />
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
 

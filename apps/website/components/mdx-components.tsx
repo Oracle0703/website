@@ -222,6 +222,10 @@ export const mdxComponents = {
       );
     }
 
-    return <MDXCodeBlock code={codeBlock.code} language={codeBlock.language} />;
+    return (
+      <MDXCodeBlock code={codeBlock.code} language={codeBlock.language}>
+        {props.children}
+      </MDXCodeBlock>
+    );
   }
 };

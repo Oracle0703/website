@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 export function MDXCodeBlock({
   code,
-  language
+  language,
+  children
 }: {
   code: string;
   language?: string;
+  // Highlighted code nodes (from rehype-highlight) used for display. The raw
+  // `code` string is still used for the copy button. Falls back to plain code.
+  children?: ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
   const [isZh, setIsZh] = useState(false);
@@ -48,7 +52,7 @@ export function MDXCodeBlock({
         </button>
       </div>
       <pre className="overflow-x-auto p-4 text-sm text-primary">
-        <code>{code}</code>
+        {children ?? <code>{code}</code>}
       </pre>
     </div>
   );

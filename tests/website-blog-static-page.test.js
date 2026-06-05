@@ -18,8 +18,10 @@ test('blog list page avoids page-level request reads', () => {
   assert.doesNotMatch(pageSource, /searchParams/);
   assert.match(pageSource, /defaultLocale/);
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
-  assert.match(pageSource, /getPublishedPosts\(\)/);
-  assert.match(pageSource, /getPublishedSeries\(\)/);
+  // Locale-aware data, but still static: the locale is the build-time constant
+  // defaultLocale (no request-scoped read), and overrides are applied for zh.
+  assert.match(pageSource, /getPublishedPostsForLocale\(defaultLocale\)/);
+  assert.match(pageSource, /getPublishedSeriesForLocale\(defaultLocale\)/);
   assert.match(pageSource, /<Suspense/);
   assert.match(pageSource, /fallback=\{\s*<BlogListView/);
   assert.doesNotMatch(pageSource, /fallback=\{null\}/);

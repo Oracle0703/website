@@ -3,16 +3,14 @@
 import Link from "next/link";
 import { useI18n } from "./language-provider";
 import { getLocalePath } from "../lib/locale-routing";
+import { getActiveProfileLinks } from "../lib/site-links";
 import { TEXT_BASE_MUTED } from "../lib/typography";
-
-const socialLinks = [
-  { href: "https://github.com", label: "GitHub" },
-  { href: "https://x.com", label: "X" },
-  { href: "https://www.linkedin.com", label: "LinkedIn" },
-];
 
 export function SiteFooter() {
   const { locale, messages } = useI18n();
+  // Real profile links only (configured in lib/site-links.ts). Until a real URL
+  // is set nothing renders here — better than the old placeholder bare domains.
+  const socialLinks = getActiveProfileLinks();
 
   return (
     <footer className="border-t border-edge/70 bg-base/80">
@@ -43,19 +41,21 @@ export function SiteFooter() {
               </Link>
             ))}
           </div>
-          <div className="flex flex-wrap gap-3 md:justify-end">
-            {socialLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex rounded-sm -mx-1 px-1 font-medium text-secondary visited:text-secondary transition-colors hover:bg-primary hover-text-base"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
+          {socialLinks.length > 0 ? (
+            <div className="flex flex-wrap gap-3 md:justify-end">
+              {socialLinks.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex rounded-sm -mx-1 px-1 font-medium text-secondary visited:text-secondary transition-colors hover:bg-primary hover-text-base"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     </footer>

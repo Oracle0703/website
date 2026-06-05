@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { LayoutShell } from "../components/layout-shell";
 import { PreferenceBootScript } from "./preference-boot-script";
+import { SiteAnalytics } from "../components/site-analytics";
 import { defaultLocale, getHtmlLang, getMessages } from "../lib/i18n";
 import { defaultTheme } from "../lib/theme";
 import { getSiteBaseUrl } from "../lib/site-url";
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LayoutShell initialLocale={defaultLocale} initialTheme={defaultTheme}>
           {children}
         </LayoutShell>
+        <SiteAnalytics />
       </body>
     </html>
   );

@@ -40,6 +40,30 @@ function normalizeLinks(value: string) {
     .filter(Boolean);
 }
 
+// Map a server validation code to the field it belongs to, so the error can be
+// shown next to the relevant input instead of only in a single global banner.
+// Codes with no specific field (rate_limited, duplicate_submit, *_failure) → null.
+function fieldForErrorCode(
+  code: string,
+  formState: ContactFormState
+): keyof ContactFormState | null {
+  switch (code) {
+    case "invalid_contact":
+      return "contact";
+    case "low_quality_input":
+      return "project_goal";
+    case "invalid_link":
+      return "links";
+    case "missing_required_field":
+      if (!formState.name.trim()) return "name";
+      if (!formState.contact.trim()) return "contact";
+      if (!formState.project_goal.trim()) return "project_goal";
+      return "name";
+    default:
+      return null;
+  }
+}
+
 export function ContactClient() {
   const { locale, messages } = useI18n();
   const copy = messages.pages.contact;
@@ -111,6 +135,28 @@ export function ContactClient() {
   };
 
   const isSubmitting = submitState.status === "submitting";
+  const errorCode = submitState.status === "error" ? submitState.code : null;
+  const errorMessage = submitState.status === "error" ? submitState.message : "";
+  const erroredField = errorCode ? fieldForErrorCode(errorCode, formState) : null;
+  const isFieldErrored = (field: keyof ContactFormState) => erroredField === field;
+  const baseFieldClass =
+    "w-full rounded-xl border bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:ring-2";
+  const fieldClass = (field: keyof ContactFormState) =>
+    `${baseFieldClass} ${
+      isFieldErrored(field)
+        ? "border-red-500/70 focus:border-red-500 focus:ring-red-500/20"
+        : "border-edge focus:border-accent focus:ring-accent/20"
+    }`;
+  const fieldError = (field: keyof ContactFormState) =>
+    isFieldErrored(field) ? (
+      <span id={`${field}-error`} role="alert" className="block text-xs font-normal text-red-300">
+        {errorMessage}
+      </span>
+    ) : null;
+  const requiredMark = <span aria-hidden="true" className="ml-0.5 text-red-400">*</span>;
+  const optionalMark = (
+    <span className="ml-1.5 text-xs font-normal text-muted">({formCopy.optionalLabel})</span>
+  );
 
   return (
     <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-14 sm:px-6 md:py-20">
@@ -202,8 +248,9 @@ export function ContactClient() {
         <p className="section-kicker">{formCopy.eyebrow}</p>
         <h2 className={`mt-2 ${TITLE_BASE}`}>{formCopy.title}</h2>
         <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{formCopy.description}</p>
+        <p className="mt-2 text-xs text-muted">{formCopy.requiredHint}</p>
 
-        <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-5 space-y-4" onSubmit={handleSubmit} noValidate>
           <input
             type="text"
             name="honeypot"
@@ -217,73 +264,92 @@ export function ContactClient() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2 text-sm font-medium text-secondary">
-              <span>{formCopy.fields.name.label}</span>
+              <span>{formCopy.fields.name.label}{requiredMark}</span>
               <input
                 name="name"
                 value={formState.name}
                 onChange={(event) => updateField("name", event.target.value)}
                 autoComplete="name"
-                className="w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className={fieldClass("name")}
                 required
+                aria-required="true"
+                aria-invalid={isFieldErrored("name") || undefined}
+                aria-describedby={isFieldErrored("name") ? "name-error" : undefined}
               />
+              {fieldError("name")}
             </label>
 
             <label className="space-y-2 text-sm font-medium text-secondary">
-              <span>{formCopy.fields.contact.label}</span>
+              <span>{formCopy.fields.contact.label}{requiredMark}</span>
               <input
                 name="contact"
                 value={formState.contact}
                 onChange={(event) => updateField("contact", event.target.value)}
                 autoComplete="email"
-                className="w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className={fieldClass("contact")}
                 required
+                aria-required="true"
+                aria-invalid={isFieldErrored("contact") || undefined}
+                aria-describedby={isFieldErrored("contact") ? "contact-error" : undefined}
               />
+              {fieldError("contact")}
             </label>
           </div>
 
           <label className="space-y-2 text-sm font-medium text-secondary">
-            <span>{formCopy.fields.project_goal.label}</span>
+            <span>{formCopy.fields.project_goal.label}{requiredMark}</span>
             <textarea
               name="project_goal"
               value={formState.project_goal}
               onChange={(event) => updateField("project_goal", event.target.value)}
-              className="min-h-32 w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+              className={`min-h-32 ${fieldClass("project_goal")}`}
               required
+              aria-required="true"
+              aria-invalid={isFieldErrored("project_goal") || undefined}
+              aria-describedby={
+                isFieldErrored("project_goal") ? "project_goal-error project_goal-hint" : "project_goal-hint"
+              }
             />
-            <span className="block text-xs font-normal text-muted">{formCopy.fields.project_goal.hint}</span>
+            <span id="project_goal-hint" className="block text-xs font-normal text-muted">{formCopy.fields.project_goal.hint}</span>
+            {fieldError("project_goal")}
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2 text-sm font-medium text-secondary">
-              <span>{formCopy.fields.timeline.label}</span>
+              <span>{formCopy.fields.timeline.label}{optionalMark}</span>
               <input
                 name="timeline"
                 value={formState.timeline}
                 onChange={(event) => updateField("timeline", event.target.value)}
-                className="w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className={fieldClass("timeline")}
               />
             </label>
 
             <label className="space-y-2 text-sm font-medium text-secondary">
-              <span>{formCopy.fields.budget_range.label}</span>
+              <span>{formCopy.fields.budget_range.label}{optionalMark}</span>
               <input
                 name="budget_range"
                 value={formState.budget_range}
                 onChange={(event) => updateField("budget_range", event.target.value)}
-                className="w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className={fieldClass("budget_range")}
               />
             </label>
           </div>
 
           <label className="space-y-2 text-sm font-medium text-secondary">
-            <span>{formCopy.fields.links.label}</span>
+            <span>{formCopy.fields.links.label}{optionalMark}</span>
             <textarea
               name="links"
               value={formState.links}
               onChange={(event) => updateField("links", event.target.value)}
-              className="min-h-24 w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+              className={`min-h-24 ${fieldClass("links")}`}
+              aria-invalid={isFieldErrored("links") || undefined}
+              aria-describedby={
+                isFieldErrored("links") ? "links-error links-hint" : "links-hint"
+              }
             />
-            <span className="block text-xs font-normal text-muted">{formCopy.fields.links.hint}</span>
+            <span id="links-hint" className="block text-xs font-normal text-muted">{formCopy.fields.links.hint}</span>
+            {fieldError("links")}
           </label>
 
           <div className="grid gap-3 md:grid-cols-3">
@@ -298,7 +364,7 @@ export function ContactClient() {
             </p>
           </div>
 
-          {submitState.status === "error" ? (
+          {submitState.status === "error" && erroredField === null ? (
             <p className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm leading-6 text-red-200" role="alert">
               {submitState.message}
             </p>

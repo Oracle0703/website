@@ -263,7 +263,12 @@ export const messages = {
           "用真实场景校验产品判断，不只做展示效果。",
           "优先保持数据、路由、SEO 和内容策略一致。",
           "让每个原型都有下一步演进路径，而不是停留在 Demo。"
-        ]
+        ],
+        connectTitle: "建立联系",
+        connectDescription: "想合作、交流或了解更多?直接查看作品，或发起一次具体的联系。",
+        connectProjectsCta: "查看作品",
+        connectContactCta: "联系我",
+        connectLinksLabel: "在别处找到我"
       },
       contact: {
         eyebrow: "联系我",
@@ -285,14 +290,14 @@ export const messages = {
         ],
         contactPathTitle: "联系路径",
         contactPathDescription:
-          "目前不公开邮箱和表单。建议先从公开作品或 AI 页面分析 Demo 判断合作方向，再带着目标、约束和期望交付物发起沟通。",
-        contactDecisionTitle: "联系闭环决策",
-        contactDecisionStatus: "D6 保持站内联系策略，不公开邮箱，不上线后端表单。",
+          "下面的表单是主要的联系方式。填写前，可以先从公开作品或 AI 页面分析 Demo 判断合作方向，再带着目标、约束和期望交付物填写，信息越具体越容易判断是否进入后续沟通。",
+        contactDecisionTitle: "怎样的请求最容易推进",
+        contactDecisionStatus: "目标清晰、约束明确、有可衡量的阶段目标。",
         contactDecisionDescription:
-          "当前没有经过确认的公开联系方式。为了避免假邮箱、占位表单和垃圾信息入口，D6 只把沟通前置路径说清楚；真实表单进入 D7 前置规格。",
-        formSpecTitle: "D7 表单规格",
+          "请尽量写清当前状态、想解决的问题、期望的交付物与时间线；范围越具体，越能快速对齐是否合作以及如何开始。",
+        formSpecTitle: "隐私与数据",
         formSpecAction:
-          "上线表单前必须先确认反垃圾、隐私字段、数据留存、删除方式、提交失败、重复提交和通知失败处理。",
+          "表单内容只用于判断是否进入后续沟通，不会公开展示；保存的字段、留存期限与删除方式见表单下方说明。",
         contactChannels: [
           {
             label: "查看作品证据",
@@ -317,6 +322,9 @@ export const messages = {
           title: "Contact form",
           description:
             "用这份表单提交一个具体、可判断边界的项目请求。提交内容只用于判断是否进入后续沟通，不会公开展示。",
+          requiredLabel: "必填",
+          optionalLabel: "选填",
+          requiredHint: "标 * 的为必填项。",
           fields: {
             name: {
               label: "姓名"
@@ -370,6 +378,8 @@ export const messages = {
         featuredDescription: "优先展示最能代表当前产品化方向和工程能力的项目。",
         allTitle: "全部项目",
         allDescription: "按状态和类型梳理当前网站生态中的项目资产。",
+        otherTitle: "更多项目",
+        otherDescription: "精选之外的其余项目资产。",
         emptyTitle: "暂无作品",
         emptyDescription: "完成首批项目整理后会在这里展示。",
         problemTitle: "问题",
@@ -702,7 +712,13 @@ export const messages = {
           "Validate product decisions against real usage, not only visual polish.",
           "Keep routing, data, SEO, and content policy aligned.",
           "Give every prototype a clear path beyond the demo stage."
-        ]
+        ],
+        connectTitle: "Get in touch",
+        connectDescription:
+          "Want to collaborate, compare notes, or learn more? Browse the work or start a focused conversation.",
+        connectProjectsCta: "View work",
+        connectContactCta: "Contact me",
+        connectLinksLabel: "Find me elsewhere"
       },
       contact: {
         eyebrow: "Contact",
@@ -724,14 +740,14 @@ export const messages = {
         ],
         contactPathTitle: "Contact path",
         contactPathDescription:
-          "No public inbox or backend form is exposed yet. Start from the public projects or the AI page analysis demo, then bring the goal, constraints, and expected deliverables into the conversation.",
-        contactDecisionTitle: "Contact-loop decision",
-        contactDecisionStatus: "D6 keeps the on-site contact path, with no public inbox and no backend form.",
+          "The form below is the main way to reach me. Before filling it in, you can size up fit from the public projects or the AI page analysis demo, then include the goal, constraints, and expected deliverables — the more specific, the easier it is to judge next steps.",
+        contactDecisionTitle: "What moves fastest",
+        contactDecisionStatus: "A clear goal, explicit constraints, and a measurable first milestone.",
         contactDecisionDescription:
-          "There is no confirmed public contact channel yet. To avoid fake inboxes, placeholder forms, and spam entry points, D6 only clarifies the pre-contact path; a real form moves into the D7 specification first.",
-        formSpecTitle: "D7 form spec",
+          "Spell out the current state, the problem to solve, the deliverables you expect, and a timeline. The more concrete the scope, the faster we can align on whether and how to start.",
+        formSpecTitle: "Privacy & data",
         formSpecAction:
-          "Before a form ships, it must define anti-spam controls, privacy fields, retention, deletion, submit failure, duplicate submit, and notification failure behavior.",
+          "Submissions are only used to decide on follow-up and are never published. The stored fields, retention window, and deletion path are described under the form.",
         contactChannels: [
           {
             label: "Review project evidence",
@@ -756,6 +772,9 @@ export const messages = {
           title: "Contact form",
           description:
             "Send a focused project request with enough context to judge scope, fit, and next steps. The submission is only used for follow-up decisions and is not published.",
+          requiredLabel: "Required",
+          optionalLabel: "Optional",
+          requiredHint: "Fields marked * are required.",
           fields: {
             name: {
               label: "Name"
@@ -809,6 +828,8 @@ export const messages = {
         featuredDescription: "The projects that best represent the current product and engineering direction.",
         allTitle: "All projects",
         allDescription: "A structured view of the project assets across this website ecosystem.",
+        otherTitle: "More projects",
+        otherDescription: "The rest of the project assets beyond the featured set.",
         emptyTitle: "No projects yet",
         emptyDescription: "The first project set will appear here once it is curated.",
         problemTitle: "Problem",

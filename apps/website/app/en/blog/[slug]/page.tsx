@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import type { BlogPost } from "../../../../lib/blog";
 import { getMessages, type Locale } from "../../../../lib/i18n";
 import {
@@ -125,7 +126,8 @@ export default async function Page({ params }: PageProps) {
       components: mdxComponents,
       options: {
         mdxOptions: {
-          remarkPlugins: [remarkGfm]
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [[rehypeHighlight, { detect: true, ignoreMissing: true }]]
         }
       }
     });

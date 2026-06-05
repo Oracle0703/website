@@ -90,7 +90,7 @@ export function HomePageClient({
             <p className={`${heroMotion("delay-100")} max-w-2xl ${TEXT_BASE_SECONDARY} leading-relaxed sm:text-lg`}>
               {copy.heroSubtitle}
             </p>
-            <p className={`${heroMotion("delay-200")} max-w-2xl ${TEXT_SM_MUTED} leading-relaxed sm:text-base`}>
+            <p className={`${heroMotion("delay-200")} max-w-2xl ${TEXT_SM_SECONDARY} leading-relaxed sm:text-base`}>
               {copy.heroIntro}
             </p>
           </div>
@@ -163,7 +163,7 @@ export function HomePageClient({
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className={TITLE_XL}>{copy.featuredProjectsTitle}</h2>
-              <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.featuredProjectsDescription}</p>
+              <p className={`mt-2 ${TEXT_SM_SECONDARY}`}>{copy.featuredProjectsDescription}</p>
             </div>
             <Link href={getHref("/projects")} className="text-sm font-medium text-muted hover:text-primary">
               {copy.viewAll}
@@ -200,7 +200,7 @@ export function HomePageClient({
             <h2 className={TITLE_XL}>
               {featuredSeriesSectionItems.length > 0 ? copy.featuredSeriesTitle : copy.latestFallbackTitle}
             </h2>
-            <p className={`mt-2 ${TEXT_SM_MUTED}`}>
+            <p className={`mt-2 ${TEXT_SM_SECONDARY}`}>
               {featuredSeriesSectionItems.length > 0 ? copy.featuredSeriesDescription : copy.latestBlog}
             </p>
           </div>
@@ -254,7 +254,7 @@ export function HomePageClient({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className={TITLE_XL}>{copy.labsTrackerTitle}</h2>
-            <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.labsTrackerDescription}</p>
+            <p className={`mt-2 ${TEXT_SM_SECONDARY}`}>{copy.labsTrackerDescription}</p>
           </div>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -277,10 +277,7 @@ export function HomePageClient({
         <div className="panel-surface p-5 sm:p-6">
           <h2 className={TITLE_XL}>{copy.trackerTitle}</h2>
           <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.trackerDesc}</p>
-          <ul
-            className="mt-4 space-y-2.5 text-sm text-secondary sm:text-base"
-            style={{ color: "rgb(var(--color-text-secondary) / 1)" }}
-          >
+          <ul className="mt-4 space-y-2.5 text-sm text-secondary sm:text-base">
             {copy.trackerPoints.map((point) => (
               <li key={point} className="flex items-center gap-2 rounded-lg border border-edge/70 bg-surface/60 px-2.5 py-1.5 text-secondary">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent" />
