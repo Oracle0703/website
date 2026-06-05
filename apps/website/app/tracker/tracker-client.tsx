@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import Link from "next/link";
 import { AnnouncementTicker } from "../../components/announcement-ticker";
 import { useI18n } from "../../components/language-provider";
@@ -24,6 +24,7 @@ type TrackerContent = {
     title: string;
     description: string;
     button: string;
+    buttonDone: string;
     note: string;
   };
   stats: { label: string; value: string; helper: string }[];
@@ -68,6 +69,7 @@ const trackerContent: Record<Locale, TrackerContent> = {
       title: "签到面板",
       description: "完成签到与任务，积累修为值与灵石。",
       button: "今日签到",
+      buttonDone: "已签到 ✓(本地预览)",
       note: "签到后可叠加早课/夜修加成与连续奖励。"
     },
     stats: [
@@ -197,6 +199,7 @@ const trackerContent: Record<Locale, TrackerContent> = {
       title: "Check-in Console",
       description: "Complete your check-in and tasks to gain cultivation and spirit stones.",
       button: "Check in today",
+      buttonDone: "Checked in ✓ (local preview)",
       note: "Check-ins stack with morning/night bonuses and streak rewards."
     },
     stats: [
@@ -367,9 +370,13 @@ export function TrackerClient() {
   const copy = messages.pages.tracker;
   const common = messages.pages.common;
   const content = trackerContent[locale];
+  // Local, optimistic check-in so the console is genuinely interactive (no
+  // backend yet — clearly labelled as a local preview).
+  const [checkedIn, setCheckedIn] = useState(false);
+  const currentProgress = content.progress.current + (checkedIn ? 1 : 0);
   const progressPercent = Math.min(
     100,
-    Math.round((content.progress.current / content.progress.next) * 100)
+    Math.round((currentProgress / content.progress.next) * 100)
   );
 
   return (
@@ -394,11 +401,15 @@ export function TrackerClient() {
             </div>
             <button
               type="button"
-              disabled
-              className="w-full rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white opacity-70 sm:w-auto"
+              onClick={() => setCheckedIn(true)}
+              disabled={checkedIn}
+              className="w-full rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
             >
-              {content.panel.button}
+              {checkedIn ? content.panel.buttonDone : content.panel.button}
             </button>
+            <span className="sr-only" role="status" aria-live="polite">
+              {checkedIn ? content.panel.buttonDone : ""}
+            </span>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {content.stats.map((stat) => (
@@ -416,7 +427,7 @@ export function TrackerClient() {
           <div className={`flex items-center justify-between ${TEXT_SM_MUTED}`}>
             <span>{content.progress.currentLabel}</span>
             <span>
-              {content.progress.current} / {content.progress.next}
+              {currentProgress} / {content.progress.next}
             </span>
             <span>{content.progress.nextLabel}</span>
           </div>

@@ -18,7 +18,6 @@ export const TEXT_BASE_SEMIBOLD_SECONDARY = "text-base font-semibold text-second
 
 export const TEXT_XS_MUTED = "text-xs text-muted";
 export const TEXT_XS_SECONDARY = "text-xs text-secondary";
-export const TEXT_XS_SUBTLE = "text-xs text-subtle";
 export const TEXT_XS_SEMIBOLD_SECONDARY = "text-xs font-semibold text-secondary";
 export const TEXT_XS_SEMIBOLD_MUTED = "text-xs font-semibold text-muted";
 

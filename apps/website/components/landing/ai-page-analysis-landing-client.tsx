@@ -887,6 +887,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const timersRef = useRef<number[]>([]);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   const modeLabel = useMemo(
     () => currentModeOptions.find((option) => option.id === mode),
@@ -899,6 +900,17 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
       timersRef.current = [];
     };
   }, []);
+
+  // When a result lands (and generation has stopped), bring it into view so the
+  // payoff isn't missed — especially on mobile where the result stacks below.
+  useEffect(() => {
+    if (!output || isGenerating) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    resultRef.current?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "nearest"
+    });
+  }, [output, isGenerating]);
 
   const progressValue = output ? 100 : Math.round((completedStageCount / currentPipelineStages.length) * 100);
 
@@ -1117,6 +1129,17 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
               disabled={isGenerating}
               className="btn-primary mt-4 px-4 py-2"
             >
+              {isGenerating ? (
+                <svg
+                  className="h-4 w-4 animate-spin motion-reduce:animate-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                  <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              ) : null}
               {isGenerating ? copy.generateBusy : copy.generateIdle}
             </button>
           </div>
@@ -1172,7 +1195,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
               </div>
             </div>
 
-            <div className="panel-surface p-5">
+            <div className="panel-surface p-5" ref={resultRef} aria-live="polite">
               <p className={TEXT_SM_MUTED}>{copy.resultTitle}</p>
 
               {!output ? (

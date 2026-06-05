@@ -8,7 +8,6 @@
   --color-primary: rgb(var(--ui-text-primary-rgb));
   --color-secondary: rgb(var(--ui-text-secondary-rgb));
   --color-muted: rgb(var(--ui-text-muted-rgb));
-  --color-subtle: rgb(var(--ui-text-subtle-rgb));
   --color-edge: rgb(var(--ui-edge-rgb));
   --color-edge-strong: rgb(var(--ui-edge-strong-rgb));
 }
@@ -22,7 +21,6 @@
   --ui-text-primary-rgb: 241 245 249;
   --ui-text-secondary-rgb: 203 213 225;
   --ui-text-muted-rgb: 148 163 184;
-  --ui-text-subtle-rgb: 226 232 240;
   --ui-accent-rgb: 91 140 255;
   --ui-accent-strong-rgb: 147 197 253;
   --code-keyword-rgb: 147 197 253;
@@ -41,7 +39,6 @@
   --ui-text-primary-rgb: 15 23 42;
   --ui-text-secondary-rgb: 51 65 85;
   --ui-text-muted-rgb: 100 116 139;
-  --ui-text-subtle-rgb: 71 85 105;
   --ui-accent-rgb: 37 99 235;
   --ui-accent-strong-rgb: 29 78 216;
   --code-keyword-rgb: 29 78 216;

@@ -10,7 +10,6 @@ import {
   TEXT_SM_SECONDARY,
   TEXT_SM_MUTED,
   TEXT_XS_MUTED,
-  TEXT_XS_SUBTLE,
   TITLE_BASE_SM_LG,
   TITLE_XL
 } from "../../lib/typography";
@@ -296,7 +295,7 @@ export function HomePageClient({
         <div className="panel-surface bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/20 p-5 sm:p-6">
           <h2 className={TITLE_XL}>{copy.contactTitle}</h2>
           <p className={`mt-2 ${TEXT_SM_MUTED}`}>{copy.contactDescription}</p>
-          <div className={`mt-4 flex flex-wrap gap-2 ${TEXT_XS_SUBTLE}`}>
+          <div className={`mt-4 flex flex-wrap gap-2 ${TEXT_XS_MUTED}`}>
             {copy.skillTags.map((skill) => (
               <span key={skill} className="rounded-full border border-edge-strong bg-base/35 px-3 py-1">
                 {skill}
