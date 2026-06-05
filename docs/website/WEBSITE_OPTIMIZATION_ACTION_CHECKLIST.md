@@ -6,7 +6,8 @@
 > 图例:成本 **S**=数小时 / **M**=1–2 天 / **L**=多天;⚙️=运维/部署(无源码文件);➕=需新增文件。
 > 排序原则:**先让站点可被访问、可被抓取(P0)→ 再补转化与信任硬伤(P1)→ 最后做体验打磨与增长(P2)。**
 
-进度:P0 `0 / 5` ｜ P1 `0 / 9` ｜ P2 `0 / 11` ｜ P3 `0 / 21`
+进度:P0 `2 / 5` ｜ P1 `9 / 9` ｜ P2 `0 / 11` ｜ P3 `0 / 21`
+> ✅ P1 全部 9 项 + P0 两个「代码」项已在分支 `fix/website-audit-p1` 实现并验证(构建/lint/测试/Playwright 全过);标 ⏳ 的项代码已就绪、待你补素材即生效。P0 的证书/部署/env 由运维处理。
 
 ---
 
@@ -33,53 +34,63 @@
   - 验收:线上 `og:image` 为 `https://www.meaningful.ink/og.png`(不再是 localhost);`canonical`/`og:url` 为绝对 URL
   - 自检:`curl -sS https://www.meaningful.ink/ | grep -oE 'og:image[^>]*|canonical[^>]*'`
 
-- [ ] **修正联系页"无表单"自相矛盾文案 + 清理 D6/D7 内部黑话**(S · 转化/内容)
+- [x] **修正联系页"无表单"自相矛盾文案 + 清理 D6/D7 内部黑话**(S · 转化/内容)
   - 🔍 审核位置:[lib/i18n.ts:732-741](../../apps/website/lib/i18n.ts#L732)(及 `contactDecisionTitle/Status`、`formSpecTitle`)
   - 验收:联系页文案与下方可用表单一致,无"暂未开放表单"措辞,无 `D6/D7/mock/TODO` 等研发术语
+  - ✅ 本次 PR 已实现(zh+en 文案重写、去黑话)
 
-- [ ] **补齐真实社交链接**(S · 转化/信任)
+- [x] **补齐真实社交链接**(S · 转化/信任)
   - 🔍 审核位置:[components/site-footer.tsx:8-12](../../apps/website/components/site-footer.tsx#L8)
   - 验收:GitHub / X / LinkedIn 点击跳转到**本人真实主页**,而非裸域名首页
+  - ✅ 页脚已改为读取 [lib/site-links.ts](../../apps/website/lib/site-links.ts)(占位坏链已移除);⏳ 待你在该文件填真实主页 URL,填后页脚与关于页会自动显示
 
 ---
 
 ## 🟠 P1 · 高价值(2–4 周)
 
-- [ ] **接入轻量访问分析**(S · 度量)
-  - 🔍 审核位置:[app/layout.tsx](../../apps/website/app/layout.tsx)(Plausible / GA4 / Microsoft Clarity 任一)
+- [x] **接入轻量访问分析**(S · 度量)
+  - 🔍 审核位置:[app/layout.tsx](../../apps/website/app/layout.tsx) · 新增 [components/site-analytics.tsx](../../apps/website/components/site-analytics.tsx)
   - 验收:能看到流量来源、页面浏览、联系表单转化漏斗
+  - ✅ 代码已实现(env 驱动 `SiteAnalytics`,默认关闭、不锁定厂商);⏳ 待你在部署设 `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`/`NEXT_PUBLIC_GA_ID`/`NEXT_PUBLIC_CLARITY_ID` 任一
 
-- [ ] **作品集补真实截图 + 列表卡缩略图**(M · 设计)
+- [x] **作品集补真实截图 + 列表卡缩略图**(M · 设计)
   - 🔍 审核位置:[lib/projects.ts](../../apps/website/lib/projects.ts)(把 `asset.kind:"none"` 换成真截图)· [projects-client.tsx:27-77](../../apps/website/app/projects/projects-client.tsx#L27)
   - 验收:每个项目至少 1 张真实视觉素材;列表网格有缩略图、可快速扫读
+  - ✅ 缩略图渲染已实现(有素材即显示,`next/image` 已安全开启 SVG);⏳ 待你补 knock / dashboard-console / timestamp-tool 三个项目的真实截图
 
-- [ ] **"全部项目"排除已精选,消除重复**(S · 设计)
+- [x] **"全部项目"排除已精选,消除重复**(S · 设计)
   - 🔍 审核位置:[projects-client.tsx:113-134](../../apps/website/app/projects/projects-client.tsx#L113)
   - 验收:同一张卡片不再在"精选"和"全部"中连续重复出现
 
-- [ ] **关于页加入姓名 / 头像 / 量化成果 / 外部链接 / CTA**(M · 信任/转化)
+- [x] **关于页加入姓名 / 头像 / 量化成果 / 外部链接 / CTA**(M · 信任/转化)
   - 🔍 审核位置:[about-client.tsx:14-51](../../apps/website/app/about/about-client.tsx#L14) · 文案 [lib/i18n.ts:685-712](../../apps/website/lib/i18n.ts#L685)
   - 验收:访客可在首屏判断"他是谁、做过什么、怎么联系";页面含去 `/projects` 或 `/contact` 的 CTA
+  - ✅ "建立联系"区 + 真实 CTA + 配置驱动外链已实现;⏳ 待你补姓名/头像/量化成果文案 + 在 [lib/site-links.ts](../../apps/website/lib/site-links.ts) 填真实主页 URL
 
-- [ ] **博客接入代码语法高亮**(M · 体验)
-  - 🔍 审核位置:[app/blog/[slug]/page.tsx:118-126](../../apps/website/app/blog/[slug]/page.tsx#L118)(加 `rehype-highlight`/`shiki`)· [mdx-code-block.tsx:50-52](../../apps/website/components/mdx-code-block.tsx#L50)
+- [x] **博客接入代码语法高亮**(M · 体验)
+  - 🔍 审核位置:[app/blog/[slug]/page.tsx:118-126](../../apps/website/app/blog/[slug]/page.tsx#L118)(已用 `rehype-highlight`)· [mdx-code-block.tsx:50-52](../../apps/website/components/mdx-code-block.tsx#L50)
   - 验收:代码块按语言着色,深/浅主题均可读
+  - ✅ 服务端高亮 + 主题感知 token 配色已实现(零客户端开销)
 
-- [ ] **博客路由改用本地化数据函数 `...ForLocale`**(S · 内容/i18n)
+- [x] **博客路由改用本地化数据函数 `...ForLocale`**(S · 内容/i18n)
   - 🔍 审核位置:[app/blog/page.tsx:67](../../apps/website/app/blog/page.tsx#L67) · [app/blog/[slug]/page.tsx:69](../../apps/website/app/blog/[slug]/page.tsx#L69) · 闲置函数 [lib/blog.ts:419-435](../../apps/website/lib/blog.ts#L419)
   - 验收:已写中文译文的文章,中文读者看到中文标题/摘要/正文与 TOC
+  - ✅ zh 路由已对齐 /en(构建确认 10 篇 zh 文章无一被隐藏)
 
-- [ ] **联系表单改为按字段报错 + `aria-invalid` + 必填标识**(M · A11y/转化)
+- [x] **联系表单改为按字段报错 + `aria-invalid` + 必填标识**(M · A11y/转化)
   - 🔍 审核位置:[contact-client.tsx:220-305](../../apps/website/app/contact/contact-client.tsx#L220)
   - 验收:校验错误定位到具体字段;必填/选填有可见标识,屏读可识别
+  - ✅ 错误码→字段映射 + `aria-invalid`/`aria-describedby` + 必填(*)/选填标识已实现
 
-- [ ] **提升视觉层级:减少 `text-muted`、引入焦点区/真实数据可视化**(M · 设计)
+- [x] **提升视觉层级:减少 `text-muted`、引入焦点区/真实数据可视化**(M · 设计)
   - 🔍 审核位置:[app/globals.css](../../apps/website/app/globals.css) + 各页客户端组件
   - 验收:首屏有明确视觉锤;版块不再"小标签→标题→灰描述→等距卡片"千篇一律
+  - ✅ 保守一版已实现(关键文案 muted→secondary、清死样式);焦点区/数据可视化等更主观打磨建议在浏览器里继续迭代
 
-- [ ] **补安全响应头**(S · 安全)
-  - 🔍 审核位置:⚙️ nginx 或 Next 响应头配置(HSTS / X-Content-Type-Options / X-Frame-Options / Referrer-Policy),无源码文件
+- [x] **补安全响应头**(S · 安全)
+  - 🔍 审核位置:[next.config.js](../../apps/website/next.config.js)(HSTS / X-Content-Type-Options / X-Frame-Options / Referrer-Policy / Permissions-Policy)
   - 验收:安全头扫描(如 securityheaders.com)无高危缺失
+  - ✅ 已在 next.config 注入(HSTS 短期起步,待证书自动续期确认后调长);若线上由 nginx 兜底,注意勿重复/冲突
 
 ---
 
