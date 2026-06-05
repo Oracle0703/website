@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getMessages, type Locale } from "../../../../lib/i18n";
 import { getAllProjects, getProjectBySlug, getProjectView } from "../../../../lib/projects";
-import { getJsonLdLanguage, getLanguageAlternates } from "../../../../lib/seo";
+import { buildBreadcrumbJsonLd, getJsonLdLanguage, getLanguageAlternates } from "../../../../lib/seo";
 import { toAbsoluteUrl } from "../../../../lib/site-url";
 import { ProjectDetailClient } from "../../../projects/[slug]/project-detail-client";
 
@@ -60,16 +60,26 @@ export default function Page({ params }: PageProps) {
 
   const canonicalPath = `/en/projects/${encodeURIComponent(project.slug)}`;
   const projectView = getProjectView(project, locale);
+  const { nav, pages } = getMessages(locale);
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: projectView.title,
-    description: projectView.summary,
-    url: toAbsoluteUrl(canonicalPath),
-    dateModified: project.updatedAt,
-    inLanguage: getJsonLdLanguage(locale),
-    applicationCategory: project.type,
-    image: toAbsoluteUrl("/og.png")
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        name: projectView.title,
+        description: projectView.summary,
+        url: toAbsoluteUrl(canonicalPath),
+        dateModified: project.updatedAt,
+        inLanguage: getJsonLdLanguage(locale),
+        applicationCategory: project.type,
+        image: toAbsoluteUrl("/og.png")
+      },
+      buildBreadcrumbJsonLd(locale, [
+        { name: nav.items[0].label, path: "/" },
+        { name: pages.projects.title, path: "/projects" },
+        { name: projectView.title, path: `/projects/${encodeURIComponent(project.slug)}` }
+      ])
+    ]
   };
 
   return (

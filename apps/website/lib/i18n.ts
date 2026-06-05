@@ -29,6 +29,12 @@ export const messages = {
       switchToLight: "切换到亮色",
       switchToDark: "切换到暗色"
     },
+    notFound: {
+      eyebrow: "404",
+      title: "页面未找到",
+      description: "你访问的页面可能已移动或不存在。试试从下面的入口继续浏览。",
+      backHome: "返回首页"
+    },
     footer: {
       copyright: "© 2026 开发者工作室",
       tagline: "开发者作品集 · 博客 · 实验室 · 打卡"
@@ -476,6 +482,12 @@ export const messages = {
       dark: "Dark",
       switchToLight: "Switch to light mode",
       switchToDark: "Switch to dark mode"
+    },
+    notFound: {
+      eyebrow: "404",
+      title: "Page not found",
+      description: "The page you are looking for may have moved or never existed. Try one of the entries below.",
+      backHome: "Back to home"
     },
     footer: {
       copyright: "© 2026 Developer Studio",

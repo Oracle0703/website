@@ -7,12 +7,24 @@ import { getSiteBaseUrl } from "../lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getSiteBaseUrl();
+  const posts = getPublishedPosts();
+  const projects = getAllProjects();
+
+  // Freshness hint for the static routes: the most recent content update across
+  // posts and projects (ISO date strings sort lexicographically).
+  const contentDates = [
+    ...posts.map((post) => post.updatedAt || post.date),
+    ...projects.map((project) => project.updatedAt)
+  ].filter((value): value is string => Boolean(value));
+  const latestContent = contentDates.length
+    ? new Date(contentDates.slice().sort().at(-1) as string)
+    : undefined;
 
   const entries: MetadataRoute.Sitemap = PUBLIC_WEBSITE_LOCALE_ROUTES.map((route) => ({
-    url: `${baseUrl}${route.canonicalPath === "/" ? "" : route.canonicalPath}`
+    url: `${baseUrl}${route.canonicalPath === "/" ? "" : route.canonicalPath}`,
+    ...(latestContent ? { lastModified: latestContent } : {})
   }));
 
-  const posts = getPublishedPosts();
   for (const post of posts) {
     const slug = encodeURIComponent(post.slug);
     const lastModified = post.updatedAt ? new Date(post.updatedAt) : new Date(post.date);
@@ -25,7 +37,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
-  const projects = getAllProjects();
   for (const project of projects) {
     for (const locale of ["zh", "en"] as const) {
       entries.push({

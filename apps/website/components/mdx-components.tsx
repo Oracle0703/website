@@ -4,8 +4,8 @@ import Link from "next/link";
 import { MDXCodeBlock } from "./mdx-code-block";
 import { slugifyHeading } from "../lib/blog-headings";
 import {
+  TEXT_BASE_SECONDARY,
   TEXT_SM_MUTED,
-  TEXT_SM_SECONDARY,
   TEXT_SM_SEMIBOLD_PRIMARY,
   TITLE_LG,
   TITLE_XL
@@ -181,22 +181,22 @@ export const mdxComponents = {
   h2: MdxHeading2,
   h3: MdxHeading3,
   p: (props: ComponentProps<"p">) => (
-    <p className={`mt-4 ${TEXT_SM_SECONDARY} leading-7`} {...props} />
+    <p className={`mt-4 ${TEXT_BASE_SECONDARY} leading-7`} {...props} />
   ),
   ul: (props: ComponentProps<"ul">) => (
     <ul
-      className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`}
+      className={`mt-4 list-disc space-y-2 pl-5 ${TEXT_BASE_SECONDARY} leading-7`}
       {...props}
     />
   ),
   ol: (props: ComponentProps<"ol">) => (
     <ol
-      className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_SM_SECONDARY} leading-7`}
+      className={`mt-4 list-decimal space-y-2 pl-5 ${TEXT_BASE_SECONDARY} leading-7`}
       {...props}
     />
   ),
   li: (props: ComponentProps<"li">) => (
-    <li className={`${TEXT_SM_SECONDARY} leading-7`} {...props} />
+    <li className={`${TEXT_BASE_SECONDARY} leading-7`} {...props} />
   ),
   blockquote: (props: ComponentProps<"blockquote">) => (
     <blockquote

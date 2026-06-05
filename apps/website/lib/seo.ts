@@ -23,6 +23,23 @@ export function getJsonLdLanguage(locale: Locale) {
   return locale === "en" ? "en" : "zh-CN";
 }
 
+// Build a schema.org BreadcrumbList with absolute, locale-aware item URLs.
+// `items` are ordered root -> current; `path` is the unprefixed route.
+export function buildBreadcrumbJsonLd(
+  locale: Locale,
+  items: Array<{ name: string; path: string }>
+) {
+  return {
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: toAbsoluteUrl(getLocalePath(item.path, locale))
+    }))
+  };
+}
+
 export const hreflang = {
   zh: "zh-CN",
   en: "en"

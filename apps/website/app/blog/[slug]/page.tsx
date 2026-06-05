@@ -8,7 +8,7 @@ import type { BlogPost } from "../../../lib/blog";
 import { defaultLocale, getMessages } from "../../../lib/i18n";
 import { getPostBySlugForLocale, getPublishedPostsForLocale } from "../../../lib/blog";
 import { getSeriesByPostSlugForLocale } from "../../../lib/blog-series";
-import { getJsonLdLanguage, getLanguageAlternates } from "../../../lib/seo";
+import { buildBreadcrumbJsonLd, getJsonLdLanguage, getLanguageAlternates } from "../../../lib/seo";
 import { toAbsoluteUrl } from "../../../lib/site-url";
 import { mdxComponents } from "../../../components/mdx-components";
 import { extractTocHeadings } from "../../../lib/blog-headings";
@@ -157,17 +157,27 @@ export default async function Page({ params }: PageProps) {
   const description = post.seo?.description ?? post.summary;
   const cover = post.seo?.ogImage ?? coverSrc;
   const canonicalPath = `/blog/${encodeURIComponent(post.slug)}`;
+  const { nav, pages } = getMessages(defaultLocale);
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: description,
-    datePublished: post.date,
-    dateModified: post.updatedAt,
-    author: { "@type": "Person", name: post.author },
-    url: toAbsoluteUrl(canonicalPath),
-    inLanguage: getJsonLdLanguage(defaultLocale),
-    image: getStructuredDataImageUrl(cover)
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: post.title,
+        description: description,
+        datePublished: post.date,
+        dateModified: post.updatedAt,
+        author: { "@type": "Person", name: post.author },
+        url: toAbsoluteUrl(canonicalPath),
+        inLanguage: getJsonLdLanguage(defaultLocale),
+        image: getStructuredDataImageUrl(cover)
+      },
+      buildBreadcrumbJsonLd(defaultLocale, [
+        { name: nav.items[0].label, path: "/" },
+        { name: pages.blog.title, path: "/blog" },
+        { name: post.title, path: canonicalPath }
+      ])
+    ]
   };
 
   return (
