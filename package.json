@@ -24,8 +24,8 @@
     "contact:ops": "node scripts/manage-website-contact-submissions.mjs",
     "verify:website-static": "node scripts/verify-website-static-entrypoints.mjs",
     "verify:website-browser": "node scripts/verify-website-browser.mjs",
-    "test": "node --test tests/*.test.js",
-    "test:workspace": "node --test tests/workspaces.test.js"
+    "test": "node --import tsx --test tests/",
+    "test:workspace": "node --import tsx --test tests/workspaces.test.js"
   },
   "engines": {
     "node": ">=22 <23",
@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
-    "@playwright/test": "^1.60.0"
+    "@playwright/test": "^1.60.0",
+    "tsx": "^4.22.4"
   }
 }

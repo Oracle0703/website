@@ -16,7 +16,11 @@ function exists(relPath) {
 
 async function importFresh(relPath) {
   const url = pathToFileURL(path.join(root, relPath));
-  return import(`${url.href}?t=${Date.now()}`);
+  const mod = await import(`${url.href}?t=${Date.now()}`);
+  // A .ts module in a CommonJS package can surface its named exports under
+  // `default` when loaded via a transform loader (tsx) on Node 20. Flatten so
+  // tests destructure named exports the same way Node 22 native loading does.
+  return mod.default && typeof mod.default === "object" ? { ...mod.default, ...mod } : mod;
 }
 
 test("D7 contact form module validates required fields, quality, links, and placeholders", async () => {

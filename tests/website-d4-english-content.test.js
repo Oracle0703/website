@@ -13,7 +13,11 @@ function read(relPath) {
 
 async function importFresh(relPath) {
   const url = pathToFileURL(path.join(root, relPath));
-  return import(`${url.href}?t=${Date.now()}`);
+  const mod = await import(`${url.href}?t=${Date.now()}`);
+  // A .ts module in a CommonJS package can surface named exports under
+  // `default` when loaded via a transform loader (tsx) on Node 20. Flatten
+  // so destructuring matches Node 22 native loading.
+  return mod.default && typeof mod.default === "object" ? { ...mod.default, ...mod } : mod;
 }
 
 const cjkPattern = /[\u3400-\u9fff\uF900-\uFAFF]/;
