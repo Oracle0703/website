@@ -401,7 +401,8 @@ test("site command palette restores focus and opens a selected result", async ({
   await page.goto("/");
 
   const trigger = page.getByRole("button", { name: "打开全站搜索" });
-  await page.keyboard.press("Control+K");
+  await expect(trigger).toBeVisible();
+  await trigger.click();
   const dialog = page.getByRole("dialog", { name: /搜索 Meaningful/ });
   await expect(dialog).toBeVisible();
   await expect(page.getByRole("combobox")).toBeFocused();
@@ -413,6 +414,7 @@ test("site command palette restores focus and opens a selected result", async ({
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
 
   await page.keyboard.press("Control+K");
+  await expect(dialog).toBeVisible();
   await page.getByRole("combobox").fill("开发者工具箱");
   await expect(page.getByRole("option", { name: /开发者工具箱/ })).toBeVisible();
   await page.keyboard.press("Enter");
