@@ -31,6 +31,19 @@ export function LabsClient({ locale, copy, common }: LabsClientProps) {
         </div>
       </div>
 
+      <section className="feature-surface grid gap-6 p-6 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <div>
+          <p className="section-kicker">{copy.queryEyebrow}</p>
+          <h2 className={`mt-2 ${TITLE_2XL}`}>{copy.queryTitle}</h2>
+          <p className={`mt-3 max-w-2xl ${TEXT_SM_MUTED} leading-7`}>
+            {copy.queryDescription}
+          </p>
+        </div>
+        <Link href={getHref("/labs/query")} className="btn-primary md:mb-1">
+          {copy.queryAction} <span aria-hidden="true">{common.arrowRight}</span>
+        </Link>
+      </section>
+
       <TimestampTool />
     </main>
   );

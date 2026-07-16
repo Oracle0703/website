@@ -95,6 +95,11 @@ const englishContentChecks = [
     text: /V1 roadmap|Mock Pipeline limitation/
   },
   {
+    path: "/en/labs/query",
+    heading: /Free Query Lab/,
+    text: /City name|WeatherAPI\.com/
+  },
+  {
     path: "/en/contact",
     heading: /Contact/,
     text: /Send a project inquiry|Project goal|Privacy/
@@ -405,6 +410,107 @@ test("contact form keeps input after validation failure", async ({ page }) => {
   await expect(page.locator("main")).toContainText(/Add more context|Project goal/i);
   await expect(page.getByLabel("Project goal")).toHaveValue("Need help");
   await expect(page.locator("main")).not.toContainText(/hello@example\.com|mailto:hello|example\.com/);
+});
+
+test("free query lab selects a location and refreshes results when units change", async ({
+  page
+}) => {
+  await page.route("**/api/query/locations?**", async (route) => {
+    const requestUrl = new URL(route.request().url());
+    expect([...requestUrl.searchParams.keys()].sort()).toEqual(["lang", "q"]);
+
+    await route.fulfill({
+      json: {
+        ok: true,
+        data: {
+          locations: [
+            {
+              id: "shanghai-cn",
+              name: "上海",
+              region: "上海",
+              country: "中国",
+              lat: 31.2304,
+              lon: 121.4737
+            }
+          ]
+        },
+        meta: { stale: false }
+      }
+    });
+  });
+
+  await page.route("**/api/query/weather?**", async (route) => {
+    const requestUrl = new URL(route.request().url());
+    expect([...requestUrl.searchParams.keys()].sort()).toEqual(["lang", "q", "units"]);
+    expect(requestUrl.searchParams.get("q")).toBe("31.2304,121.4737");
+    const imperial = requestUrl.searchParams.get("units") === "imperial";
+
+    await route.fulfill({
+      json: {
+        ok: true,
+        data: {
+          location: {
+            name: "上海",
+            region: "上海",
+            country: "中国",
+            localTime: "2026-07-16 18:30"
+          },
+          current: {
+            temperature: imperial ? 77 : 25,
+            feelsLike: imperial ? 78.8 : 26,
+            humidity: 61,
+            windSpeed: imperial ? 6.2 : 10,
+            condition: "晴"
+          },
+          forecast: [
+            {
+              date: "2026-07-16",
+              condition: "晴",
+              maxTemperature: imperial ? 82.4 : 28,
+              minTemperature: imperial ? 71.6 : 22,
+              rainChance: 10
+            },
+            {
+              date: "2026-07-17",
+              condition: "多云",
+              maxTemperature: imperial ? 80.6 : 27,
+              minTemperature: imperial ? 69.8 : 21,
+              rainChance: 30
+            },
+            {
+              date: "2026-07-18",
+              condition: "小雨",
+              maxTemperature: imperial ? 78.8 : 26,
+              minTemperature: imperial ? 68 : 20,
+              rainChance: 60
+            }
+          ],
+          airQuality: {
+            usEpaIndex: 2,
+            pm25: 12.5,
+            pm10: 24.8
+          },
+          updatedAt: "2026-07-16 18:15"
+        },
+        meta: { stale: false }
+      }
+    });
+  });
+
+  await page.goto("/labs/query");
+  await page.getByLabel("城市名称").fill("上海");
+  await page.getByRole("button", { name: "搜索城市" }).click();
+  await expect(page.getByRole("heading", { name: "选择地点" })).toBeVisible();
+  await page.getByRole("button", { name: /查看这个地点/ }).click();
+
+  await expect(page.getByRole("heading", { name: /上海 · 中国/ })).toBeVisible();
+  await expect(page.locator("main")).toContainText("美国 EPA 类别（1–6）");
+  await expect(page.locator("main")).toContainText("2 · 中等");
+  await expect(page.locator("main")).toContainText("重要数据提示");
+
+  await page.getByRole("button", { name: "英制 °F" }).click();
+  await expect(page.locator("main")).toContainText(/77\.0\s*°F/);
+  await expectNoBrowserErrors(page);
 });
 
 test("project detail evidence sections are visible", async ({ page }) => {
