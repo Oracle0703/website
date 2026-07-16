@@ -167,6 +167,56 @@ test("D10 capture maps size, auth, content, and timeout failures to stable error
   assert.equal(timeout.error.code, "capture_timeout");
 });
 
+test("D10 capture enforces its own timeout and streaming byte limit", async () => {
+  const { capturePageForAnalysis } = await importFresh("apps/website/lib/ai-page-analysis.ts");
+
+  const timeout = await capturePageForAnalysis("https://example.com", {
+    resolver: async () => ["93.184.216.34"],
+    timeoutMs: 5,
+    fetcher: async (_url, init) => new Promise((_resolve, reject) => {
+      const rejectAsAborted = () => {
+        const error = new Error("capture aborted");
+        error.name = "AbortError";
+        reject(error);
+      };
+
+      if (init.signal?.aborted) {
+        rejectAsAborted();
+        return;
+      }
+      init.signal?.addEventListener("abort", rejectAsAborted, { once: true });
+    })
+  });
+  assert.equal(timeout.ok, false);
+  assert.equal(timeout.error.code, "capture_timeout");
+
+  let textFallbackCalled = false;
+  const oversizedBody = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(1024 * 1024));
+      controller.enqueue(new Uint8Array(1024 * 1024));
+      controller.enqueue(new Uint8Array(1));
+      controller.close();
+    }
+  });
+  const tooLarge = await capturePageForAnalysis("https://example.com", {
+    resolver: async () => ["93.184.216.34"],
+    fetcher: async () => ({
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+      body: oversizedBody,
+      text: async () => {
+        textFallbackCalled = true;
+        return enoughHtml;
+      }
+    })
+  });
+
+  assert.equal(tooLarge.ok, false);
+  assert.equal(tooLarge.error.code, "page_too_large");
+  assert.equal(textFallbackCalled, false);
+});
+
 test("D10 analyze pipeline can use captured title while preserving safe mock output", async () => {
   const { analyzePageRequest } = await importFresh("apps/website/lib/ai-page-analysis.ts");
 

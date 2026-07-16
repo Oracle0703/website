@@ -18,7 +18,7 @@ type CalloutProps = {
 };
 
 const CALLOUT_STYLES: Record<NonNullable<CalloutProps["tone"]>, string> = {
-  info: "border-blue-500/40 bg-blue-500/10 text-secondary",
+  info: "border-accent-secondary/40 bg-accent-secondary/10 text-secondary",
   warning: "border-amber-500/40 bg-amber-500/10 text-secondary",
   success: "border-emerald-500/40 bg-emerald-500/10 text-secondary"
 };

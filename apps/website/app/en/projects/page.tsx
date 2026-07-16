@@ -34,6 +34,13 @@ export const generateMetadata = (): Metadata => {
 export default function Page() {
   const projects = getProjectViews("en");
   const featuredProjects = getFeaturedProjectViews("en");
+  const featuredSlugs = new Set(featuredProjects.map((project) => project.slug));
+  const archiveProjects = projects.filter((project) => !featuredSlugs.has(project.slug));
 
-  return <ProjectsClient projects={projects} featuredProjects={featuredProjects} />;
+  return (
+    <ProjectsClient
+      archiveProjects={archiveProjects}
+      featuredProjects={featuredProjects}
+    />
+  );
 }

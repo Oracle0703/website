@@ -13,6 +13,8 @@ export const TEXT_SM_SECONDARY = "text-sm text-secondary";
 export const TEXT_SM_PRIMARY = "text-sm text-primary";
 export const TEXT_SM_SEMIBOLD_PRIMARY = "text-sm font-semibold text-primary";
 export const TEXT_SM_SEMIBOLD_ACCENT = "text-sm font-semibold text-accent";
+export const TEXT_SM_SEMIBOLD_ACCENT_SECONDARY =
+  "text-sm font-semibold text-accent-secondary";
 export const TEXT_SM_SEMIBOLD_SECONDARY = "text-sm font-semibold text-secondary";
 export const TEXT_BASE_SEMIBOLD_SECONDARY = "text-base font-semibold text-secondary";
 
@@ -23,5 +25,7 @@ export const TEXT_XS_SEMIBOLD_SECONDARY = "text-xs font-semibold text-secondary"
 export const TEXT_XS_SEMIBOLD_MUTED = "text-xs font-semibold text-muted";
 
 export const EYEBROW_ACCENT = "text-xs uppercase tracking-[0.2em] text-accent";
+export const EYEBROW_ACCENT_SECONDARY =
+  "text-xs uppercase tracking-[0.2em] text-accent-secondary";
 export const EYEBROW_SECONDARY =
   "text-xs font-semibold uppercase tracking-[0.16em] text-secondary";

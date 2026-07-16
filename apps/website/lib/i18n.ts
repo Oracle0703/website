@@ -9,11 +9,8 @@ export const messages = {
     nav: {
       brand: "Meaningful · Ink",
       items: [
-        { href: "/", label: "首页" },
-        { href: "/blog", label: "博客" },
         { href: "/projects", label: "作品" },
-        { href: "/labs", label: "实验室" },
-        { href: "/tracker", label: "打卡" },
+        { href: "/blog", label: "文章" },
         { href: "/about", label: "关于" },
         { href: "/contact", label: "联系" }
       ],
@@ -31,13 +28,14 @@ export const messages = {
     },
     footer: {
       copyright: "© 2026 Meaningful · Ink",
-      tagline: "开发者作品集 · 博客 · 实验室 · 打卡"
+      tagline: "AI 产品 · 全栈工程 · 独立创作"
     },
     home: {
-      heroTitle: "专注 AI 工程与产品体验的全栈开发者",
-      heroSubtitle: "把 AI 与产品想法做成可运行、可验证的原型",
+      heroEyebrow: "AI 产品工程 · 独立全栈开发",
+      heroTitle: "把复杂想法，做成清晰、可用的产品。",
+      heroSubtitle: "独立全栈开发者，专注 AI 应用、产品体验与可持续演进的工程系统。",
       heroIntro:
-        "我使用 Next.js、TypeScript 与 Node.js，构建 AI 工具、内容系统、后台控制台和可以持续演进的小产品。",
+        "从问题定义、交互原型到上线验证，我使用 Next.js、TypeScript 与 Node.js，让产品判断和工程实现彼此支撑。",
       ctaEnter: "查看作品",
       ctaBlog: "阅读博客",
       ctaProjects: "查看作品",
@@ -64,22 +62,23 @@ export const messages = {
         { label: "实验室", href: "/labs" },
         { label: "联系", href: "/contact" }
       ],
-      currentFocusTitle: "当前构建中",
+      currentFocusTitle: "正在打磨的产品",
       currentFocusDescription:
         "AI 页面分析助手正在从展示型 Demo 走向可用 MVP：先固化输入、诊断、建议和 backlog，再接入真实抓取与模型分析。",
       currentFocusMeta: "Prototype · AI Tool",
       currentFocusHref: "/ai-page-analysis",
       currentFocusAction: "查看当前原型",
       featuredProjectsTitle: "精选作品",
-      featuredProjectsDescription: "用统一项目模型展示可复用的工程与产品能力。",
+      featuredProjectsDescription: "从产品判断到工程落地，选择几件正在持续演进的作品。",
       featuredSeriesTitle: "推荐系列",
       featuredSeriesDescription: "按主题组织阅读路径，让文章形成长期资产。",
       latestFallbackTitle: "最新文章",
       labsTrackerTitle: "实验与系统",
       labsTrackerDescription: "Labs 承接小工具和原型，Tracker 承接产品规则与长期行为系统。",
-      contactTitle: "合作与沟通",
+      contactEyebrow: "现在 / 合作",
+      contactTitle: "有一个值得推进的想法？",
       contactDescription:
-        "适合讨论 AI 应用原型、个人网站工程化、后台控制台、内容系统与小产品落地。",
+        "欢迎聊聊 AI 应用原型、个人网站工程化、后台控制台、内容系统与小产品落地。",
       contactAction: "联系沟通",
       latestBlog: "最新博客",
       viewAll: "查看全部",
@@ -447,11 +446,8 @@ export const messages = {
     nav: {
       brand: "Meaningful · Ink",
       items: [
-        { href: "/", label: "Home" },
-        { href: "/blog", label: "Blog" },
-        { href: "/projects", label: "Projects" },
-        { href: "/labs", label: "Labs" },
-        { href: "/tracker", label: "Tracker" },
+        { href: "/projects", label: "Work" },
+        { href: "/blog", label: "Writing" },
         { href: "/about", label: "About" },
         { href: "/contact", label: "Contact" }
       ],
@@ -469,13 +465,14 @@ export const messages = {
     },
     footer: {
       copyright: "© 2026 Meaningful · Ink",
-      tagline: "Developer Portfolio · Blog · Labs · Tracker"
+      tagline: "AI products · Full-stack engineering · Independent making"
     },
     home: {
-      heroTitle: "Full-Stack Developer for AI Products",
-      heroSubtitle: "Turning AI and product ideas into working, testable prototypes",
+      heroEyebrow: "AI Product Engineering · Independent Full-Stack",
+      heroTitle: "Turning complex ideas into clear, useful products.",
+      heroSubtitle: "Independent full-stack developer focused on AI applications, product experience, and systems built to evolve.",
       heroIntro:
-        "I use Next.js, TypeScript, and Node.js to build AI tools, content systems, dashboards, and small products that can keep evolving.",
+        "From framing the problem and shaping the interaction to shipping and validation, I use Next.js, TypeScript, and Node.js to connect product judgment with implementation.",
       ctaEnter: "View projects",
       ctaBlog: "Read the Blog",
       ctaProjects: "View projects",
@@ -502,22 +499,23 @@ export const messages = {
         { label: "Labs", href: "/labs" },
         { label: "Contact", href: "/contact" }
       ],
-      currentFocusTitle: "Currently building",
+      currentFocusTitle: "Currently in the workshop",
       currentFocusDescription:
         "The AI page analysis assistant is moving from a demo into an MVP: inputs, diagnosis, recommendations, and backlog first, then real crawling and model analysis.",
       currentFocusMeta: "Prototype · AI Tool",
       currentFocusHref: "/ai-page-analysis",
       currentFocusAction: "View current prototype",
       featuredProjectsTitle: "Featured projects",
-      featuredProjectsDescription: "A structured set of projects showing reusable product and engineering capability.",
+      featuredProjectsDescription: "A few evolving projects, from product judgment through engineering delivery.",
       featuredSeriesTitle: "Recommended series",
       featuredSeriesDescription: "Themed reading paths that make writing work as a long-term asset.",
       latestFallbackTitle: "Latest posts",
       labsTrackerTitle: "Labs and systems",
       labsTrackerDescription: "Labs hosts tools and prototypes; Tracker hosts product rules and long-term behavior systems.",
-      contactTitle: "Work together",
+      contactEyebrow: "Now / Contact",
+      contactTitle: "Have an idea worth moving forward?",
       contactDescription:
-        "Useful for AI app prototypes, personal-site engineering, dashboards, content systems, and small product delivery.",
+        "Let’s talk about AI prototypes, personal-site engineering, dashboards, content systems, or a focused small product.",
       contactAction: "Contact",
       latestBlog: "Latest Posts",
       viewAll: "View all",

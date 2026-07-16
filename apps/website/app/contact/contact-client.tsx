@@ -4,7 +4,7 @@ import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import { useI18n } from "../../components/language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
-import { TEXT_SM_MUTED, TITLE_2XL, TITLE_BASE } from "../../lib/typography";
+import { TEXT_SM_MUTED, TITLE_2XL } from "../../lib/typography";
 
 type SubmitState =
   | { status: "idle" }
@@ -111,83 +111,79 @@ export function ContactClient() {
   };
 
   const isSubmitting = submitState.status === "submitting";
+  const githubChannel = copy.contactChannels.find((channel) => channel.href.startsWith("http"));
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-14 sm:px-6 md:py-20">
-      <header className="panel-surface p-6 sm:p-9">
-        <p className={TEXT_SM_MUTED}>{copy.eyebrow}</p>
-        <h1 className={`mt-2 ${TITLE_2XL}`}>{copy.title}</h1>
-        <p className={`mt-4 max-w-2xl ${TEXT_SM_MUTED} leading-relaxed`}>{copy.description}</p>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Link href={getHref("/projects")} className="btn-primary">
-            {copy.primaryAction}
-          </Link>
-          <Link href={getHref("/blog")} className="btn-secondary">
-            {copy.secondaryAction}
-          </Link>
-        </div>
-        <div className={`mt-6 flex flex-wrap items-center gap-5 ${TEXT_SM_MUTED}`}>
-          <Link href={getHref("/")} className="link-muted font-medium">
-            {common.backToHome}
-          </Link>
-        </div>
+    <main className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 md:py-20">
+      <header className="border-b border-edge/70 pb-10 md:pb-14">
+        <p className="section-kicker">{copy.eyebrow}</p>
+        <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.035em] text-primary sm:text-5xl">
+          {copy.title}
+        </h1>
+        <p className={`mt-5 max-w-2xl ${TEXT_SM_MUTED} text-base leading-7 sm:text-lg`}>
+          {copy.description}
+        </p>
+        <Link href={getHref("/")} className="link-muted mt-6 inline-flex text-sm font-medium">
+          {common.backToHome}
+        </Link>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <article className="panel-surface p-5 sm:p-6">
-          <h2 className={TITLE_BASE}>{copy.collaborationTitle}</h2>
-          <ul className={`mt-4 space-y-3 ${TEXT_SM_MUTED}`}>
-            {copy.collaborationAreas.map((area) => (
-              <li key={area} className="flex gap-3">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                <span>{area}</span>
-              </li>
-            ))}
-          </ul>
-        </article>
+      <div className="grid gap-10 pt-10 md:pt-14 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:gap-14">
+        <aside className="space-y-8">
+          <section>
+            <p className="section-kicker">{copy.contactPathEyebrow}</p>
+            <h2 className={`mt-3 ${TITLE_2XL}`}>{copy.collaborationTitle}</h2>
+            <ul className="mt-6 divide-y divide-edge/70 border-y border-edge/70">
+              {copy.collaborationAreas.map((area) => (
+                <li key={area} className="flex gap-3 py-4 text-sm leading-6 text-secondary">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-secondary" aria-hidden="true" />
+                  <span>{area}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-        <article className="panel-surface p-5 sm:p-6">
-          <h2 className={TITLE_BASE}>{copy.boundariesTitle}</h2>
-          <ul className={`mt-4 space-y-3 ${TEXT_SM_MUTED}`}>
-            {copy.boundaries.map((boundary) => (
-              <li key={boundary} className="flex gap-3">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                <span>{boundary}</span>
-              </li>
-            ))}
-          </ul>
-        </article>
-      </section>
+          <p className="border-l-2 border-accent pl-4 text-sm leading-7 text-muted">
+            {copy.responseExpectation}
+          </p>
 
-      <section className="panel-surface p-5 sm:p-6">
-        <p className="section-kicker">{copy.contactPathEyebrow}</p>
-        <h2 className={`mt-2 ${TITLE_BASE}`}>{copy.contactPathTitle}</h2>
-        <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{copy.contactPathDescription}</p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {copy.contactChannels.map((channel) => (
-            <Link
-              key={channel.href}
-              href={channel.href.startsWith("http") ? channel.href : getHref(channel.href)}
-              target={channel.href.startsWith("http") ? "_blank" : undefined}
-              rel={channel.href.startsWith("http") ? "noopener noreferrer" : undefined}
-              className="evidence-card card-interactive flex h-full flex-col"
-            >
-              <span className="text-sm font-semibold text-accent">{channel.label}</span>
-              <span className={`mt-2 ${TEXT_SM_MUTED} leading-6`}>{channel.description}</span>
+          <div className="flex flex-wrap gap-3">
+            <Link href={getHref("/projects")} className="btn-secondary">
+              {copy.primaryAction}
             </Link>
-          ))}
-        </div>
-        <p className={`mt-5 rounded-xl border border-edge/70 bg-base/40 p-4 ${TEXT_SM_MUTED} leading-7`}>
-          {copy.responseExpectation}
-        </p>
-      </section>
+            {githubChannel ? (
+              <Link
+                href={githubChannel.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-accent inline-flex items-center px-2 py-2 text-sm font-semibold"
+              >
+                {githubChannel.label} <span className="ml-2" aria-hidden>{common.arrowRight}</span>
+              </Link>
+            ) : null}
+          </div>
 
-      <section className="panel-surface p-5 sm:p-6">
-        <p className="section-kicker">{formCopy.eyebrow}</p>
-        <h2 className={`mt-2 ${TITLE_BASE}`}>{formCopy.title}</h2>
-        <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{formCopy.description}</p>
+          <details className="border-y border-edge/70 py-4">
+            <summary className="cursor-pointer text-sm font-semibold text-primary">
+              {copy.boundariesTitle}
+            </summary>
+            <ul className={`mt-4 space-y-3 ${TEXT_SM_MUTED}`}>
+              {copy.boundaries.map((boundary) => (
+                <li key={boundary} className="flex gap-3 leading-6">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                  <span>{boundary}</span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </aside>
 
-        <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
+        <section className="feature-surface p-5 sm:p-7 md:p-8">
+          <p className="section-kicker">{formCopy.eyebrow}</p>
+          <h2 className={`mt-2 ${TITLE_2XL}`}>{formCopy.title}</h2>
+          <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{formCopy.description}</p>
+
+          <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
           <input
             type="text"
             name="honeypot"
@@ -270,17 +266,15 @@ export function ContactClient() {
             <span className="block text-xs font-normal text-muted">{formCopy.fields.links.hint}</span>
           </label>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <p className="rounded-xl border border-edge/70 bg-base/35 p-3 text-xs leading-6 text-muted">
-              {copy.contactForm.privacyNotice}
-            </p>
-            <p className="rounded-xl border border-edge/70 bg-base/35 p-3 text-xs leading-6 text-muted">
-              {copy.contactForm.retentionNotice}
-            </p>
-            <p className="rounded-xl border border-edge/70 bg-base/35 p-3 text-xs leading-6 text-muted">
-              {copy.contactForm.deletionNotice}
-            </p>
-          </div>
+            <details className="border-y border-edge/70 py-3 text-xs leading-6 text-muted">
+              <summary className="cursor-pointer font-semibold text-secondary">
+                {copy.contactForm.privacyNotice}
+              </summary>
+              <div className="mt-3 space-y-2">
+                <p>{copy.contactForm.retentionNotice}</p>
+                <p>{copy.contactForm.deletionNotice}</p>
+              </div>
+            </details>
 
           {submitState.status === "error" ? (
             <p className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm leading-6 text-red-200" role="alert">
@@ -300,11 +294,12 @@ export function ContactClient() {
             </p>
           ) : null}
 
-          <button type="submit" className="btn-primary px-5 py-2.5" disabled={isSubmitting}>
-            {isSubmitting ? formCopy.submitBusy : formCopy.submitIdle}
-          </button>
-        </form>
-      </section>
+            <button type="submit" className="btn-primary px-5 py-2.5" disabled={isSubmitting}>
+              {isSubmitting ? formCopy.submitBusy : formCopy.submitIdle}
+            </button>
+          </form>
+        </section>
+      </div>
     </main>
   );
 }

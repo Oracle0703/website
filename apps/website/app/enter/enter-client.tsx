@@ -189,10 +189,10 @@ export function EnterClient() {
                 aria-disabled={isNavigating ? true : undefined}
                 className={[
                   "group flex h-full flex-col justify-between rounded-2xl border border-edge bg-surface/70 p-5 transition duration-300 sm:p-6",
-                  "hover:-translate-y-1 hover:border-blue-400/60 hover:shadow-lg hover:shadow-blue-500/10",
+                  "hover:-translate-y-1 hover:border-accent/60 hover:shadow-lg hover:shadow-accent/10",
                   "motion-reduce:transform-none motion-reduce:transition-none",
                   isDimmed ? "opacity-40 scale-95" : "",
-                  isActive ? "z-10 scale-[1.03] border-blue-400/80 shadow-xl shadow-blue-500/20" : ""
+                  isActive ? "z-10 scale-[1.03] border-accent/80 shadow-xl shadow-accent/20" : ""
                 ]
                   .filter(Boolean)
                   .join(" ")}
