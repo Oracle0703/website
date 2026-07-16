@@ -223,6 +223,7 @@ test("offline navigation uses cached document loads and blocks network-only inte
 test("build and response headers make the generated root-scoped worker updateable", async () => {
   const packageJson = JSON.parse(read("apps/website/package.json"));
   const nextConfig = require(path.join(root, "apps/website/next.config.js"));
+  const standaloneVerifier = read("scripts/verify-website-standalone.ps1");
   const rules = await nextConfig.headers();
   const workerRule = rules.find((rule) => rule.source === "/sw.js");
   const headers = new Map(workerRule?.headers.map(({ key, value }) => [key, value]));
@@ -234,5 +235,11 @@ test("build and response headers make the generated root-scoped worker updateabl
   assert.match(
     read(".github/workflows/website-windows-release.yml"),
     /scripts\/generate-website-service-worker\.mjs/
+  );
+  assert.match(standaloneVerifier, /function Get-ResponseContentText/);
+  assert.match(standaloneVerifier, /\[System\.Text\.Encoding\]::UTF8\.GetString\(\$content\)/);
+  assert.match(
+    standaloneVerifier,
+    /\$pwaManifest = Get-ResponseContentText \$pwaManifestResponse \| ConvertFrom-Json/
   );
 });

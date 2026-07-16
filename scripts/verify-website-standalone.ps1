@@ -9,6 +9,15 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Get-ResponseContentText([object]$Response) {
+  $content = $Response.Content
+  if ($content -is [byte[]]) {
+    return [System.Text.Encoding]::UTF8.GetString($content)
+  }
+
+  return [string]$content
+}
+
 $ReleaseDirectory = [System.IO.Path]::GetFullPath($ReleaseDirectory)
 $manifestPath = Join-Path $ReleaseDirectory "release-manifest.json"
 $serverPath = Join-Path $ReleaseDirectory "apps\website\server.js"
@@ -94,7 +103,7 @@ try {
   if ([string]$searchResponse.Headers["X-Robots-Tag"] -ne "noindex, nofollow") {
     throw "/search-index.json must return X-Robots-Tag: noindex, nofollow."
   }
-  $searchPayload = $searchResponse.Content | ConvertFrom-Json
+  $searchPayload = Get-ResponseContentText $searchResponse | ConvertFrom-Json
   if ($searchPayload.version -ne 1 -or -not $searchPayload.entries -or $searchPayload.entries.Count -lt 1) {
     throw "/search-index.json does not contain a valid v1 index."
   }
@@ -103,7 +112,7 @@ try {
   if ($pwaManifestResponse.StatusCode -ne 200) {
     throw "Health request failed for /manifest.webmanifest with status $($pwaManifestResponse.StatusCode)."
   }
-  $pwaManifest = $pwaManifestResponse.Content | ConvertFrom-Json
+  $pwaManifest = Get-ResponseContentText $pwaManifestResponse | ConvertFrom-Json
   if ($pwaManifest.id -ne "/" -or $pwaManifest.scope -ne "/" -or $pwaManifest.start_url -ne "/tracker" -or $pwaManifest.display -ne "standalone") {
     throw "/manifest.webmanifest does not contain the expected root-scoped PWA metadata."
   }
@@ -118,11 +127,12 @@ try {
   if ([string]$serviceWorkerResponse.Headers["Cache-Control"] -notmatch "no-cache") {
     throw "/sw.js must return Cache-Control containing no-cache."
   }
-  if ($serviceWorkerResponse.Content -notmatch [regex]::Escape($buildId)) {
+  $serviceWorkerContent = Get-ResponseContentText $serviceWorkerResponse
+  if ($serviceWorkerContent -notmatch [regex]::Escape($buildId)) {
     throw "/sw.js does not contain the packaged Next.js BUILD_ID."
   }
   foreach ($offlineRoute in @("/tracker", "/en/tracker", "/labs/tools", "/en/labs/tools")) {
-    if ($serviceWorkerResponse.Content -notmatch [regex]::Escape($offlineRoute)) {
+    if ($serviceWorkerContent -notmatch [regex]::Escape($offlineRoute)) {
       throw "/sw.js is missing offline route $offlineRoute."
     }
   }
