@@ -47,8 +47,9 @@ test("free query page keeps the interactive boundary narrow and documents same-o
   assert.match(page, /GET \/api\/query\/locations\?q=Shanghai&lang=/);
   assert.match(page, /GET \/api\/query\/weather\?q=31\.2304%2C121\.4737&lang=/);
   assert.match(page, /https:\/\/www\.weatherapi\.com\//);
+  assert.match(page, /grid grid-cols-1 gap-7/);
   assert.match(page, /className="min-w-0 space-y-5"/);
-  assert.equal((page.match(/max-w-full overflow-x-auto/g) ?? []).length, 2);
+  assert.equal((page.match(/w-full min-w-0 max-w-full overflow-x-auto/g) ?? []).length, 2);
 
   assert.match(client, /^"use client";/);
   assert.match(client, /import type \{ Locale, Messages \}/);
