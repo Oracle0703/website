@@ -23,11 +23,13 @@ test('projects list page avoids page-level locale cookie reads', () => {
   assert.match(pageSource, /projects\.filter\(\(project\) => !featuredSlugs\.has\(project\.slug\)\)/);
   assert.match(pageSource, /archiveProjects=\{archiveProjects\}/);
   assert.match(pageSource, /<ProjectsClient/);
+  assert.match(pageSource, /copy=\{pages\.projects\}/);
+  assert.match(pageSource, /common=\{pages\.common\}/);
 
   assert.match(clientSource, /"use client"/);
-  assert.match(clientSource, /useI18n/);
-  assert.match(clientSource, /messages\.pages\.projects/);
-  assert.match(clientSource, /messages\.pages\.common/);
+  assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
+  assert.match(clientSource, /type ProjectsCopy = Messages\["pages"\]\["projects"\]/);
+  assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
   assert.match(clientSource, /type ProjectsClientProps/);
   assert.match(clientSource, /archiveProjects:\s*ProjectView\[\]/);
   assert.match(clientSource, /featuredProjects:\s*ProjectView\[\]/);

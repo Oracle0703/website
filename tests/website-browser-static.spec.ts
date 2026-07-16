@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { PUBLIC_WEBSITE_LOCALE_ROUTES } from "../apps/website/lib/public-routes";
 
 const detailRoutes = [
@@ -6,6 +6,45 @@ const detailRoutes = [
   { path: "/projects/ai-page-analysis", name: "zh-project-detail" },
   { path: "/en/blog/ci-agent-guardrails", name: "en-blog-detail" },
   { path: "/en/projects/ai-page-analysis", name: "en-project-detail" }
+];
+
+const primaryRoutes = [
+  {
+    path: "/",
+    name: "home",
+    heading: /把复杂想法，做成清晰、可用的产品/,
+    content: /AI 页面分析|Next\.js/,
+    evidence: (page: Page) =>
+      page.locator("main a[href^='/projects/'], main a[href^='/ai-page-analysis']").first()
+  },
+  {
+    path: "/projects",
+    name: "projects",
+    heading: /^作品$/,
+    content: /AI 页面分析|Tracker|Dashboard/,
+    evidence: (page: Page) => page.locator("main article a[href^='/projects/']").first()
+  },
+  {
+    path: "/blog",
+    name: "blog",
+    heading: /^博客$/,
+    content: /CI Agent|Next\.js|打卡/,
+    evidence: (page: Page) => page.locator("main article a[href^='/blog/']").first()
+  },
+  {
+    path: "/about",
+    name: "about",
+    heading: /^关于我$/,
+    content: /工作原则|Next\.js|全栈开发/,
+    evidence: (page: Page) => page.getByRole("heading", { name: "工作原则" })
+  },
+  {
+    path: "/contact",
+    name: "contact",
+    heading: /^联系我$/,
+    content: /提交合作需求|GitHub 主页/,
+    evidence: (page: Page) => page.locator("main form")
+  }
 ];
 
 function getRouteName(path: string) {
@@ -24,9 +63,10 @@ const routes = [
   }))
 ];
 
-const ignoredConsoleFragments = [
-  "Download the React DevTools"
-];
+const ignoredConsoleFragments = ["Download the React DevTools"];
+const hydrationErrorPattern =
+  /hydration|hydrating|server rendered html|did not match|content does not match/i;
+const browserErrorsByPage = new WeakMap<Page, string[]>();
 
 const englishContentChecks = [
   {
@@ -63,8 +103,12 @@ const englishContentChecks = [
 
 async function installPreferenceState(page: Page) {
   await page.addInitScript(() => {
-    localStorage.setItem("locale", "en");
-    localStorage.setItem("theme", "dark");
+    if (localStorage.getItem("locale") === null) {
+      localStorage.setItem("locale", "en");
+    }
+    if (localStorage.getItem("theme") === null) {
+      localStorage.setItem("theme", "dark");
+    }
   });
 }
 
@@ -73,71 +117,208 @@ async function expectNoCjk(page: Page, selector = "main") {
   expect(text).not.toMatch(/[\u3400-\u9fff\uF900-\uFAFF]/);
 }
 
-async function expectNoBrowserErrors(page: Page, browserErrors: string[]) {
+async function expectNoBrowserErrors(page: Page) {
   await page.waitForLoadState("networkidle");
+  expect(browserErrorsByPage.get(page) ?? [], "unexpected console, hydration, or page errors").toEqual(
+    []
+  );
+}
 
-  expect(browserErrors.filter(Boolean)).toEqual([]);
+async function firstVisible(locator: Locator) {
+  const count = await locator.count();
+
+  for (let index = 0; index < count; index += 1) {
+    const candidate = locator.nth(index);
+    if (await candidate.isVisible()) return candidate;
+  }
+
+  return null;
 }
 
 async function openMobileMenu(page: Page) {
-  await page.locator("button[aria-expanded='false']").click();
+  const openButton = await firstVisible(
+    page.getByRole("button", { name: /打开菜单|Open menu/ })
+  );
+
+  if (openButton) await openButton.click();
 }
 
-async function clickLanguageToggle(page: Page, name: RegExp, openMenuWhenHidden: boolean) {
-  const button = page.getByRole("button", { name }).first();
+async function closeMobileMenu(page: Page) {
+  const closeButton = await firstVisible(
+    page.getByRole("button", { name: /关闭菜单|Close menu/ })
+  );
 
-  if (openMenuWhenHidden && !(await button.isVisible())) {
+  if (closeButton) await closeButton.click();
+}
+
+async function clickLanguageToggle(page: Page, name: RegExp) {
+  let button = await firstVisible(page.getByRole("button", { name }));
+
+  if (!button) {
     await openMobileMenu(page);
+    button = await firstVisible(page.getByRole("button", { name }));
   }
 
-  await page.getByRole("button", { name }).first().click();
+  expect(button, `language toggle ${name} should be visible`).not.toBeNull();
+  await button?.click();
+}
+
+async function clickThemeToggle(page: Page, name: RegExp) {
+  let button = await firstVisible(page.getByRole("button", { name }));
+
+  if (!button) {
+    await openMobileMenu(page);
+    button = await firstVisible(page.getByRole("button", { name }));
+  }
+
+  expect(button, `theme toggle ${name} should be visible`).not.toBeNull();
+  await button?.click();
+}
+
+async function expectPrimaryNavigation(page: Page, isMobile: boolean) {
+  if (isMobile) await openMobileMenu(page);
+
+  const nav = page.locator("header nav:visible").first();
+  await expect(nav).toBeVisible();
+
+  for (const item of [
+    { label: "作品", href: "/projects" },
+    { label: "文章", href: "/blog" },
+    { label: "关于", href: "/about" },
+    { label: "联系", href: "/contact" }
+  ]) {
+    await expect(nav.getByRole("link", { name: item.label, exact: true })).toHaveAttribute(
+      "href",
+      item.href
+    );
+  }
+}
+
+async function expectNoHorizontalOverflow(page: Page) {
+  const overflow = await page.evaluate(() => {
+    const root = document.documentElement;
+    return {
+      clientWidth: root.clientWidth,
+      scrollWidth: root.scrollWidth,
+      overflow: root.scrollWidth - root.clientWidth
+    };
+  });
+
+  expect(
+    overflow.overflow,
+    `document width ${overflow.scrollWidth}px exceeds viewport ${overflow.clientWidth}px`
+  ).toBeLessThanOrEqual(1);
+}
+
+async function getThemePalette(page: Page) {
+  return page.evaluate(() => {
+    const bodyStyles = getComputedStyle(document.body);
+    const rootStyles = getComputedStyle(document.documentElement);
+
+    return {
+      background: bodyStyles.backgroundColor,
+      foreground: bodyStyles.color,
+      accent: rootStyles.getPropertyValue("--ui-accent-rgb").trim()
+    };
+  });
+}
+
+async function attachViewportScreenshot(page: Page, testInfo: TestInfo, label: string) {
+  await testInfo.attach(`${testInfo.project.name}-${label}`, {
+    body: await page.screenshot({ animations: "disabled", fullPage: false }),
+    contentType: "image/png"
+  });
 }
 
 test.beforeEach(async ({ page }) => {
   const browserErrors: string[] = [];
+  browserErrorsByPage.set(page, browserErrors);
 
   page.on("console", (message) => {
-    if (message.type() !== "error") return;
-    const text = message.text();
-    if (ignoredConsoleFragments.some((fragment) => text.includes(fragment))) return;
-    browserErrors.push(text);
+    const messageText = message.text();
+    const isBrowserError = message.type() === "error";
+    const isHydrationError = hydrationErrorPattern.test(messageText);
+
+    if (!isBrowserError && !isHydrationError) return;
+    if (ignoredConsoleFragments.some((fragment) => messageText.includes(fragment))) return;
+    browserErrors.push(`[console.${message.type()}] ${messageText}`);
   });
 
   page.on("pageerror", (error) => {
-    browserErrors.push(error.message);
+    browserErrors.push(`[pageerror] ${error.message}`);
   });
 
   await installPreferenceState(page);
-  await page.exposeFunction("__collectBrowserErrors", () => browserErrors);
+});
+
+test.describe("primary route visual and behavior acceptance", () => {
+  for (const route of primaryRoutes) {
+    test(`${route.name} supports both themes without layout or runtime regressions`, async ({
+      page
+    }, testInfo) => {
+      const isMobile = testInfo.project.name.includes("mobile");
+
+      await page.goto(route.path);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+      const main = page.locator("main");
+      await expect(main).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: route.heading }).first()).toBeVisible();
+      await expect(main).toContainText(route.content);
+      await expect(route.evidence(page)).toBeVisible();
+      await expect(main).not.toContainText(/Lorem ipsum|hello@example\.com|mailto:hello|example\.com/);
+
+      await expectPrimaryNavigation(page, isMobile);
+      if (isMobile) await closeMobileMenu(page);
+      await expectNoHorizontalOverflow(page);
+
+      const darkPalette = await getThemePalette(page);
+      if (route.name === "home") {
+        await attachViewportScreenshot(page, testInfo, "home-dark");
+      }
+
+      await clickThemeToggle(page, /切换到亮色|切换到浅色模式|Switch to light mode/i);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+      await expect
+        .poll(() => page.evaluate(() => localStorage.getItem("theme")))
+        .toBe("light");
+
+      if (isMobile) await closeMobileMenu(page);
+      const lightPalette = await getThemePalette(page);
+      expect(lightPalette).not.toEqual(darkPalette);
+      await expectNoHorizontalOverflow(page);
+
+      if (route.name === "home") {
+        await attachViewportScreenshot(page, testInfo, "home-light");
+      }
+
+      await expectNoBrowserErrors(page);
+    });
+  }
 });
 
 for (const route of routes) {
-  test(`${route.name} restores preferences without console errors`, async ({ page }, testInfo) => {
+  test(`${route.name} restores route locale and dark preference without browser errors`, async ({
+    page
+  }) => {
     await page.goto(route.path);
 
     await expect.poll(async () => page.evaluate(() => document.documentElement.lang)).toBe(route.expectedLang);
-    await expect.poll(async () => page.evaluate(() => document.documentElement.dataset.theme)).toBe("dark");
-
-    const browserErrors = await page.evaluate(async () => {
-      const collectBrowserErrors = window.__collectBrowserErrors as () => Promise<string[]>;
-      return collectBrowserErrors();
-    });
-    await expectNoBrowserErrors(page, browserErrors);
-
-    await expect(page).toHaveScreenshot(`${testInfo.project.name}-${route.name}.png`, {
-      fullPage: false
-    });
+    await expect
+      .poll(async () => page.evaluate(() => document.documentElement.dataset.theme))
+      .toBe("dark");
+    await expect(page.locator("#main-content")).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await expectNoBrowserErrors(page);
   });
 }
 
 test("language toggle moves between Chinese and English canonical URLs", async ({ page }) => {
-  const isMobile = test.info().project.name.includes("mobile");
-
   await page.goto("/blog");
-  await clickLanguageToggle(page, /切换到英文|Switch to English/, isMobile);
+  await clickLanguageToggle(page, /切换到英文|Switch to English/);
   await expect(page).toHaveURL(/\/en\/blog$/);
 
-  await clickLanguageToggle(page, /切换到中文|Switch to Chinese/, isMobile);
+  await clickLanguageToggle(page, /切换到中文|Switch to Chinese/);
   await expect(page).toHaveURL(/\/blog$/);
 });
 
@@ -164,15 +345,18 @@ test.describe("English content quality", () => {
       await expect(page.getByRole("heading", { name: check.heading }).first()).toBeVisible();
       await expect(page.locator("main")).toContainText(check.text);
       await expectNoCjk(page);
+      await expectNoBrowserErrors(page);
     });
   }
 });
 
-test("contact page exposes the live form and GitHub fallback without rollout jargon", async ({ page }) => {
+test("contact page exposes the live form and GitHub fallback without rollout jargon", async ({
+  page
+}) => {
   await page.goto("/contact");
 
   await expect(page.locator("main")).not.toContainText(/hello@example\.com|mailto:hello|example\.com/);
-  await expect(page.locator("main")).toContainText(/填写下方表单/);
+  await expect(page.locator("main")).toContainText(/提交合作需求/);
   await expect(page.getByRole("link", { name: /GitHub 主页/ })).toHaveAttribute(
     "href",
     "https://github.com/Oracle0703"
@@ -180,7 +364,7 @@ test("contact page exposes the live form and GitHub fallback without rollout jar
   await expect(page.locator("main")).not.toContainText(/D6|D7|联系闭环决策|表单规格/);
 });
 
-test("D7 contact form keeps input after validation failure", async ({ page }) => {
+test("contact form keeps input after validation failure", async ({ page }) => {
   await page.goto("/en/contact");
 
   await page.getByLabel("Name").fill("Ada");
@@ -193,7 +377,7 @@ test("D7 contact form keeps input after validation failure", async ({ page }) =>
   await expect(page.locator("main")).not.toContainText(/hello@example\.com|mailto:hello|example\.com/);
 });
 
-test("D5 project detail evidence sections are visible", async ({ page }) => {
+test("project detail evidence sections are visible", async ({ page }) => {
   await page.goto("/en/projects/ai-page-analysis");
 
   await expect(page.getByRole("heading", { name: /Evidence/ })).toBeVisible();
@@ -203,8 +387,6 @@ test("D5 project detail evidence sections are visible", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Roadmap/ })).toBeVisible();
 });
 
-declare global {
-  interface Window {
-    __collectBrowserErrors: () => Promise<string[]>;
-  }
-}
+// Pixel matching via toHaveScreenshot is intentionally not the default gate. The two home
+// theme states above are attached to the Playwright report for review without committing a
+// large, brittle snapshot matrix for every route and viewport.

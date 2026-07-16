@@ -88,6 +88,7 @@ test("D7 contact form module validates required fields, quality, links, and plac
 
 test("D7 contact submission gate catches rate limits and duplicate submissions", async () => {
   const {
+    CONTACT_GATE_MAX_ENTRIES,
     checkContactSubmissionGate,
     createContactSubmissionGate
   } = await importFresh("apps/website/lib/contact-form.ts");
@@ -128,6 +129,28 @@ test("D7 contact submission gate catches rate limits and duplicate submissions",
   });
   assert.equal(limited.ok, false);
   assert.equal(limited.error.code, "rate_limited");
+
+  const capacityGate = createContactSubmissionGate();
+  for (let index = 0; index < CONTACT_GATE_MAX_ENTRIES; index += 1) {
+    capacityGate.attemptsByIdentity.set(`client-${index}`, [3_000_000]);
+    capacityGate.duplicateByContactGoal.set(`duplicate-${index}`, 3_000_000);
+  }
+  capacityGate.lastCleanupAt = 3_000_000;
+
+  assert.equal(
+    checkContactSubmissionGate(capacityGate, {
+      ...base,
+      identityKey: "new-client",
+      contact: "new-client@lovelace.dev",
+      projectGoal: `${base.projectGoal} capacity check`,
+      now: 3_000_001
+    }).ok,
+    true
+  );
+  assert.equal(capacityGate.attemptsByIdentity.size, CONTACT_GATE_MAX_ENTRIES);
+  assert.equal(capacityGate.duplicateByContactGoal.size, CONTACT_GATE_MAX_ENTRIES);
+  assert.equal(capacityGate.attemptsByIdentity.has("client-0"), false);
+  assert.equal(capacityGate.attemptsByIdentity.has("new-client"), true);
 });
 
 test("D7 contact webhook delivery has a bounded timeout", async () => {

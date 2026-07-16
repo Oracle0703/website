@@ -17,12 +17,13 @@ test('enter page avoids page-level locale cookie reads', () => {
   assert.doesNotMatch(pageSource, /getLocale\(/);
   assert.match(pageSource, /defaultLocale/);
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
-  assert.match(pageSource, /<EnterClient \/>/);
+  assert.match(pageSource, /<EnterClient copy=\{enter\} common=\{pages\.common\} \/>/);
 
   assert.match(clientSource, /"use client"/);
   assert.match(clientSource, /useI18n/);
-  assert.match(clientSource, /messages\.enter/);
-  assert.match(clientSource, /messages\.pages\.common/);
+  assert.match(clientSource, /getShellMessages\(locale\)/);
+  assert.match(clientSource, /copy: Messages\["enter"\]/);
+  assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
 });
 
 test('static rendering document records enter as a migrated page', () => {

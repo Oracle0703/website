@@ -19,12 +19,12 @@ test('tracker page avoids page-level locale cookie reads', () => {
   assert.doesNotMatch(pageSource, /trackerContent/);
   assert.match(pageSource, /defaultLocale/);
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
-  assert.match(pageSource, /<TrackerClient \/>/);
+  assert.match(pageSource, /<TrackerClient locale=\{defaultLocale\} copy=\{pages\.tracker\} common=\{pages\.common\} \/>/);
 
   assert.match(clientSource, /"use client"/);
-  assert.match(clientSource, /useI18n/);
-  assert.match(clientSource, /messages\.pages\.tracker/);
-  assert.match(clientSource, /messages\.pages\.common/);
+  assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
+  assert.match(clientSource, /copy: Messages\["pages"\]\["tracker"\]/);
+  assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
   assert.match(clientSource, /trackerContent\[locale\]/);
   assert.match(clientSource, /<AnnouncementTicker/);
   assert.match(clientSource, /概念原型 · 示例数据/);

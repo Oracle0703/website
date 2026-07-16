@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
-import { useI18n } from "../../components/language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
+import type { Locale, Messages } from "../../lib/i18n";
 import { TEXT_SM_MUTED, TITLE_2XL } from "../../lib/typography";
 
 type SubmitState =
@@ -40,11 +40,14 @@ function normalizeLinks(value: string) {
     .filter(Boolean);
 }
 
-export function ContactClient() {
-  const { locale, messages } = useI18n();
-  const copy = messages.pages.contact;
+type ContactClientProps = {
+  locale: Locale;
+  copy: Messages["pages"]["contact"];
+  common: Messages["pages"]["common"];
+};
+
+export function ContactClient({ locale, copy, common }: ContactClientProps) {
   const formCopy = copy.contactForm;
-  const common = messages.pages.common;
   const getHref = (href: string) => getLocalePath(href, locale);
   const [formState, setFormState] = useState<ContactFormState>(initialFormState);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });

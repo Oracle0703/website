@@ -28,7 +28,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function HomePage() {
-  const { seo } = getMessages(defaultLocale);
+  const { seo, home, pages } = getMessages(defaultLocale);
   const latestBlogItems = getPublishedPosts()
     .slice(0, 3)
     .map((post) => ({
@@ -82,6 +82,10 @@ export default function HomePage() {
   return (
     <>
       <HomePageClient
+        locale={defaultLocale}
+        copy={home}
+        common={pages.common}
+        projectStatusLabels={pages.projects.status}
         latestBlogItems={latestBlogItems}
         featuredProjects={featuredProjects}
       />

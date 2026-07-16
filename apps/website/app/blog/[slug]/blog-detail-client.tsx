@@ -5,11 +5,10 @@ import Link from "next/link";
 import type { BlogPost } from "../../../lib/blog";
 import type { BlogSeries } from "../../../lib/blog-series";
 import type { TocHeading } from "../../../lib/blog-headings";
+import type { Locale, Messages } from "../../../lib/i18n";
 import { BlogCoverImage } from "../../../components/blog-cover-image";
-import { useI18n } from "../../../components/language-provider";
 import { getLocalePath } from "../../../lib/locale-routing";
 import { getBlogTopicLabel } from "../../../lib/blog-topics";
-import { TITLE_2XL } from "../../../lib/typography";
 
 type BlogDetailPost = Pick<
   BlogPost,
@@ -25,6 +24,9 @@ type BlogDetailPost = Pick<
 >;
 
 type BlogDetailClientProps = {
+  locale: Locale;
+  copy: Messages["pages"]["blog"];
+  common: Messages["pages"]["common"];
   post: BlogDetailPost;
   coverSrc: string;
   coverAlt: string;
@@ -49,6 +51,9 @@ function formatDate(date: string, locale: string) {
 }
 
 export function BlogDetailClient({
+  locale,
+  copy,
+  common,
   post,
   coverSrc,
   coverAlt,
@@ -63,250 +68,295 @@ export function BlogDetailClient({
   mdxError,
   children
 }: BlogDetailClientProps) {
-  const { locale, messages } = useI18n();
-  const copy = messages.pages.blog;
-  const common = messages.pages.common;
   const getHref = (href: string) => getLocalePath(href, locale);
+  const hasReadingRail = tocHeadings.length > 0 || Boolean(currentSeries);
 
   return (
-    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-14 sm:px-6 md:space-y-10 md:py-20">
-      <header className="space-y-5">
-        <div className="flex flex-wrap items-center gap-4 text-base text-muted">
-          <span>{copy.publishedAt} · {formatDate(post.date, locale)}</span>
-          {showUpdated && (
-            <span>{copy.updatedAt} · {formatDate(post.updatedAt, locale)}</span>
-          )}
-          <span>{copy.readingTime} · {post.readingTime} {copy.minute}</span>
+    <main className="mx-auto w-full max-w-6xl space-y-12 px-4 py-14 sm:px-6 md:space-y-16 md:py-20">
+      <header className="max-w-4xl space-y-6">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold text-muted">
+          {post.category ? (
+            <span className="section-kicker">{getBlogTopicLabel(post.category, locale)}</span>
+          ) : null}
+          <span>{post.author}</span>
         </div>
-        <h1 className={`${TITLE_2XL} text-4xl leading-tight sm:text-5xl`}>{post.title}</h1>
-        <p className="max-w-3xl text-lg leading-8 text-secondary">{post.summary}</p>
-        <div className="flex flex-wrap items-center gap-3 text-base text-secondary">
-          <span className="text-muted">{post.author}</span>
-          {post.category && (
-            <div className="flex flex-wrap gap-2">
-              <span className="text-muted">{copy.topicLabel}:</span>
-              <span className="rounded-full border border-edge-strong px-3 py-1">
-                {getBlogTopicLabel(post.category, locale)}
-              </span>
-            </div>
-          )}
+
+        <h1 className="text-4xl font-semibold leading-[1.08] tracking-[-0.035em] text-primary sm:text-5xl md:text-6xl">
+          {post.title}
+        </h1>
+        <p className="max-w-3xl text-lg leading-8 text-secondary sm:text-xl sm:leading-9">
+          {post.summary}
+        </p>
+
+        <div className="flex flex-wrap gap-x-5 gap-y-2 border-t border-edge/70 pt-4 text-sm text-muted">
+          <span>
+            {copy.publishedAt} · <time dateTime={post.date}>{formatDate(post.date, locale)}</time>
+          </span>
+          {showUpdated ? (
+            <span>
+              {copy.updatedAt} ·{" "}
+              <time dateTime={post.updatedAt}>{formatDate(post.updatedAt, locale)}</time>
+            </span>
+          ) : null}
+          <span>
+            {copy.readingTime} · {post.readingTime} {copy.minute}
+          </span>
         </div>
       </header>
 
       {coverSrc ? (
-        <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-edge/80 bg-base/40">
-          <BlogCoverImage
-            src={coverSrc}
-            alt={coverAlt}
-            priority
-            sizes="(max-width: 896px) 100vw, 896px"
-          />
-        </div>
+        <figure>
+          <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-edge/80 bg-surface">
+            <BlogCoverImage
+              src={coverSrc}
+              alt={coverAlt}
+              priority
+              sizes="(max-width: 1200px) 100vw, 1152px"
+            />
+          </div>
+        </figure>
       ) : null}
 
-      {tocHeadings.length > 0 && (
-        <section className="panel-surface p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-primary sm:text-xl">{copy.tableOfContents}</h2>
-          <nav className="mt-3 space-y-1.5">
-            {tocHeadings.map((heading, index) => (
-              <a
-                key={`${heading.id}-${index}`}
-                href={`#${heading.id}`}
-                className={`block rounded-md px-2 py-1 text-sm text-muted transition-colors hover:bg-primary hover-text-base ${
-                  heading.depth === 3 ? "ml-4" : ""
-                }`}
-              >
-                {heading.title}
-              </a>
-            ))}
-          </nav>
-        </section>
-      )}
+      <div
+        className={
+          hasReadingRail
+            ? "grid gap-10 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-16"
+            : "max-w-3xl"
+        }
+      >
+        {hasReadingRail ? (
+          <aside
+            className="space-y-9 lg:order-2"
+            aria-label={currentSeries ? copy.seriesNavigationTitle : copy.tableOfContents}
+          >
+            {tocHeadings.length > 0 ? (
+              <section className="border-t border-edge/70 pt-5">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
+                  {copy.tableOfContents}
+                </h2>
+                <nav className="mt-3" aria-label={copy.tableOfContents}>
+                  <ol className="divide-y divide-edge/60">
+                    {tocHeadings.map((heading, index) => (
+                      <li key={`${heading.id}-${index}`}>
+                        <a
+                          href={`#${heading.id}`}
+                          className={`block py-2.5 text-sm leading-5 text-muted transition-colors hover:text-accent ${
+                            heading.depth === 3 ? "pl-4" : ""
+                          }`}
+                        >
+                          {heading.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+              </section>
+            ) : null}
 
-      {currentSeries && (
-        <section className="panel-surface p-5 sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-muted">{copy.seriesNavigationTitle}</p>
-              <h2 className="mt-1 text-xl font-semibold text-primary sm:text-2xl">
-                {currentSeries.title}
-              </h2>
+            {currentSeries ? (
+              <section className="border-t border-edge/70 pt-5">
+                <p className="section-kicker">{copy.seriesNavigationTitle}</p>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <h2 className="text-lg font-semibold leading-6 text-primary">
+                    {currentSeries.title}
+                  </h2>
+                  <span className="shrink-0 text-xs font-semibold text-muted">
+                    {currentSeries.posts.length} {copy.seriesCountSuffix}
+                  </span>
+                </div>
+
+                <ol className="mt-4 divide-y divide-edge/60 border-y border-edge/60">
+                  {currentSeries.posts.map((seriesPost) => {
+                    const isCurrent = seriesPost.slug === post.slug;
+
+                    return (
+                      <li key={seriesPost.slug}>
+                        <Link
+                          href={getHref(`/blog/${encodeURIComponent(seriesPost.slug)}`)}
+                          prefetch={false}
+                          aria-current={isCurrent ? "page" : undefined}
+                          className={`block py-3 text-sm leading-5 transition-colors hover:text-accent ${
+                            isCurrent
+                              ? "border-l-2 border-accent pl-3 font-semibold text-primary"
+                              : "text-muted"
+                          }`}
+                        >
+                          <span>
+                            {seriesPost.series?.order}. {seriesPost.title}
+                          </span>
+                          {isCurrent ? (
+                            <span className="mt-1 block text-xs font-semibold text-accent">
+                              {copy.currentPost}
+                            </span>
+                          ) : null}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ol>
+
+                {previousSeriesPost || nextSeriesPost ? (
+                  <nav className="mt-4 grid gap-3" aria-label={copy.seriesNavigationTitle}>
+                    {previousSeriesPost ? (
+                      <Link
+                        href={getHref(`/blog/${encodeURIComponent(previousSeriesPost.slug)}`)}
+                        prefetch={false}
+                        className="group border-l border-edge-strong pl-3"
+                      >
+                        <span className="text-xs font-semibold text-muted">
+                          {common.arrowLeft} {copy.previousPost}
+                        </span>
+                        <span className="mt-1 block text-sm font-semibold leading-5 text-primary transition-colors group-hover:text-accent">
+                          {previousSeriesPost.title}
+                        </span>
+                      </Link>
+                    ) : null}
+                    {nextSeriesPost ? (
+                      <Link
+                        href={getHref(`/blog/${encodeURIComponent(nextSeriesPost.slug)}`)}
+                        prefetch={false}
+                        className="group border-l border-edge-strong pl-3"
+                      >
+                        <span className="text-xs font-semibold text-muted">
+                          {copy.nextPost} {common.arrowRight}
+                        </span>
+                        <span className="mt-1 block text-sm font-semibold leading-5 text-primary transition-colors group-hover:text-accent">
+                          {nextSeriesPost.title}
+                        </span>
+                      </Link>
+                    ) : null}
+                  </nav>
+                ) : null}
+              </section>
+            ) : null}
+          </aside>
+        ) : null}
+
+        <article className="min-w-0 border-y border-edge/70 py-8 sm:py-11 lg:order-1">
+          {mdxError ? (
+            <div className="rounded-xl border border-dashed border-edge p-6 text-lg leading-8 text-muted">
+              {copy.invalidContent}
             </div>
-            <span className="rounded-full border border-edge px-3 py-1 text-xs font-semibold text-secondary">
-              {currentSeries.posts.length} {copy.seriesCountSuffix}
-            </span>
-          </div>
-          <nav className="mt-4 space-y-2">
-            {currentSeries.posts.map((seriesPost) => {
-              const isCurrent = seriesPost.slug === post.slug;
-              return (
-                <Link
-                  key={seriesPost.slug}
-                  href={getHref(`/blog/${encodeURIComponent(seriesPost.slug)}`)}
-                  className={
-                    isCurrent
-                      ? "block rounded-xl border border-accent/70 bg-accent/15 px-4 py-3"
-                      : "block rounded-xl border border-edge bg-base/40 px-4 py-3 transition-colors hover:border-edge-strong hover:bg-base/70"
-                  }
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-primary">
-                      {seriesPost.series?.order}. {seriesPost.title}
-                    </span>
-                    {isCurrent && (
-                      <span className="text-xs font-semibold text-accent">
-                        {copy.currentPost}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </nav>
-          {(previousSeriesPost || nextSeriesPost) && (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {previousSeriesPost && (
-                <Link
-                  href={getHref(`/blog/${encodeURIComponent(previousSeriesPost.slug)}`)}
-                  className="card-interactive rounded-xl border border-edge bg-base/40 p-4"
-                >
-                  <p className="text-xs font-semibold text-muted">
-                    {common.arrowLeft} {copy.previousPost}
-                  </p>
-                  <h3 className="mt-1 text-base font-semibold text-primary">
-                    {previousSeriesPost.title}
-                  </h3>
-                </Link>
-              )}
-              {nextSeriesPost && (
-                <Link
-                  href={getHref(`/blog/${encodeURIComponent(nextSeriesPost.slug)}`)}
-                  className="card-interactive rounded-xl border border-edge bg-base/40 p-4"
-                >
-                  <p className="text-xs font-semibold text-muted">
-                    {copy.nextPost} {common.arrowRight}
-                  </p>
-                  <h3 className="mt-1 text-base font-semibold text-primary">
-                    {nextSeriesPost.title}
-                  </h3>
-                </Link>
-              )}
-            </div>
+          ) : (
+            children
           )}
-        </section>
-      )}
+        </article>
+      </div>
 
-      <article className="panel-surface space-y-6 p-6 sm:p-10">
-        {mdxError ? (
-          <div className="rounded-xl border border-dashed border-edge p-6 text-lg leading-8 text-muted">
-            {copy.invalidContent}
-          </div>
-        ) : (
-          children
-        )}
-      </article>
-
-      {(previousPost || nextPost) && (
-        <section className="panel-surface p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-primary sm:text-2xl">
+      {previousPost || nextPost ? (
+        <section className="section-plain pt-8">
+          <p className="section-kicker">{copy.readMore}</p>
+          <h2 className="mt-2 text-2xl font-semibold text-primary sm:text-3xl">
             {copy.postNavigationTitle}
           </h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {previousPost && (
+          <nav
+            className="mt-6 grid border-y border-edge/70 sm:grid-cols-2 sm:divide-x sm:divide-edge/70"
+            aria-label={copy.postNavigationTitle}
+          >
+            {previousPost ? (
               <Link
                 href={getHref(`/blog/${encodeURIComponent(previousPost.slug)}`)}
-                className="card-interactive rounded-xl border border-edge bg-base/40 p-4"
+                prefetch={false}
+                className="group py-5 sm:pr-7"
               >
-                <p className="text-xs font-semibold text-muted">
+                <span className="text-xs font-semibold text-muted">
                   {common.arrowLeft} {copy.previousPost}
-                </p>
-                <h3 className="mt-1 text-base font-semibold text-primary">
+                </span>
+                <span className="mt-2 block text-lg font-semibold text-primary transition-colors group-hover:text-accent">
                   {previousPost.title}
-                </h3>
-                <p className="mt-1 text-sm text-muted">{previousPost.summary}</p>
+                </span>
+                <span className="mt-2 block text-sm leading-6 text-muted">{previousPost.summary}</span>
               </Link>
+            ) : (
+              <span aria-hidden="true" />
             )}
-            {nextPost && (
+            {nextPost ? (
               <Link
                 href={getHref(`/blog/${encodeURIComponent(nextPost.slug)}`)}
-                className="card-interactive rounded-xl border border-edge bg-base/40 p-4"
+                prefetch={false}
+                className="group border-t border-edge/70 py-5 sm:border-t-0 sm:pl-7"
               >
-                <p className="text-xs font-semibold text-muted">
+                <span className="text-xs font-semibold text-muted">
                   {copy.nextPost} {common.arrowRight}
-                </p>
-                <h3 className="mt-1 text-base font-semibold text-primary">{nextPost.title}</h3>
-                <p className="mt-1 text-sm text-muted">{nextPost.summary}</p>
+                </span>
+                <span className="mt-2 block text-lg font-semibold text-primary transition-colors group-hover:text-accent">
+                  {nextPost.title}
+                </span>
+                <span className="mt-2 block text-sm leading-6 text-muted">{nextPost.summary}</span>
               </Link>
-            )}
-          </div>
+            ) : null}
+          </nav>
         </section>
-      )}
+      ) : null}
 
-      {relatedPosts.length > 0 && (
-        <section className="panel-surface p-6 sm:p-8">
-          <h2 className="text-xl font-semibold text-primary sm:text-2xl">{copy.relatedPostsTitle}</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      {relatedPosts.length > 0 ? (
+        <section className="section-plain pt-8">
+          <h2 className="text-2xl font-semibold text-primary sm:text-3xl">
+            {copy.relatedPostsTitle}
+          </h2>
+          <div className="mt-5 divide-y divide-edge/70 border-y border-edge/70">
             {relatedPosts.map((relatedPost) => (
               <Link
                 key={relatedPost.slug}
                 href={getHref(`/blog/${encodeURIComponent(relatedPost.slug)}`)}
-                className="card-interactive rounded-xl border border-edge bg-base/40 p-4"
+                prefetch={false}
+                className="group grid gap-2 py-5 sm:grid-cols-[9rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-5"
               >
-                <p className="text-xs text-muted">{formatDate(relatedPost.date, locale)}</p>
-                <h3 className="mt-1 text-base font-semibold text-primary">{relatedPost.title}</h3>
-                <p className="mt-1 text-sm text-muted">{relatedPost.summary}</p>
-                <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-accent">
+                <time dateTime={relatedPost.date} className="text-xs text-muted">
+                  {formatDate(relatedPost.date, locale)}
+                </time>
+                <span>
+                  <span className="block text-base font-semibold text-primary transition-colors group-hover:text-accent">
+                    {relatedPost.title}
+                  </span>
+                  <span className="mt-1 block text-sm leading-6 text-muted">
+                    {relatedPost.summary}
+                  </span>
+                </span>
+                <span className="text-sm font-semibold text-accent">
                   {copy.readMore} {common.arrowRight}
                 </span>
               </Link>
             ))}
           </div>
         </section>
-      )}
+      ) : null}
 
-      <section className="panel-surface p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-primary sm:text-2xl">
-          {copy.articleEvidenceTitle}
-        </h2>
-        <p className="mt-2 text-base leading-7 text-secondary">
-          {copy.articleEvidenceDescription}
-        </p>
-        <p className="mt-2 text-sm leading-6 text-muted">
-          {copy.articleCtaDescription}
-        </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <Link
-            href={getHref("/projects")}
-            className="card-interactive rounded-xl border border-edge bg-base/40 p-4 text-sm font-semibold text-accent"
-          >
+      <section className="brand-banner grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="max-w-2xl">
+          <p className="section-kicker">{copy.articleCtaTitle}</p>
+          <h2 className="mt-2 text-2xl font-semibold text-primary sm:text-3xl">
+            {copy.articleEvidenceTitle}
+          </h2>
+          <p className="mt-3 text-base leading-7 text-secondary">
+            {copy.articleEvidenceDescription}
+          </p>
+          <p className="mt-2 text-sm leading-6 text-muted">{copy.articleCtaDescription}</p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link href={getHref("/projects")} className="btn-primary">
             {copy.viewProjects}
           </Link>
-          <Link
-            href={getHref("/blog")}
-            className="card-interactive rounded-xl border border-edge bg-base/40 p-4 text-sm font-semibold text-accent"
-          >
-            {copy.readMoreArticles}
-          </Link>
-          <Link
-            href={getHref("/contact")}
-            className="card-interactive rounded-xl border border-edge bg-base/40 p-4 text-sm font-semibold text-accent"
-          >
+          <Link href={getHref("/contact")} className="btn-secondary">
             {copy.contactMe}
+          </Link>
+          <Link href={getHref("/blog")} className="link-accent self-center font-semibold">
+            {copy.readMoreArticles} {common.arrowRight}
           </Link>
         </div>
       </section>
 
-      <div className="flex flex-wrap items-center gap-5 text-lg text-muted">
+      <nav
+        className="flex flex-wrap items-center gap-5 border-t border-edge/70 pt-6 text-base"
+        aria-label={copy.postNavigationTitle}
+      >
         <Link href={getHref("/blog")} className="link-accent font-medium">
           {copy.title}
-        </Link>
-        <Link href={getHref("/enter")} className="link-accent font-medium">
-          {common.backToEnter}
         </Link>
         <Link href={getHref("/")} className="link-muted font-medium">
           {common.backToHome}
         </Link>
-      </div>
+      </nav>
     </main>
   );
 }

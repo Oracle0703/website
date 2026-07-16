@@ -2,17 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useI18n } from "../../components/language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
+import type { Locale, Messages } from "../../lib/i18n";
 import type { ProjectView } from "../../lib/projects";
 
 type ProjectsClientProps = {
   archiveProjects: ProjectView[];
   featuredProjects: ProjectView[];
+  locale: Locale;
+  copy: Messages["pages"]["projects"];
+  common: Messages["pages"]["common"];
+  relatedLabels: {
+    blog: string;
+    labs: string;
+  };
 };
 
-type ProjectsCopy = ReturnType<typeof useI18n>["messages"]["pages"]["projects"];
-type ProjectsLocale = ReturnType<typeof useI18n>["locale"];
+type ProjectsCopy = Messages["pages"]["projects"];
+type ProjectsLocale = Locale;
 
 function ProjectMeta({ project, copy }: { project: ProjectView; copy: ProjectsCopy }) {
   return (
@@ -231,10 +238,14 @@ function ArchiveProjectRow({
   );
 }
 
-export function ProjectsClient({ archiveProjects, featuredProjects }: ProjectsClientProps) {
-  const { locale, messages } = useI18n();
-  const copy = messages.pages.projects;
-  const common = messages.pages.common;
+export function ProjectsClient({
+  archiveProjects,
+  featuredProjects,
+  locale,
+  copy,
+  common,
+  relatedLabels
+}: ProjectsClientProps) {
   const getHref = (href: string) => getLocalePath(href, locale);
   const [flagshipProject, ...supportingFeaturedProjects] = featuredProjects;
   const hasProjects = Boolean(flagshipProject) || archiveProjects.length > 0;
@@ -324,10 +335,10 @@ export function ProjectsClient({ archiveProjects, featuredProjects }: ProjectsCl
             {common.backToHome}
           </Link>
           <Link href={getHref("/blog")} className="link-accent font-medium">
-            {messages.pages.blog.title}
+            {relatedLabels.blog}
           </Link>
           <Link href={getHref("/labs")} className="link-accent font-medium">
-            {messages.pages.labs.title}
+            {relatedLabels.labs}
           </Link>
         </div>
       </section>

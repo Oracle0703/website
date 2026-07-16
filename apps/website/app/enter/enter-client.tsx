@@ -7,6 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "../../components/use-prefers-reduced-motion";
 import { useI18n } from "../../components/language-provider";
 import { useTheme } from "../../components/theme-provider";
+import { getShellMessages } from "../../lib/i18n-shell";
+import type { Messages } from "../../lib/i18n";
 import { getLocalePath } from "../../lib/locale-routing";
 import {
   TEXT_SM_MUTED,
@@ -53,11 +55,15 @@ const entryIcons: Record<EntryId, Entry["Icon"]> = {
   tracker: TrackerIcon
 };
 
-export function EnterClient() {
-  const { locale, messages, toggleLocale } = useI18n();
+type EnterClientProps = {
+  copy: Messages["enter"];
+  common: Messages["pages"]["common"];
+};
+
+export function EnterClient({ copy, common }: EnterClientProps) {
+  const { locale, toggleLocale } = useI18n();
+  const messages = getShellMessages(locale);
   const { theme, toggleTheme } = useTheme();
-  const copy = messages.enter;
-  const common = messages.pages.common;
   const toggleLabel = locale === "zh" ? "EN" : "\u4e2d\u6587";
   const toggleAriaLabel =
     locale === "zh" ? messages.nav.switchToEnglish : messages.nav.switchToChinese;

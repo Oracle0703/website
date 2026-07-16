@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useI18n } from "../../components/language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
+import type { Locale, Messages } from "../../lib/i18n";
 import { TEXT_SM_MUTED, TITLE_2XL } from "../../lib/typography";
 
-export function AboutClient() {
-  const { locale, messages } = useI18n();
-  const copy = messages.pages.about;
-  const common = messages.pages.common;
+type AboutClientProps = {
+  locale: Locale;
+  copy: Messages["pages"]["about"];
+  common: Messages["pages"]["common"];
+};
+
+export function AboutClient({ locale, copy, common }: AboutClientProps) {
   const getHref = (href: string) => getLocalePath(href, locale);
 
   return (

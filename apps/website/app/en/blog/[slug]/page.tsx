@@ -116,6 +116,8 @@ export default async function Page({ params }: PageProps) {
     notFound();
   }
 
+  const { pages } = getMessages(locale);
+
   let mdxContent: ReactNode = null;
   let mdxError = false;
 
@@ -180,6 +182,9 @@ export default async function Page({ params }: PageProps) {
   return (
     <>
       <BlogDetailClient
+        locale={locale}
+        copy={pages.blog}
+        common={pages.common}
         post={post}
         coverSrc={coverSrc}
         coverAlt={coverAlt}

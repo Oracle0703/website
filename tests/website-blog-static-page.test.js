@@ -24,12 +24,14 @@ test('blog list page avoids page-level request reads', () => {
   assert.match(pageSource, /fallback=\{\s*<BlogListView/);
   assert.doesNotMatch(pageSource, /fallback=\{null\}/);
   assert.match(pageSource, /<BlogClient/);
+  assert.match(pageSource, /copy=\{pages\.blog\}/);
+  assert.match(pageSource, /common=\{pages\.common\}/);
 
   assert.match(clientSource, /"use client"/);
-  assert.match(clientSource, /useI18n/);
+  assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
   assert.match(clientSource, /useSearchParams/);
-  assert.match(clientSource, /messages\.pages\.blog/);
-  assert.match(clientSource, /messages\.pages\.common/);
+  assert.match(clientSource, /copy: Messages\["pages"\]\["blog"\]/);
+  assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
 });
 
 test('blog client receives list-shaped data instead of full mdx posts', () => {

@@ -20,9 +20,9 @@ test("blog detail page avoids page-level locale cookie reads", () => {
   assert.match(pageSource, /<BlogDetailClient/);
 
   assert.match(clientSource, /"use client"/);
-  assert.match(clientSource, /useI18n/);
-  assert.match(clientSource, /messages\.pages\.blog/);
-  assert.match(clientSource, /messages\.pages\.common/);
+  assert.doesNotMatch(clientSource, /useI18n/);
+  assert.match(clientSource, /copy: Messages\["pages"\]\["blog"\]/);
+  assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
   assert.match(clientSource, /formatDate\(post\.date,\s*locale\)/);
 });
 
@@ -37,9 +37,9 @@ test("project detail page avoids page-level locale cookie reads", () => {
   assert.match(pageSource, /<ProjectDetailClient/);
 
   assert.match(clientSource, /"use client"/);
-  assert.match(clientSource, /useI18n/);
-  assert.match(clientSource, /messages\.pages\.projects/);
-  assert.match(clientSource, /messages\.pages\.common/);
+  assert.doesNotMatch(clientSource, /useI18n/);
+  assert.match(clientSource, /copy: Messages\["pages"\]\["projects"\]/);
+  assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
   assert.match(clientSource, /copy\.status\[project\.status\]/);
   assert.match(clientSource, /copy\.type\[project\.type\]/);
 });
@@ -108,6 +108,24 @@ test("D5 blog detail names the article-to-project evidence bridge", () => {
   assert.match(clientSource, /getHref\("\/contact"\)/);
   assert.match(i18nSource, /articleEvidenceTitle/);
   assert.match(i18nSource, /articleEvidenceDescription/);
+});
+
+test("detail pages use editorial sections instead of nested generic panels", () => {
+  const blogSource = read("apps/website/app/blog/[slug]/blog-detail-client.tsx");
+  const projectSource = read("apps/website/app/projects/[slug]/project-detail-client.tsx");
+
+  assert.doesNotMatch(blogSource, /panel-surface|card-interactive/);
+  assert.match(blogSource, /<article className=/);
+  assert.match(blogSource, /<aside\s+className=/);
+  assert.match(blogSource, /relatedPosts\.map[\s\S]*prefetch=\{false\}/);
+  assert.match(blogSource, /currentSeries\.posts\.map[\s\S]*prefetch=\{false\}/);
+
+  assert.doesNotMatch(projectSource, /panel-surface|card-interactive|evidence-card/);
+  assert.match(projectSource, /<AssetSection asset=\{project\.asset\}/);
+  assert.match(projectSource, /priority[\s\S]*sizes=/);
+  assert.match(projectSource, /copy\.architectureTitle/);
+  assert.match(projectSource, /copy\.tradeoffsTitle/);
+  assert.match(projectSource, /copy\.roadmapTitle/);
 });
 
 test("static rendering document records blog and project detail migration", () => {

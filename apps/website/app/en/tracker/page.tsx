@@ -31,5 +31,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function Page() {
-  return <TrackerClient />;
+  const { pages } = getMessages(locale);
+
+  return <TrackerClient locale={locale} copy={pages.tracker} common={pages.common} />;
 }

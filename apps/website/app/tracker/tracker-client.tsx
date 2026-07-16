@@ -3,8 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { AnnouncementTicker } from "../../components/announcement-ticker";
-import { useI18n } from "../../components/language-provider";
-import type { Locale } from "../../lib/i18n";
+import type { Locale, Messages } from "../../lib/i18n";
 import { getLocalePath } from "../../lib/locale-routing";
 import {
   EYEBROW_ACCENT,
@@ -399,10 +398,13 @@ function BulletList({ items }: { items: string[] }) {
   );
 }
 
-export function TrackerClient() {
-  const { locale, messages } = useI18n();
-  const copy = messages.pages.tracker;
-  const common = messages.pages.common;
+type TrackerClientProps = {
+  locale: Locale;
+  copy: Messages["pages"]["tracker"];
+  common: Messages["pages"]["common"];
+};
+
+export function TrackerClient({ locale, copy, common }: TrackerClientProps) {
   const content = trackerContent[locale];
   const progressPercent = Math.min(
     100,

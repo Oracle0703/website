@@ -132,7 +132,7 @@ test('English home copy names the actual product surfaces', () => {
 test('header and footer consume the focused navigation without exposing secondary demos', () => {
   const headerSource = read('apps/website/components/site-header.tsx');
   const footerSource = read('apps/website/components/site-footer.tsx');
-  const i18nSource = read('apps/website/lib/i18n.ts');
+  const i18nSource = read('apps/website/lib/i18n-shell.ts');
   const expectedPrimaryHrefs = ['/projects', '/blog', '/about', '/contact'];
 
   for (const locale of ['zh', 'en']) {

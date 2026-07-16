@@ -56,6 +56,7 @@ export default function Page({ params }: PageProps) {
     notFound();
   }
 
+  const { pages } = getMessages(defaultLocale);
   const canonicalPath = `/projects/${encodeURIComponent(project.slug)}`;
   const projectView = getProjectView(project, defaultLocale);
   const jsonLd = {
@@ -72,7 +73,13 @@ export default function Page({ params }: PageProps) {
 
   return (
     <>
-      <ProjectDetailClient project={projectView} />
+      <ProjectDetailClient
+        project={projectView}
+        locale={defaultLocale}
+        copy={pages.projects}
+        common={pages.common}
+        relatedLabels={{ blog: pages.blog.title, contact: pages.contact.title }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

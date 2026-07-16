@@ -44,6 +44,7 @@ export type NormalizedContactFormInput = {
 export type ContactSubmissionGate = {
   attemptsByIdentity: Map<string, number[]>;
   duplicateByContactGoal: Map<string, number>;
+  lastCleanupAt: number;
 };
 
 type GateInput = {
@@ -79,6 +80,7 @@ export type ContactCleanupResult = {
 const FIFTEEN_MINUTES = 15 * 60 * 1000;
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS_PER_WINDOW = 3;
+export const CONTACT_GATE_MAX_ENTRIES = 5_000;
 export const CONTACT_RETENTION_DAYS = 90;
 export const CONTACT_NOTIFICATION_TIMEOUT_MS = 5_000;
 const PLACEHOLDER_CONTACT_PATTERN = /(^|\b)(hello@example\.com|test@example\.com|example\.com|example\.org|example\.net)(\b|$)/i;
@@ -199,17 +201,78 @@ export function validateContactFormSubmission(input: ContactFormInput):
 export function createContactSubmissionGate(): ContactSubmissionGate {
   return {
     attemptsByIdentity: new Map(),
-    duplicateByContactGoal: new Map()
+    duplicateByContactGoal: new Map(),
+    lastCleanupAt: 0
   };
 }
 
 export const contactSubmissionGate = createContactSubmissionGate();
+
+function makeRoomInGateMap<TKey, TValue>(
+  map: Map<TKey, TValue>,
+  maximumSize: number,
+  incomingKey: TKey
+) {
+  if (map.has(incomingKey)) return;
+
+  while (map.size >= maximumSize) {
+    const oldestKey = map.keys().next().value;
+    if (oldestKey === undefined) break;
+    map.delete(oldestKey);
+  }
+}
+
+function cleanupContactSubmissionGate(
+  gate: ContactSubmissionGate,
+  now: number,
+  incomingIdentityKey: string,
+  incomingDuplicateKey: string
+) {
+  const cleanupDue = now - gate.lastCleanupAt >= FIFTEEN_MINUTES;
+  const needsRoom =
+    (!gate.attemptsByIdentity.has(incomingIdentityKey) &&
+      gate.attemptsByIdentity.size >= CONTACT_GATE_MAX_ENTRIES) ||
+    (!gate.duplicateByContactGoal.has(incomingDuplicateKey) &&
+      gate.duplicateByContactGoal.size >= CONTACT_GATE_MAX_ENTRIES);
+  if (!cleanupDue && !needsRoom) return;
+
+  for (const [identityKey, attempts] of gate.attemptsByIdentity) {
+    const activeAttempts = attempts.filter((timestamp) => now - timestamp < FIFTEEN_MINUTES);
+    if (activeAttempts.length === 0) {
+      gate.attemptsByIdentity.delete(identityKey);
+    } else if (activeAttempts.length !== attempts.length) {
+      gate.attemptsByIdentity.set(identityKey, activeAttempts);
+    }
+  }
+
+  for (const [duplicateKey, timestamp] of gate.duplicateByContactGoal) {
+    if (now - timestamp >= ONE_DAY) {
+      gate.duplicateByContactGoal.delete(duplicateKey);
+    }
+  }
+
+  makeRoomInGateMap(
+    gate.attemptsByIdentity,
+    CONTACT_GATE_MAX_ENTRIES,
+    incomingIdentityKey
+  );
+  makeRoomInGateMap(
+    gate.duplicateByContactGoal,
+    CONTACT_GATE_MAX_ENTRIES,
+    incomingDuplicateKey
+  );
+  gate.lastCleanupAt = now;
+}
 
 export function checkContactSubmissionGate(
   gate: ContactSubmissionGate,
   input: GateInput
 ): { ok: true } | { ok: false; error: ContactFormError } {
   const now = input.now ?? Date.now();
+  const duplicateKey = hashContactValue(
+    `${input.contact.trim().toLowerCase()}|${normalizeGoalFingerprint(input.projectGoal)}`
+  );
+  cleanupContactSubmissionGate(gate, now, input.identityKey, duplicateKey);
   const attempts = gate.attemptsByIdentity.get(input.identityKey) ?? [];
   const activeAttempts = attempts.filter((timestamp) => now - timestamp < FIFTEEN_MINUTES);
 
@@ -217,9 +280,6 @@ export function checkContactSubmissionGate(
     return error("rate_limited", "Too many requests. Please retry later.");
   }
 
-  const duplicateKey = hashContactValue(
-    `${input.contact.trim().toLowerCase()}|${normalizeGoalFingerprint(input.projectGoal)}`
-  );
   const previousDuplicate = gate.duplicateByContactGoal.get(duplicateKey);
 
   if (previousDuplicate && now - previousDuplicate < ONE_DAY) {

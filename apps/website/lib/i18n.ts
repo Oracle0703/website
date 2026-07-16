@@ -1,35 +1,19 @@
-export type Locale = "zh" | "en";
+import type { Locale } from "./i18n-core";
+import { shellMessages } from "./i18n-shell";
 
-export const locales = ["zh", "en"] as const;
-export const defaultLocale: Locale = "zh";
-export const LOCALE_COOKIE = "locale";
+export {
+  defaultLocale,
+  getHtmlLang,
+  getLocaleFromCookieValue,
+  isLocale,
+  locales,
+  LOCALE_COOKIE,
+  type Locale
+} from "./i18n-core";
 
 export const messages = {
   zh: {
-    nav: {
-      brand: "Meaningful · Ink",
-      items: [
-        { href: "/projects", label: "作品" },
-        { href: "/blog", label: "文章" },
-        { href: "/about", label: "关于" },
-        { href: "/contact", label: "联系" }
-      ],
-      enter: "进入",
-      openMenu: "打开菜单",
-      closeMenu: "关闭菜单",
-      switchToEnglish: "切换到英文",
-      switchToChinese: "切换到中文"
-    },
-    theme: {
-      light: "亮色",
-      dark: "暗色",
-      switchToLight: "切换到亮色",
-      switchToDark: "切换到暗色"
-    },
-    footer: {
-      copyright: "© 2026 Meaningful · Ink",
-      tagline: "AI 产品 · 全栈工程 · 独立创作"
-    },
+    ...shellMessages.zh,
     home: {
       heroEyebrow: "AI 产品工程 · 独立全栈开发",
       heroTitle: "把复杂想法，做成清晰、可用的产品。",
@@ -443,30 +427,7 @@ export const messages = {
     }
   },
   en: {
-    nav: {
-      brand: "Meaningful · Ink",
-      items: [
-        { href: "/projects", label: "Work" },
-        { href: "/blog", label: "Writing" },
-        { href: "/about", label: "About" },
-        { href: "/contact", label: "Contact" }
-      ],
-      enter: "Enter",
-      openMenu: "Open menu",
-      closeMenu: "Close menu",
-      switchToEnglish: "Switch to English",
-      switchToChinese: "Switch to Chinese"
-    },
-    theme: {
-      light: "Light",
-      dark: "Dark",
-      switchToLight: "Switch to light mode",
-      switchToDark: "Switch to dark mode"
-    },
-    footer: {
-      copyright: "© 2026 Meaningful · Ink",
-      tagline: "AI products · Full-stack engineering · Independent making"
-    },
+    ...shellMessages.en,
     home: {
       heroEyebrow: "AI Product Engineering · Independent Full-Stack",
       heroTitle: "Turning complex ideas into clear, useful products.",
@@ -884,12 +845,4 @@ export const messages = {
 
 export type Messages = (typeof messages)[Locale];
 
-export const isLocale = (value?: string): value is Locale =>
-  value === "zh" || value === "en";
-
-export const getLocaleFromCookieValue = (value?: string): Locale =>
-  isLocale(value) ? value : defaultLocale;
-
 export const getMessages = (locale: Locale): Messages => messages[locale];
-
-export const getHtmlLang = (locale: Locale) => (locale === "en" ? "en" : "zh-CN");

@@ -85,7 +85,13 @@ export default function Page() {
         />
       }
     >
-      <BlogClient posts={posts} series={series} />
+      <BlogClient
+        posts={posts}
+        series={series}
+        locale={locale}
+        copy={pages.blog}
+        common={pages.common}
+      />
     </Suspense>
   );
 }

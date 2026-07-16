@@ -27,6 +27,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function Page() {
+  const { pages } = getMessages(defaultLocale);
   const projects = getProjectViews(defaultLocale);
   const featuredProjects = getFeaturedProjectViews(defaultLocale);
   const featuredSlugs = new Set(featuredProjects.map((project) => project.slug));
@@ -36,6 +37,10 @@ export default function Page() {
     <ProjectsClient
       archiveProjects={archiveProjects}
       featuredProjects={featuredProjects}
+      locale={defaultLocale}
+      copy={pages.projects}
+      common={pages.common}
+      relatedLabels={{ blog: pages.blog.title, labs: pages.labs.title }}
     />
   );
 }

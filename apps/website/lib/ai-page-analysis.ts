@@ -88,6 +88,7 @@ export type PageAnalysisResult = {
 
 export type AnalysisRequestGate = {
   attemptsByIdentity: Map<string, number[]>;
+  lastCleanupAt: number;
 };
 
 export type PageCaptureSummary = {
@@ -116,6 +117,7 @@ export type AnalysisResolver = (hostname: string) => Promise<string[]>;
 
 const FIFTEEN_MINUTES = 15 * 60 * 1000;
 const MAX_ATTEMPTS_PER_WINDOW = 5;
+export const ANALYSIS_GATE_MAX_IDENTITIES = 5_000;
 const MAX_URL_LENGTH = 2048;
 const MAX_CAPTURE_REDIRECTS = 3;
 const MAX_CAPTURE_HTML_BYTES = 2 * 1024 * 1024;
@@ -307,17 +309,50 @@ export function validateAnalysisRequest(payload: unknown):
 
 export function createAnalysisRequestGate(): AnalysisRequestGate {
   return {
-    attemptsByIdentity: new Map()
+    attemptsByIdentity: new Map(),
+    lastCleanupAt: 0
   };
 }
 
 export const analysisRequestGate = createAnalysisRequestGate();
+
+function cleanupAnalysisRequestGate(
+  gate: AnalysisRequestGate,
+  now: number,
+  incomingIdentityKey: string
+) {
+  const cleanupDue = now - gate.lastCleanupAt >= FIFTEEN_MINUTES;
+  const needsRoom =
+    !gate.attemptsByIdentity.has(incomingIdentityKey) &&
+    gate.attemptsByIdentity.size >= ANALYSIS_GATE_MAX_IDENTITIES;
+  if (!cleanupDue && !needsRoom) return;
+
+  for (const [identityKey, attempts] of gate.attemptsByIdentity) {
+    const activeAttempts = attempts.filter((timestamp) => now - timestamp < FIFTEEN_MINUTES);
+    if (activeAttempts.length === 0) {
+      gate.attemptsByIdentity.delete(identityKey);
+    } else if (activeAttempts.length !== attempts.length) {
+      gate.attemptsByIdentity.set(identityKey, activeAttempts);
+    }
+  }
+
+  if (!gate.attemptsByIdentity.has(incomingIdentityKey)) {
+    while (gate.attemptsByIdentity.size >= ANALYSIS_GATE_MAX_IDENTITIES) {
+      const oldestIdentity = gate.attemptsByIdentity.keys().next().value;
+      if (typeof oldestIdentity !== "string") break;
+      gate.attemptsByIdentity.delete(oldestIdentity);
+    }
+  }
+
+  gate.lastCleanupAt = now;
+}
 
 export function checkAnalysisRequestGate(
   gate: AnalysisRequestGate,
   input: { identityKey: string; now?: number }
 ): { ok: true } | { ok: false; error: AnalysisError } {
   const now = input.now ?? Date.now();
+  cleanupAnalysisRequestGate(gate, now, input.identityKey);
   const attempts = gate.attemptsByIdentity.get(input.identityKey) ?? [];
   const activeAttempts = attempts.filter((timestamp) => now - timestamp < FIFTEEN_MINUTES);
 
