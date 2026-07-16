@@ -100,6 +100,31 @@ const englishContentChecks = [
     text: /City name|WeatherAPI\.com/
   },
   {
+    path: "/en/explore",
+    heading: /One map for the tools/,
+    text: /Local habit tracker|Developer toolbox/
+  },
+  {
+    path: "/en/labs/tools",
+    heading: /developer toolbox/,
+    text: /JSON|SHA-256|Color contrast/
+  },
+  {
+    path: "/en/tracker",
+    heading: /^Tracker$/,
+    text: /Your habit data stays on this device|Add a habit/
+  },
+  {
+    path: "/en/resume",
+    heading: /Turning product judgment/,
+    text: /Core capabilities|Public project evidence/
+  },
+  {
+    path: "/en/now",
+    heading: /What I am working on now/,
+    text: /Current directions|Recently completed/
+  },
+  {
     path: "/en/contact",
     heading: /Contact/,
     text: /Send a project inquiry|Project goal|Privacy/
@@ -370,6 +395,30 @@ test("keyboard skip link reveals and focuses the main content target", async ({ 
 
   await expect(page).toHaveURL(/#main-content$/);
   await expect(page.locator("#main-content")).toBeFocused();
+});
+
+test("site command palette restores focus and opens a selected result", async ({ page }) => {
+  await page.goto("/");
+
+  const trigger = page.getByRole("button", { name: "打开全站搜索" });
+  await page.keyboard.press("Control+K");
+  const dialog = page.getByRole("dialog", { name: /搜索 Meaningful/ });
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("combobox")).toBeFocused();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
+
+  await page.keyboard.press("Control+K");
+  await page.getByRole("combobox").fill("开发者工具箱");
+  await expect(page.getByRole("option", { name: /开发者工具箱/ })).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/labs\/tools$/);
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
+  await expectNoBrowserErrors(page);
 });
 
 test.describe("English content quality", () => {

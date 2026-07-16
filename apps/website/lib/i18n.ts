@@ -218,7 +218,12 @@ export const messages = {
         queryTitle: "免费查询中心",
         queryDescription:
           "从城市搜索开始，查询当前天气、未来 3 天预报与空气质量。密钥只保留在服务器端。",
-        queryAction: "打开查询中心"
+        queryAction: "打开查询中心",
+        toolsEyebrow: "浏览器本地",
+        toolsTitle: "开发者工具箱",
+        toolsDescription:
+          "格式化 JSON、转换 URL/Base64、生成 UUID、计算 SHA-256 并检查颜色对比度；输入不会发送到服务器。",
+        toolsAction: "打开工具箱"
       },
       freeQuery: {
         eyebrow: "Free Query Lab",
@@ -722,7 +727,12 @@ export const messages = {
         queryTitle: "Free Query Lab",
         queryDescription:
           "Search by city for current weather, a three-day forecast, and air quality while the API key stays server-side.",
-        queryAction: "Open Free Query Lab"
+        queryAction: "Open Free Query Lab",
+        toolsEyebrow: "Browser-only",
+        toolsTitle: "Developer Toolbox",
+        toolsDescription:
+          "Format JSON, transform URL/Base64, generate UUIDs, calculate SHA-256, and check color contrast without sending input to a server.",
+        toolsAction: "Open toolbox"
       },
       freeQuery: {
         eyebrow: "Free Query Lab",

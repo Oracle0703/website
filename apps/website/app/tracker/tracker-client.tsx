@@ -1,401 +1,265 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
-import { AnnouncementTicker } from "../../components/announcement-ticker";
 import type { Locale, Messages } from "../../lib/i18n";
 import { getLocalePath } from "../../lib/locale-routing";
+import {
+  TRACKER_MAX_HABITS,
+  TRACKER_MAX_IMPORT_BYTES,
+  TRACKER_MAX_NAME_LENGTH,
+  TRACKER_STORAGE_KEY,
+  createEmptyTrackerState,
+  createHabit,
+  getCurrentStreak,
+  getRecentDateKeys,
+  getSevenDayCount,
+  isValidHabitName,
+  normalizeHabitName,
+  parseTrackerState,
+  removeHabit,
+  serializeTrackerState,
+  toLocalDateKey,
+  toggleHabitForDate,
+  type TrackerState
+} from "../../lib/tracker-local";
 import {
   EYEBROW_ACCENT,
   TEXT_SM_MUTED,
   TEXT_XS_MUTED,
-  TEXT_SM_SEMIBOLD_PRIMARY,
   TITLE_2XL,
   TITLE_LG,
   TITLE_XL
 } from "../../lib/typography";
 
-type RewardItem = { label: string; reward: string };
-type TrackerTableRow = { level: string; range: string; note: string };
-
 type TrackerContent = {
-  prototypeNotice: {
-    label: string;
-    description: string;
-    buttonNote: string;
-  };
-  ticker: {
-    label: string;
-    kicker: string;
-    emptyMessage: string;
-    pauseLabel: string;
-    resumeLabel: string;
-  };
-  panel: {
-    eyebrow: string;
+  privacy: { label: string; title: string; description: string; backup: string };
+  add: {
     title: string;
     description: string;
+    label: string;
+    placeholder: string;
     button: string;
-    note: string;
+    limit: string;
   };
-  stats: { label: string; value: string; helper: string }[];
-  progress: {
+  summary: {
     title: string;
-    currentLabel: string;
-    nextLabel: string;
-    current: number;
-    next: number;
-    note: string;
+    today: string;
+    sevenDays: string;
+    activeStreak: string;
+    todayHelper: string;
+    sevenDaysHelper: string;
+    streakHelper: string;
   };
-  streakRewards: {
+  habits: {
     title: string;
-    items: RewardItem[];
+    description: string;
+    emptyTitle: string;
+    emptyDescription: string;
+    checked: string;
+    unchecked: string;
+    checkIn: string;
+    undo: string;
+    delete: string;
+    confirmDelete: string;
+    streak: string;
+    days: string;
+    sevenDayTotal: string;
+    doneOn: string;
+    notDoneOn: string;
+    beforeCreation: string;
   };
-  rules: { title: string; items: string[] };
-  specialDay: { title: string; items: string[] };
-  settlement: { title: string; weeklyLabel: string; monthlyLabel: string; weekly: string[]; monthly: string[] };
-  makeup: { title: string; items: string[] };
-  realms: { title: string; columns: string[]; rows: TrackerTableRow[] };
-  tasks: {
+  data: {
     title: string;
-    dailyTitle: string;
-    dailyReward: string;
-    dailyItems: string[];
-    deepTitle: string;
-    deepReward: string;
-    deepItems: string[];
-    note: string;
+    description: string;
+    export: string;
+    import: string;
+    importConfirm: string;
+    importHint: string;
+    reset: string;
+    resetConfirm: string;
   };
-  merits: { title: string; items: string[] };
-  antiCheat: { title: string; items: string[] };
-  exchange: { title: string; items: string[] };
-  footerNote: string;
-  announcements: string[];
+  status: {
+    added: string;
+    duplicate: string;
+    invalidName: string;
+    habitLimit: string;
+    checked: string;
+    unchecked: string;
+    deleted: string;
+    exported: string;
+    imported: string;
+    reset: string;
+    invalidFile: string;
+    fileTooLarge: string;
+    storageReadError: string;
+    storageWriteError: string;
+    synced: string;
+  };
+  loading: string;
 };
 
 const trackerContent: Record<Locale, TrackerContent> = {
   zh: {
-    prototypeNotice: {
-      label: "概念原型 · 示例数据",
-      description: "页面中的人物、积分、连续天数与公告均为演示内容，不代表真实用户或线上数据。",
-      buttonNote: "演示状态，尚未接入账户与持久化。"
+    privacy: {
+      label: "本地优先 · 无需登录",
+      title: "你的习惯数据只留在这台设备",
+      description: "打卡记录以明文保存在当前浏览器的 localStorage 中；Tracker 本身不会主动上传记录。",
+      backup: "同源脚本、浏览器扩展或可访问本机的人可能读取；清理数据或换设备前请导出并妥善保管 JSON 备份。"
     },
-    ticker: {
-      label: "修行公告",
-      kicker: "天机",
-      emptyMessage: "暂无最新动态",
-      pauseLabel: "暂停滚动",
-      resumeLabel: "继续滚动"
+    add: {
+      title: "添加习惯",
+      description: "给习惯起一个清晰、可执行的名字，然后每天回来完成一次打卡。",
+      label: "习惯名称",
+      placeholder: "例如：阅读 20 分钟",
+      button: "添加习惯",
+      limit: `最多 ${TRACKER_MAX_HABITS} 个习惯，每个名称不超过 ${TRACKER_MAX_NAME_LENGTH} 个字符。`
     },
-    panel: {
-      eyebrow: "今日修行",
-      title: "签到面板",
-      description: "完成签到与任务，积累修为值与灵石。",
-      button: "今日签到",
-      note: "签到后可叠加早课/夜修加成与连续奖励。"
+    summary: {
+      title: "最近进度",
+      today: "今日完成",
+      sevenDays: "近 7 天完成率",
+      activeStreak: "最长当前连续",
+      todayHelper: "按习惯计算",
+      sevenDaysHelper: "仅统计习惯创建后的日期",
+      streakHelper: "今天或昨天仍连续的记录"
     },
-    stats: [
-      { label: "当前境界", value: "筑基", helper: "下一层级：金丹" },
-      { label: "修为值", value: "680", helper: "距离晋升还差 220" },
-      { label: "连续天数", value: "12 天", helper: "距离 14 天奖励还差 2 天" },
-      { label: "灵石 / 功德", value: "6 / 3", helper: "灵石可用于补签" }
-    ],
-    progress: {
-      title: "修为进度",
-      currentLabel: "筑基",
-      nextLabel: "金丹",
-      current: 680,
-      next: 900,
-      note: "每次签到与任务都会推进进度条。"
+    habits: {
+      title: "我的习惯",
+      description: "可打卡或撤销今天的记录；下方方格展示最近 7 天。",
+      emptyTitle: "还没有习惯",
+      emptyDescription: "从一个足够小、今天就能完成的目标开始。",
+      checked: "今天已完成",
+      unchecked: "今天未完成",
+      checkIn: "完成今日打卡",
+      undo: "撤销今日打卡",
+      delete: "删除习惯",
+      confirmDelete: "确定删除“{name}”及其全部打卡记录吗？此操作无法撤销。",
+      streak: "当前连续",
+      days: "天",
+      sevenDayTotal: "近 7 天",
+      doneOn: "已完成",
+      notDoneOn: "未完成",
+      beforeCreation: "尚未创建"
     },
-    streakRewards: {
-      title: "连续奖励",
-      items: [
-        { label: "连续 3 天", reward: "+5 修为值" },
-        { label: "连续 7 天", reward: "+20 修为值" },
-        { label: "连续 14 天", reward: "+50 修为值" },
-        { label: "连续 30 天", reward: "+120 修为值 +2 灵石" },
-        { label: "连续 60 天", reward: "+260 修为值 +5 灵石" },
-        { label: "连续 100 天", reward: "+500 修为值 +10 灵石" }
-      ]
+    data: {
+      title: "备份与迁移",
+      description: "导出的 v1 JSON 可在另一台设备或浏览器中导入。导入会替换当前全部数据。",
+      export: "导出 JSON",
+      import: "导入 JSON",
+      importConfirm: "导入会用 {incoming} 个习惯替换当前 {current} 个习惯及全部记录。建议先导出备份，确定继续吗？",
+      importHint: "仅接受本站导出的 v1 JSON，最大 512 KB。",
+      reset: "重置全部数据",
+      resetConfirm: "确定删除这台浏览器中的全部习惯和打卡记录吗？此操作无法撤销。"
     },
-    rules: {
-      title: "规则速览",
-      items: [
-        "每日签到：+10 修为值、+1 灵石",
-        "签到时间：00:00–23:59（本地时区）",
-        "早课加成：05:00–09:00 额外 +2 修为值",
-        "夜修加成：22:00–23:59 额外 +2 修为值",
-        "每日仅 1 次有效签到",
-        "当日任务额外奖励上限 +15 修为值"
-      ]
+    status: {
+      added: "习惯已添加并保存在本机。",
+      duplicate: "已经存在同名习惯。",
+      invalidName: "请输入有效的习惯名称。",
+      habitLimit: `最多只能创建 ${TRACKER_MAX_HABITS} 个习惯。`,
+      checked: "今日打卡已保存。",
+      unchecked: "已撤销今日打卡。",
+      deleted: "习惯及其记录已删除。",
+      exported: "备份文件已导出。",
+      imported: "备份已导入，并替换当前数据。",
+      reset: "本地 Tracker 数据已重置。",
+      invalidFile: "文件不是有效的 Tracker v1 备份，未修改当前数据。",
+      fileTooLarge: "文件超过 512 KB，未进行导入。",
+      storageReadError: "本地数据无法安全读取，原始内容未被覆盖。请导入备份或重置后继续。",
+      storageWriteError: "浏览器拒绝保存数据，请检查隐私模式或存储空间。",
+      synced: "已同步此网站在另一个标签页中的更改。"
     },
-    specialDay: {
-      title: "月度特殊日 · 3 号开坛",
-      items: [
-        "当日签到额外 +30 修为值、+3 灵石、+1 功德",
-        "补签不触发开坛日奖励",
-        "可与连续签到奖励叠加"
-      ]
-    },
-    settlement: {
-      title: "周/月结算",
-      weeklyLabel: "周结算",
-      monthlyLabel: "月结算",
-      weekly: ["周内签到 ≥ 5 天：+30 修为值", "周内全勤 7 天：+60 修为值 +1 灵石"],
-      monthly: [
-        "月内签到 ≥ 20 天：+100 修为值",
-        "月内签到 ≥ 26 天：+180 修为值 +2 灵石",
-        "月内全勤：+300 修为值 +5 灵石 +3 功德"
-      ]
-    },
-    makeup: {
-      title: "断签与补签",
-      items: [
-        "断签连续天数归零，但累计修为值保留",
-        "补签消耗 2 灵石，仅能补过去 7 天",
-        "补签仅恢复连续奖励，不叠加日常签到",
-        "月度补签最多 3 次"
-      ]
-    },
-    realms: {
-      title: "境界等级",
-      columns: ["境界", "修为值区间", "说明"],
-      rows: [
-        { level: "炼气", range: "0–299", note: "入门期，建立打卡习惯" },
-        { level: "筑基", range: "300–899", note: "形成稳定节奏" },
-        { level: "金丹", range: "900–1799", note: "连续签到显著提升" },
-        { level: "元婴", range: "1800–2999", note: "具备长期输出能力" },
-        { level: "化神", range: "3000–4499", note: "中长期目标形成闭环" },
-        { level: "合体", range: "4500–6399", note: "稳态高频打卡" },
-        { level: "大乘", range: "6400–8999", note: "长周期持续者" },
-        { level: "渡劫", range: "9000–11999", note: "冲刺阶段" },
-        { level: "仙人", range: "12000+", note: "打卡长期主义者" }
-      ]
-    },
-    tasks: {
-      title: "修炼任务",
-      dailyTitle: "日常任务（简单）",
-      dailyReward: "每项 +5 修为值（最多 3 项）",
-      dailyItems: ["写下今日修炼目标（≥ 1 条）", "专注学习/阅读 10–15 分钟", "整理待办或复盘 3 条要点"],
-      deepTitle: "深修任务（高难）",
-      deepReward: "完成 +10 修为值 +1 功德",
-      deepItems: [
-        "连续专注 120 分钟（学习/开发/阅读）",
-        "输出一篇学习总结（≥ 800 字）",
-        "完成一次高强度训练（≥ 60 分钟）或提交可展示成果"
-      ],
-      note: "任务奖励需与当日签到绑定，次日失效。"
-    },
-    merits: {
-      title: "功德获取",
-      items: ["发布一篇公开心得/教程：+3 功德", "参与社区答疑或提交反馈：+1 功德", "连续 30 天打卡完成后：+2 功德"]
-    },
-    antiCheat: {
-      title: "功德防刷机制",
-      items: [
-        "贡献需审核或达到质量门槛后计入功德",
-        "同日功德上限：每日最多获得 3 功德",
-        "同类贡献每周最多计入 3 次，间隔至少 12 小时",
-        "重复内容、灌水或批量提交将不计入并触发冷却",
-        "冻结条件：当日积分增长超过当天获取总和则判定异常",
-        "冻结处理：扣除超出部分积分，并将境界降低一级"
-      ]
-    },
-    exchange: {
-      title: "兑换与消耗",
-      items: ["灵石可用于补签、抽取功法卡或兑换主题皮肤", "功德值可用于活动报名、置顶展示、社区贡献排行"]
-    },
-    footerNote: "当前数据为示例，后续可接入真实签到与排行。",
-    announcements: [
-      "林远晋升至金丹境 · 连续修行 30 日",
-      "苏璃触发深修任务 · 完成 120 分钟专注",
-      "陆行完成三连签 · 获得灵石奖励",
-      "青禾达成周度全勤 · 修为大幅提升",
-      "星河提交功法总结 · 获得功德 +1"
-    ]
+    loading: "正在读取本地记录…"
   },
   en: {
-    prototypeNotice: {
-      label: "Concept prototype · Mock data",
-      description: "Names, points, streaks, and announcements on this page are demonstrations, not real users or live data.",
-      buttonNote: "Demo only; accounts and persistence are not connected."
+    privacy: {
+      label: "Local-first · No account",
+      title: "Your habit data stays on this device",
+      description: "Check-ins are stored as plain text in this browser's localStorage. Tracker itself does not upload them.",
+      backup: "Same-origin scripts, browser extensions, or someone with device access may read them. Export and protect the plain-text JSON before clearing data or changing devices."
     },
-    ticker: {
-      label: "Practice announcements",
-      kicker: "Updates",
-      emptyMessage: "No recent updates",
-      pauseLabel: "Pause",
-      resumeLabel: "Resume"
+    add: {
+      title: "Add a habit",
+      description: "Give it a clear, actionable name, then return once a day to check in.",
+      label: "Habit name",
+      placeholder: "For example: Read for 20 minutes",
+      button: "Add habit",
+      limit: `Up to ${TRACKER_MAX_HABITS} habits and ${TRACKER_MAX_NAME_LENGTH} characters per name.`
     },
-    panel: {
-      eyebrow: "Daily Practice",
-      title: "Check-in Console",
-      description: "Complete your check-in and tasks to gain cultivation and spirit stones.",
-      button: "Check in today",
-      note: "Check-ins stack with morning/night bonuses and streak rewards."
+    summary: {
+      title: "Recent progress",
+      today: "Done today",
+      sevenDays: "7-day completion",
+      activeStreak: "Best active streak",
+      todayHelper: "Counted by habit",
+      sevenDaysHelper: "Only dates after each habit was created",
+      streakHelper: "A run still active today or yesterday"
     },
-    stats: [
-      { label: "Realm", value: "Foundation", helper: "Next: Golden Core" },
-      { label: "Cultivation", value: "680", helper: "220 points to rank up" },
-      { label: "Streak", value: "12 days", helper: "2 days to the 14-day reward" },
-      { label: "Stones / Merit", value: "6 / 3", helper: "Stones can be used for make-up" }
-    ],
-    progress: {
-      title: "Cultivation Progress",
-      currentLabel: "Foundation",
-      nextLabel: "Golden Core",
-      current: 680,
-      next: 900,
-      note: "Every check-in and task advances the bar."
+    habits: {
+      title: "My habits",
+      description: "Check in or undo today. The row of squares shows the latest seven days.",
+      emptyTitle: "No habits yet",
+      emptyDescription: "Start with one small goal you can finish today.",
+      checked: "Completed today",
+      unchecked: "Not completed today",
+      checkIn: "Complete today's check-in",
+      undo: "Undo today's check-in",
+      delete: "Delete habit",
+      confirmDelete: "Delete “{name}” and all of its check-ins? This cannot be undone.",
+      streak: "Active streak",
+      days: "days",
+      sevenDayTotal: "Last 7 days",
+      doneOn: "completed",
+      notDoneOn: "not completed",
+      beforeCreation: "not created yet"
     },
-    streakRewards: {
-      title: "Streak Rewards",
-      items: [
-        { label: "3-day streak", reward: "+5 cultivation" },
-        { label: "7-day streak", reward: "+20 cultivation" },
-        { label: "14-day streak", reward: "+50 cultivation" },
-        { label: "30-day streak", reward: "+120 cultivation +2 stones" },
-        { label: "60-day streak", reward: "+260 cultivation +5 stones" },
-        { label: "100-day streak", reward: "+500 cultivation +10 stones" }
-      ]
+    data: {
+      title: "Backup and migration",
+      description: "Import the exported v1 JSON in another browser or device. Importing replaces all current data.",
+      export: "Export JSON",
+      import: "Import JSON",
+      importConfirm: "Importing replaces the current {current} habits and all check-ins with {incoming} habits. Export a backup first if needed. Continue?",
+      importHint: "Only Tracker v1 JSON is accepted, up to 512 KB.",
+      reset: "Reset all data",
+      resetConfirm: "Delete every habit and check-in stored in this browser? This cannot be undone."
     },
-    rules: {
-      title: "Quick Rules",
-      items: [
-        "Daily check-in: +10 cultivation, +1 stone",
-        "Check-in window: 00:00–23:59 (local time)",
-        "Morning bonus: +2 cultivation at 05:00–09:00",
-        "Night bonus: +2 cultivation at 22:00–23:59",
-        "Only one valid check-in per day",
-        "Daily task bonus cap: +15 cultivation"
-      ]
+    status: {
+      added: "Habit added and saved on this device.",
+      duplicate: "A habit with that name already exists.",
+      invalidName: "Enter a valid habit name.",
+      habitLimit: `You can create up to ${TRACKER_MAX_HABITS} habits.`,
+      checked: "Today's check-in was saved.",
+      unchecked: "Today's check-in was undone.",
+      deleted: "The habit and its records were deleted.",
+      exported: "Backup file exported.",
+      imported: "Backup imported and current data replaced.",
+      reset: "Local Tracker data reset.",
+      invalidFile: "This is not a valid Tracker v1 backup. Current data was not changed.",
+      fileTooLarge: "The file is larger than 512 KB and was not imported.",
+      storageReadError: "Local data could not be read safely and was not overwritten. Import a backup or reset before continuing.",
+      storageWriteError: "The browser refused to save. Check private browsing settings or available storage.",
+      synced: "Changes from another tab on this site were synced."
     },
-    specialDay: {
-      title: "Monthly Special Day · 3rd",
-      items: [
-        "Check-in bonus: +30 cultivation, +3 stones, +1 merit",
-        "Make-up check-in does not trigger the bonus",
-        "Stacks with streak rewards"
-      ]
-    },
-    settlement: {
-      title: "Weekly & Monthly Settlement",
-      weeklyLabel: "Weekly",
-      monthlyLabel: "Monthly",
-      weekly: ["5+ check-ins/week: +30 cultivation", "7-day full week: +60 cultivation +1 stone"],
-      monthly: [
-        "20+ days/month: +100 cultivation",
-        "26+ days/month: +180 cultivation +2 stones",
-        "Full attendance: +300 cultivation +5 stones +3 merit"
-      ]
-    },
-    makeup: {
-      title: "Missed & Make-up",
-      items: [
-        "Breaking a streak resets streak days, but total cultivation stays",
-        "Make-up costs 2 stones and is limited to the last 7 days",
-        "Make-up only restores streak rewards, no daily check-in bonus",
-        "Up to 3 make-ups per month"
-      ]
-    },
-    realms: {
-      title: "Realm Levels",
-      columns: ["Realm", "Cultivation range", "Notes"],
-      rows: [
-        { level: "Qi Refining", range: "0–299", note: "Build the habit" },
-        { level: "Foundation", range: "300–899", note: "Stable rhythm" },
-        { level: "Golden Core", range: "900–1799", note: "Streaks accelerate progress" },
-        { level: "Nascent Soul", range: "1800–2999", note: "Long-term output" },
-        { level: "Spirit Form", range: "3000–4499", note: "Mid-term goals align" },
-        { level: "Integration", range: "4500–6399", note: "High-frequency stability" },
-        { level: "Ascension", range: "6400–8999", note: "Long-cycle consistency" },
-        { level: "Tribulation", range: "9000–11999", note: "Final sprint" },
-        { level: "Immortal", range: "12000+", note: "Long-term practitioner" }
-      ]
-    },
-    tasks: {
-      title: "Practice Tasks",
-      dailyTitle: "Daily tasks (easy)",
-      dailyReward: "+5 cultivation each (up to 3)",
-      dailyItems: ["Write 1 practice goal for today", "Focus 10–15 minutes on study/reading", "Review 3 key points"],
-      deepTitle: "Deep practice (hard)",
-      deepReward: "+10 cultivation +1 merit",
-      deepItems: [
-        "120 minutes of uninterrupted focus",
-        "Write a learning recap (≥ 800 words)",
-        "High-intensity training (≥ 60 minutes) or ship a showcaseable output"
-      ],
-      note: "Tasks must be completed on the check-in day."
-    },
-    merits: {
-      title: "Merit Sources",
-      items: ["Publish a public tutorial: +3 merit", "Answer questions or submit feedback: +1 merit", "Complete a 30-day streak: +2 merit"]
-    },
-    antiCheat: {
-      title: "Anti-abuse Rules",
-      items: [
-        "Contributions require review or quality checks",
-        "Daily merit cap: max 3 merit per day",
-        "Limit each contribution type to 3 per week, 12-hour cooldown",
-        "Spam or duplicated content gets rejected and cooled down",
-        "Freeze when daily growth exceeds the recorded daily gains",
-        "Penalty: remove excess points and demote one realm"
-      ]
-    },
-    exchange: {
-      title: "Redemption & Spending",
-      items: [
-        "Stones can be used for make-ups, draws, or theme skins",
-        "Merit can be used for event entry, highlights, or leaderboards"
-      ]
-    },
-    footerNote: "These numbers are mock data until real tracking is connected.",
-    announcements: [
-      "Lin Yuan reached Golden Core · 30-day streak",
-      "Su Li completed deep practice · 120 minutes focus",
-      "Lu Xing hit a 3-day streak · earned bonus stones",
-      "Qing He achieved weekly full attendance",
-      "Xing He submitted a practice recap · +1 merit"
-    ]
+    loading: "Reading local records…"
   }
 };
 
-function Card({
-  title,
-  description,
-  children,
-  className = ""
-}: {
-  title: string;
-  description?: string;
-  children: ReactNode;
-  className?: string;
-}) {
+function Card({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <div
-      className={`rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-6 ${className}`}
-    >
-      <div className="space-y-2">
-        <h2 className={TITLE_LG}>{title}</h2>
-        {description ? <p className={TEXT_SM_MUTED}>{description}</p> : null}
-      </div>
-      <div className="mt-4">{children}</div>
+    <div className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6">
+      <h2 className={TITLE_LG}>{title}</h2>
+      {description ? <p className={`mt-2 ${TEXT_SM_MUTED}`}>{description}</p> : null}
+      <div className="mt-5">{children}</div>
     </div>
   );
 }
 
-function BulletList({ items }: { items: string[] }) {
-  return (
-    <ul className={`space-y-2 ${TEXT_SM_MUTED}`}>
-      {items.map((item, index) => (
-        <li key={`${item}-${index}`} className="flex items-start gap-2">
-          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent/70" aria-hidden />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
+function makeHabitId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `habit_${crypto.randomUUID()}`;
+  }
+  return `habit_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 type TrackerClientProps = {
@@ -406,194 +270,391 @@ type TrackerClientProps = {
 
 export function TrackerClient({ locale, copy, common }: TrackerClientProps) {
   const content = trackerContent[locale];
-  const progressPercent = Math.min(
-    100,
-    Math.round((content.progress.current / content.progress.next) * 100)
+  const inputId = useId();
+  const [tracker, setTracker] = useState<TrackerState>(() => createEmptyTrackerState());
+  const [habitName, setHabitName] = useState("");
+  const [todayKey, setTodayKey] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [canPersist, setCanPersist] = useState(false);
+  const [needsRecovery, setNeedsRecovery] = useState(false);
+  const [status, setStatus] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
+
+  useEffect(() => {
+    const refreshToday = () => setTodayKey(toLocalDateKey());
+    refreshToday();
+
+    try {
+      const parsed = parseTrackerState(window.localStorage.getItem(TRACKER_STORAGE_KEY));
+      if (parsed.ok) {
+        setTracker(parsed.state);
+        setCanPersist(true);
+      } else {
+        setNeedsRecovery(true);
+        setStatus({ tone: "error", text: content.status.storageReadError });
+      }
+    } catch {
+      setNeedsRecovery(true);
+      setStatus({ tone: "error", text: content.status.storageReadError });
+    } finally {
+      setIsHydrated(true);
+    }
+
+    const interval = window.setInterval(refreshToday, 60_000);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshToday();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [content.status.storageReadError]);
+
+  useEffect(() => {
+    if (!isHydrated || !canPersist) return;
+    try {
+      window.localStorage.setItem(TRACKER_STORAGE_KEY, serializeTrackerState(tracker));
+    } catch {
+      setStatus({ tone: "error", text: content.status.storageWriteError });
+    }
+  }, [canPersist, content.status.storageWriteError, isHydrated, tracker]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== TRACKER_STORAGE_KEY) return;
+      const parsed = parseTrackerState(event.newValue);
+      if (!parsed.ok) {
+        setCanPersist(false);
+        setNeedsRecovery(true);
+        setStatus({ tone: "error", text: content.status.storageReadError });
+        return;
+      }
+      setTracker(parsed.state);
+      setCanPersist(true);
+      setNeedsRecovery(false);
+      setStatus({ tone: "info", text: content.status.synced });
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [content.status.storageReadError, content.status.synced]);
+
+  const recentDates = useMemo(() => (todayKey ? getRecentDateKeys(todayKey) : []), [todayKey]);
+  const summary = useMemo(() => {
+    if (!todayKey) return { todayDone: 0, possible: 0, completed: 0, bestStreak: 0 };
+    let possible = 0;
+    let completed = 0;
+    let bestStreak = 0;
+    let todayDone = 0;
+    for (const habit of tracker.habits) {
+      if (habit.completedDates.includes(todayKey)) todayDone += 1;
+      completed += getSevenDayCount(habit.completedDates, todayKey);
+      possible += recentDates.filter((dateKey) => dateKey >= habit.createdOn).length;
+      bestStreak = Math.max(bestStreak, getCurrentStreak(habit.completedDates, todayKey));
+    }
+    return { todayDone, possible, completed, bestStreak };
+  }, [recentDates, todayKey, tracker.habits]);
+
+  const dateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", { month: "short", day: "numeric", weekday: "short" }),
+    [locale]
   );
+  const formatDate = (dateKey: string) => dateFormatter.format(new Date(`${dateKey}T12:00:00`));
+
+  const addHabit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canPersist) {
+      setStatus({ tone: "error", text: content.status.storageReadError });
+      return;
+    }
+    if (!todayKey || !isValidHabitName(habitName)) {
+      setStatus({ tone: "error", text: content.status.invalidName });
+      return;
+    }
+    if (tracker.habits.length >= TRACKER_MAX_HABITS) {
+      setStatus({ tone: "error", text: content.status.habitLimit });
+      return;
+    }
+    const normalized = normalizeHabitName(habitName);
+    if (tracker.habits.some((habit) => habit.name.toLowerCase() === normalized.toLowerCase())) {
+      setStatus({ tone: "error", text: content.status.duplicate });
+      return;
+    }
+    const habit = createHabit(normalized, todayKey, makeHabitId());
+    if (!habit) {
+      setStatus({ tone: "error", text: content.status.invalidName });
+      return;
+    }
+    setTracker((current) => ({ ...current, habits: [...current.habits, habit] }));
+    setHabitName("");
+    setStatus({ tone: "success", text: content.status.added });
+  };
+
+  const toggleToday = (habitId: string, wasCompleted: boolean) => {
+    if (!canPersist) {
+      setStatus({ tone: "error", text: content.status.storageReadError });
+      return;
+    }
+    if (!todayKey) return;
+    setTracker((current) => toggleHabitForDate(current, habitId, todayKey));
+    setStatus({ tone: "success", text: wasCompleted ? content.status.unchecked : content.status.checked });
+  };
+
+  const deleteHabit = (habitId: string, name: string) => {
+    if (!canPersist) {
+      setStatus({ tone: "error", text: content.status.storageReadError });
+      return;
+    }
+    if (!window.confirm(content.habits.confirmDelete.replace("{name}", name))) return;
+    setTracker((current) => removeHabit(current, habitId));
+    setStatus({ tone: "success", text: content.status.deleted });
+  };
+
+  const exportData = () => {
+    if (!canPersist) {
+      setStatus({ tone: "error", text: content.status.storageReadError });
+      return;
+    }
+    if (!todayKey) return;
+    const blob = new Blob([serializeTrackerState(tracker)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `meaningful-ink-tracker-${todayKey}.json`;
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    setStatus({ tone: "success", text: content.status.exported });
+  };
+
+  const importData = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+    if (file.size > TRACKER_MAX_IMPORT_BYTES) {
+      setStatus({ tone: "error", text: content.status.fileTooLarge });
+      return;
+    }
+    try {
+      const parsed = parseTrackerState(await file.text());
+      if (!parsed.ok) {
+        setStatus({ tone: "error", text: parsed.reason === "too_large" ? content.status.fileTooLarge : content.status.invalidFile });
+        return;
+      }
+      const confirmation = content.data.importConfirm
+        .replace("{incoming}", String(parsed.state.habits.length))
+        .replace("{current}", String(tracker.habits.length));
+      if (!window.confirm(confirmation)) return;
+      setCanPersist(true);
+      setNeedsRecovery(false);
+      setTracker(parsed.state);
+      setStatus({ tone: "success", text: content.status.imported });
+    } catch {
+      setStatus({ tone: "error", text: content.status.invalidFile });
+    }
+  };
+
+  const resetData = () => {
+    if (!window.confirm(content.data.resetConfirm)) return;
+    setCanPersist(true);
+    setNeedsRecovery(false);
+    setTracker(createEmptyTrackerState());
+    setStatus({ tone: "success", text: content.status.reset });
+  };
+
+  const completionRate = summary.possible > 0 ? Math.round((summary.completed / summary.possible) * 100) : 0;
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-10 px-4 py-12 sm:px-6 md:space-y-12 md:py-16">
+    <main className="mx-auto w-full max-w-6xl space-y-10 px-4 py-12 sm:px-6 md:space-y-12 md:py-16" aria-busy={!isHydrated}>
       <header className="space-y-3">
         <p className={TEXT_SM_MUTED}>{copy.eyebrow}</p>
         <h1 className={TITLE_2XL}>{copy.title}</h1>
         <p className={TEXT_SM_MUTED}>{copy.description}</p>
         <div className="max-w-3xl rounded-xl border border-accent/35 bg-accent/10 px-4 py-3">
-          <p className="text-sm font-semibold text-accent">{content.prototypeNotice.label}</p>
-          <p className={`mt-1 ${TEXT_SM_MUTED}`}>{content.prototypeNotice.description}</p>
+          <p className={EYEBROW_ACCENT}>{content.privacy.label}</p>
+          <p className="mt-2 font-semibold text-primary">{content.privacy.title}</p>
+          <p className={`mt-1 ${TEXT_SM_MUTED}`}>{content.privacy.description}</p>
+          <p className={`mt-1 ${TEXT_XS_MUTED}`}>{content.privacy.backup}</p>
         </div>
       </header>
 
-      <section className="mt-4">
-        <AnnouncementTicker
-          items={content.announcements}
-          label={content.ticker.label}
-          kicker={content.ticker.kicker}
-          emptyMessage={content.ticker.emptyMessage}
-          pauseLabel={content.ticker.pauseLabel}
-          resumeLabel={content.ticker.resumeLabel}
-        />
-      </section>
+      <div className="min-h-6" aria-live="polite" aria-atomic="true">
+        {!isHydrated ? <p className={TEXT_SM_MUTED}>{content.loading}</p> : null}
+        {status ? (
+          <p className={status.tone === "error" ? "text-sm font-semibold text-accent-strong" : status.tone === "success" ? "text-sm font-semibold text-accent-secondary" : TEXT_SM_MUTED}>
+            {status.text}
+          </p>
+        ) : null}
+      </div>
 
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <p className={EYEBROW_ACCENT}>{content.panel.eyebrow}</p>
-              <h2 className={TITLE_XL}>{content.panel.title}</h2>
-              <p className={TEXT_SM_MUTED}>{content.panel.description}</p>
-            </div>
-            <div className="w-full text-left sm:w-auto sm:text-right">
+      <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <Card title={content.add.title} description={content.add.description}>
+          <form className="space-y-3" onSubmit={addHabit}>
+            <label htmlFor={inputId} className="block text-sm font-semibold text-primary">{content.add.label}</label>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                id={inputId}
+                value={habitName}
+                onChange={(event) => setHabitName(event.target.value)}
+                maxLength={TRACKER_MAX_NAME_LENGTH}
+                autoComplete="off"
+                placeholder={content.add.placeholder}
+                disabled={!isHydrated || !canPersist || tracker.habits.length >= TRACKER_MAX_HABITS}
+                className="min-h-11 min-w-0 flex-1 rounded-xl border border-edge bg-base px-4 py-2 text-base text-primary outline-none transition focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/30 motion-reduce:transition-none"
+              />
               <button
-                type="button"
-                disabled
-                className="w-full rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white opacity-70 sm:w-auto"
+                type="submit"
+                disabled={!isHydrated || !canPersist || tracker.habits.length >= TRACKER_MAX_HABITS}
+                className="min-h-11 rounded-xl bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
               >
-                {content.panel.button}
+                {content.add.button}
               </button>
-              <p className={`mt-2 max-w-64 ${TEXT_XS_MUTED}`}>{content.prototypeNotice.buttonNote}</p>
             </div>
-          </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {content.stats.map((stat) => (
-              <div key={stat.label} className="rounded-xl border border-edge bg-base/40 p-4">
-                <p className={TEXT_XS_MUTED}>{stat.label}</p>
-                <p className={`mt-2 ${TITLE_LG}`}>{stat.value}</p>
-                <p className={`mt-1 ${TEXT_XS_MUTED}`}>{stat.helper}</p>
-              </div>
-            ))}
-          </div>
-          <p className={`mt-4 ${TEXT_XS_MUTED}`}>{content.panel.note}</p>
+            <p className={TEXT_XS_MUTED}>{content.add.limit}</p>
+          </form>
+        </Card>
+
+        <Card title={content.summary.title}>
+          <dl className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-edge bg-base/50 p-4">
+              <dt className={TEXT_XS_MUTED}>{content.summary.today}</dt>
+              <dd className={`mt-2 ${TITLE_XL}`}>{summary.todayDone} / {tracker.habits.length}</dd>
+              <p className={`mt-1 ${TEXT_XS_MUTED}`}>{content.summary.todayHelper}</p>
+            </div>
+            <div className="rounded-xl border border-edge bg-base/50 p-4">
+              <dt className={TEXT_XS_MUTED}>{content.summary.sevenDays}</dt>
+              <dd className={`mt-2 ${TITLE_XL}`}>{completionRate}%</dd>
+              <p className={`mt-1 ${TEXT_XS_MUTED}`}>{content.summary.sevenDaysHelper}</p>
+            </div>
+            <div className="rounded-xl border border-edge bg-base/50 p-4">
+              <dt className={TEXT_XS_MUTED}>{content.summary.activeStreak}</dt>
+              <dd className={`mt-2 ${TITLE_XL}`}>{summary.bestStreak} {content.habits.days}</dd>
+              <p className={`mt-1 ${TEXT_XS_MUTED}`}>{content.summary.streakHelper}</p>
+            </div>
+          </dl>
+        </Card>
+      </section>
+
+      <section aria-labelledby="tracker-habits-title">
+        <div className="mb-5">
+          <h2 id="tracker-habits-title" className={TITLE_XL}>{content.habits.title}</h2>
+          <p className={`mt-2 ${TEXT_SM_MUTED}`}>{content.habits.description}</p>
         </div>
 
-        <Card title={content.progress.title} description={content.progress.note}>
-          <div className={`flex items-center justify-between ${TEXT_SM_MUTED}`}>
-            <span>{content.progress.currentLabel}</span>
-            <span>
-              {content.progress.current} / {content.progress.next}
-            </span>
-            <span>{content.progress.nextLabel}</span>
+        {isHydrated && tracker.habits.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-edge bg-surface/40 px-5 py-10 text-center">
+            <p className="font-semibold text-primary">{content.habits.emptyTitle}</p>
+            <p className={`mt-2 ${TEXT_SM_MUTED}`}>{content.habits.emptyDescription}</p>
           </div>
-          <div className="mt-4 h-2 rounded-full bg-edge/60">
-            <div
-              className="h-2 rounded-full bg-accent transition-all"
-              style={{ width: `${progressPercent}%` }}
+        ) : null}
+
+        <ul className="grid gap-4 lg:grid-cols-2">
+          {todayKey ? tracker.habits.map((habit) => {
+            const completedToday = habit.completedDates.includes(todayKey);
+            const streak = getCurrentStreak(habit.completedDates, todayKey);
+            const eligibleDates = recentDates.filter((dateKey) => dateKey >= habit.createdOn);
+            const sevenDayCount = getSevenDayCount(habit.completedDates, todayKey);
+            return (
+              <li key={habit.id} className="rounded-2xl border border-edge bg-surface/70 p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className={TITLE_LG}>{habit.name}</h3>
+                    <p className={`mt-1 ${completedToday ? "text-sm font-semibold text-accent-secondary" : TEXT_SM_MUTED}`}>
+                      {completedToday ? content.habits.checked : content.habits.unchecked}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => deleteHabit(habit.id, habit.name)}
+                    disabled={!canPersist}
+                    className="min-h-11 rounded-lg px-3 py-2 text-xs font-semibold text-accent-strong transition hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+                    aria-label={`${content.habits.delete}: ${habit.name}`}
+                  >
+                    {content.habits.delete}
+                  </button>
+                </div>
+
+                <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-2">
+                  <div>
+                    <dt className={TEXT_XS_MUTED}>{content.habits.streak}</dt>
+                    <dd className="mt-1 font-semibold text-primary">{streak} {content.habits.days}</dd>
+                  </div>
+                  <div>
+                    <dt className={TEXT_XS_MUTED}>{content.habits.sevenDayTotal}</dt>
+                    <dd className="mt-1 font-semibold text-primary">{sevenDayCount} / {eligibleDates.length}</dd>
+                  </div>
+                </dl>
+
+                <div className="mt-5 grid grid-cols-7 gap-1.5" aria-label={content.habits.sevenDayTotal}>
+                  {recentDates.map((dateKey) => {
+                    const isBeforeCreation = dateKey < habit.createdOn;
+                    const isDone = habit.completedDates.includes(dateKey);
+                    const stateLabel = isBeforeCreation ? content.habits.beforeCreation : isDone ? content.habits.doneOn : content.habits.notDoneOn;
+                    return (
+                      <div key={dateKey} className="text-center">
+                        <span
+                          className={`block h-8 rounded-md border ${isBeforeCreation ? "border-edge/40 bg-edge/20" : isDone ? "border-emerald-500/60 bg-emerald-500/30" : "border-edge bg-base/60"}`}
+                          title={`${formatDate(dateKey)} · ${stateLabel}`}
+                        >
+                          <span className="sr-only">{formatDate(dateKey)}: {stateLabel}</span>
+                        </span>
+                        <span className="mt-1 block text-[0.65rem] text-muted" aria-hidden="true">{dateKey.slice(8)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  aria-pressed={completedToday}
+                  onClick={() => toggleToday(habit.id, completedToday)}
+                  disabled={!canPersist}
+                  className={`mt-5 min-h-11 w-full rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${completedToday ? "border border-edge bg-base text-primary hover:border-edge-strong" : "bg-accent text-white hover:bg-accent-strong"}`}
+                >
+                  {completedToday ? content.habits.undo : content.habits.checkIn}
+                </button>
+              </li>
+            );
+          }) : null}
+        </ul>
+      </section>
+
+      <Card title={content.data.title} description={content.data.description}>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={exportData}
+            disabled={!isHydrated || !canPersist}
+            className="min-h-11 rounded-xl border border-edge bg-base px-4 py-2 text-sm font-semibold text-primary transition hover:border-edge-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50 motion-reduce:transition-none"
+          >
+            {content.data.export}
+          </button>
+          <label className="relative min-h-11 cursor-pointer rounded-xl border border-edge bg-base px-4 py-2.5 text-sm font-semibold text-primary transition hover:border-edge-strong focus-within:ring-2 focus-within:ring-accent motion-reduce:transition-none">
+            {content.data.import}
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={importData}
+              disabled={!isHydrated}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+              aria-describedby={`${inputId}-import-hint`}
             />
-          </div>
-          <div className={`mt-6 space-y-2 ${TEXT_SM_MUTED}`}>
-            <p className={EYEBROW_ACCENT}>
-              {content.streakRewards.title}
-            </p>
-            {content.streakRewards.items.map((item) => (
-              <div key={item.label} className="flex items-center justify-between">
-                <span>{item.label}</span>
-                <span className="text-secondary">{item.reward}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-3">
-        <Card title={content.rules.title}>
-          <BulletList items={content.rules.items} />
-        </Card>
-        <Card title={content.specialDay.title}>
-          <BulletList items={content.specialDay.items} />
-        </Card>
-        <Card title={content.makeup.title}>
-          <BulletList items={content.makeup.items} />
-        </Card>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card title={content.settlement.title}>
-          <div className="space-y-4">
-            <div>
-              <p className={EYEBROW_ACCENT}>
-                {content.settlement.weeklyLabel}
-              </p>
-              <BulletList items={content.settlement.weekly} />
-            </div>
-            <div>
-              <p className={EYEBROW_ACCENT}>
-                {content.settlement.monthlyLabel}
-              </p>
-              <BulletList items={content.settlement.monthly} />
-            </div>
-          </div>
-        </Card>
-        <Card title={content.tasks.title} description={content.tasks.note}>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between">
-                <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{content.tasks.dailyTitle}</p>
-                <span className={TEXT_XS_MUTED}>{content.tasks.dailyReward}</span>
-              </div>
-              <BulletList items={content.tasks.dailyItems} />
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{content.tasks.deepTitle}</p>
-                <span className={TEXT_XS_MUTED}>{content.tasks.deepReward}</span>
-              </div>
-              <BulletList items={content.tasks.deepItems} />
-            </div>
-          </div>
-        </Card>
-      </section>
-
-      <section>
-        <Card title={content.realms.title}>
-          <div className="overflow-x-auto">
-            <table className={`w-full text-left ${TEXT_SM_MUTED}`}>
-              <thead>
-                <tr className="border-b border-edge">
-                  {content.realms.columns.map((col) => (
-                    <th key={col} className="py-2 pr-4 text-xs font-semibold uppercase text-secondary">
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {content.realms.rows.map((row) => (
-                  <tr key={row.level} className="border-b border-edge/60">
-                    <td className="py-2 pr-4 text-primary">{row.level}</td>
-                    <td className="py-2 pr-4">{row.range}</td>
-                    <td className="py-2 pr-4">{row.note}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card title={content.merits.title}>
-          <BulletList items={content.merits.items} />
-        </Card>
-        <Card title={content.antiCheat.title}>
-          <BulletList items={content.antiCheat.items} />
-        </Card>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card title={content.exchange.title}>
-          <BulletList items={content.exchange.items} />
-        </Card>
-        <div className="rounded-2xl border border-edge bg-base/60 p-6 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none">
-          <p className={TEXT_SM_MUTED}>{content.footerNote}</p>
-          <div className={`mt-4 flex gap-4 ${TEXT_SM_MUTED}`}>
-            <Link href={getLocalePath("/enter", locale)} className="text-accent hover:text-accent-strong">
-              {common.backToEnter}
-            </Link>
-            <Link href={getLocalePath("/", locale)} className="text-muted hover:text-primary">
-              {common.backToHome}
-            </Link>
-          </div>
+          </label>
+          <button
+            type="button"
+            onClick={resetData}
+            disabled={!isHydrated || (!needsRecovery && tracker.habits.length === 0)}
+            className="min-h-11 rounded-xl px-4 py-2 text-sm font-semibold text-accent-strong transition hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none"
+          >
+            {content.data.reset}
+          </button>
         </div>
-      </section>
+        <p id={`${inputId}-import-hint`} className={`mt-3 ${TEXT_XS_MUTED}`}>{content.data.importHint}</p>
+      </Card>
+
+      <footer className={`flex flex-wrap gap-4 ${TEXT_SM_MUTED}`}>
+        <Link href={getLocalePath("/enter", locale)} className="text-accent hover:text-accent-strong">{common.backToEnter}</Link>
+        <Link href={getLocalePath("/", locale)} className="text-muted hover:text-primary">{common.backToHome}</Link>
+      </footer>
     </main>
   );
 }

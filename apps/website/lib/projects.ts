@@ -129,41 +129,41 @@ export const projects: Project[] = [
   {
     slug: "tracker",
     title: "修行打卡系统",
-    subtitle: "围绕习惯、连续性和激励设计的个人成长产品原型",
-    updatedAt: "2026-05-18",
-    status: "prototype",
+    subtitle: "无需账户的本地优先习惯追踪工具",
+    updatedAt: "2026-07-16",
+    status: "mvp",
     type: "product-system",
     summary:
-      "一个用于追踪习惯执行、连续打卡和成长数据的轻量系统，重点在规则闭环与持续反馈。",
+      "一个可直接使用的轻量习惯工具，支持自定义习惯、每日打卡、连续天数、七日统计和 JSON 备份。",
     problem:
       "普通打卡工具容易只记录完成与否，缺少对目标、连续性、激励和反作弊边界的系统化设计。",
     solution:
-      "以日常打卡为核心，沉淀连续天数、进度趋势和规则说明，让个人成长行为具备可观察、可复盘的反馈链路。",
+      "以日常打卡为核心，在浏览器本地保存记录并提供严格校验的导入导出，让个人习惯具备可观察、可迁移的反馈链路。",
     role: ["产品规则设计", "前端页面实现", "交互流程设计", "激励机制梳理"],
     stack: ["Next.js", "TypeScript", "Tailwind CSS"],
-    highlights: ["规则表达清晰", "适合逐步接入账户和数据", "能作为内容主题持续展开"],
+    highlights: ["无需登录即可使用", "本地数据可导入导出", "输入与备份边界经过严格校验"],
     evidence: [
       { label: "公开入口", value: "Tracker 页面已进入中英文公开路由、sitemap 和浏览器验收" },
-      { label: "规则闭环", value: "页面围绕目标、打卡、连续性、趋势和复盘组织信息" },
-      { label: "阶段边界", value: "当前明确为原型，不伪装已具备账户和持久化能力" }
+      { label: "可用闭环", value: "支持创建习惯、今日打卡、连续天数、七日统计以及删除和重置确认" },
+      { label: "数据边界", value: "记录只持久化到当前浏览器，可通过版本化 JSON 手动备份和迁移" }
     ],
     asset: {
       kind: "mock",
       src: "/projects/tracker-product-mock.svg",
       alt: "修行打卡系统的 product mock，展示目标、打卡、连续性和复盘模块",
       caption:
-        "Product mock：用于说明打卡产品的核心界面结构，当前不代表已接入账户或持久化数据。"
+        "Product mock：说明 Tracker 的目标、打卡和反馈结构；实际页面使用 localStorage 持久化，不包含账户或云同步。"
     },
     architecture:
-      "当前是静态产品原型页，先把规则、反馈和页面层级稳定下来；真实版本会拆出用户、习惯、打卡记录和统计视图的数据模型。",
+      "交互界面在浏览器运行，版本化 v1 schema 保存到 localStorage；导入路径限制大小、字段、日期、重复项和数量，服务器不保存习惯记录。",
     tradeoffs: [
-      "先做规则展示而非登录系统，能更快验证产品叙事，但无法承载真实多人数据。",
-      "不接数据库让静态部署更稳，但连续打卡和复盘只能作为设计预览。",
-      "激励规则保持轻量，避免在没有真实行为数据时过度设计。"
+      "不做账户和数据库让使用与部署更轻，但数据不会自动跨设备同步。",
+      "localStorage 提供真实持久化和零服务端成本，但清理浏览器数据前必须手动导出备份。",
+      "统计保持在七日和连续天数，优先保证规则可解释与数据可迁移。"
     ],
-    roadmap: ["定义用户与习惯数据模型", "补每日打卡和连续天数逻辑", "增加周报、复盘和隐私边界"],
-    limitations: ["当前以展示和原型为主", "未接入持久化用户数据"],
-    nextSteps: ["补充真实数据模型", "设计账户与隐私边界", "增加周报和复盘视图"],
+    roadmap: ["增加月度回顾视图", "补 CSV 导出", "评估可选加密同步的成本与隐私边界"],
+    limitations: ["数据只保存在当前浏览器", "没有账户、提醒或云同步", "备份文件需要用户自行保管"],
+    nextSteps: ["增加月度回顾", "补更多可迁移格式", "继续验证本地优先隐私文案"],
     links: [{ label: "进入打卡", href: "/tracker" }],
     featured: true
   },
@@ -322,37 +322,37 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
   },
   tracker: {
     title: "Practice Tracker",
-    subtitle: "A personal growth product prototype around habits, streaks, and incentive rules",
+    subtitle: "A local-first habit tracker that works without an account",
     summary:
-      "A lightweight system for tracking habit completion, streaks, and growth signals, focused on a clear rule loop and continuous feedback.",
+      "A usable lightweight habit tool with custom habits, daily check-ins, streaks, seven-day statistics, and JSON backups.",
     problem:
       "Many trackers only record whether a task was completed, without enough structure for goals, streaks, incentives, and anti-abuse boundaries.",
     solution:
-      "Use daily check-ins as the core loop, then expose streaks, progress trends, and rules so personal growth becomes observable and reviewable.",
+      "Use daily check-ins as the core loop, persist records in the browser, and provide strictly validated import and export so progress remains observable and portable.",
     role: ["Product rule design", "Frontend implementation", "Interaction flow", "Incentive model"],
-    highlights: ["Clear rule expression", "Ready for accounts and persisted data", "Can grow into a long-running content theme"],
+    highlights: ["Works without sign-in", "Portable local backups", "Strict input and backup validation"],
     evidence: [
       { label: "Public route", value: "The Tracker page is covered by bilingual public routes, sitemap, and browser verification" },
-      { label: "Rule loop", value: "The page frames goals, check-ins, streaks, trends, and review as one product loop" },
-      { label: "Stage boundary", value: "The current surface is explicitly a prototype, not an account-backed tracker" }
+      { label: "Usable loop", value: "Create habits, check in or undo, inspect streaks and seven-day stats, then delete or reset with confirmation" },
+      { label: "Data boundary", value: "Records persist only in the current browser and move through a versioned JSON backup" }
     ],
     asset: {
       kind: "mock",
       src: "/projects/tracker-product-mock.svg",
       alt: "Product mock for the Practice Tracker showing goals, check-ins, streaks, and review modules",
       caption:
-        "Product mock: it shows the intended tracker interface without claiming accounts or persisted user data."
+        "Product mock: it explains the Tracker structure. The live page persists to localStorage without accounts or cloud sync."
     },
     architecture:
-      "The current route is a static product prototype that stabilizes rules, feedback, and page hierarchy first. A real version would split user, habit, check-in, and statistics data models.",
+      "The interactive client stores a versioned v1 schema in localStorage. Imports are bounded and validate fields, dates, duplicates, and counts; the server never stores habit records.",
     tradeoffs: [
-      "Starting with rule communication validates the product story faster than building an account system.",
-      "Static deployment stays simple, but streaks and reviews remain a design preview until data is persisted.",
-      "Incentive rules stay lightweight until real behavior data exists."
+      "Skipping accounts and a database keeps use and deployment light, but removes automatic cross-device sync.",
+      "localStorage provides real persistence at zero server cost, but users must export before clearing browser data.",
+      "Statistics stay focused on seven-day completion and active streaks so the rules remain explainable and portable."
     ],
-    roadmap: ["Define user and habit data models", "Add daily check-in and streak logic", "Add weekly reviews and privacy boundaries"],
-    limitations: ["Currently a public prototype", "No persisted user data yet"],
-    nextSteps: ["Add a real data model", "Design account and privacy boundaries", "Add weekly review views"],
+    roadmap: ["Add a monthly review", "Offer CSV export", "Evaluate the cost and privacy boundary of optional encrypted sync"],
+    limitations: ["Data stays in the current browser", "No account, reminders, or cloud sync", "Users must protect their own backup files"],
+    nextSteps: ["Add a monthly review", "Support more portable formats", "Keep refining local-first privacy copy"],
     links: [{ label: "Open tracker", href: "/tracker" }]
   },
   knock: {

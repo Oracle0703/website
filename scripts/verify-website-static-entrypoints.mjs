@@ -302,6 +302,21 @@ async function main() {
     fail("rss.xml is missing the RSS 2.0 root or Atom self-discovery link");
   }
 
+  const searchIndex = await fetchPublicAsset("/search-index.json", /^application\/json/i);
+  if (searchIndex.headers.get("x-robots-tag") !== "noindex, nofollow") {
+    fail("search-index.json must opt out of search engine indexing");
+  }
+  const searchPayload = await searchIndex.json();
+  if (
+    searchPayload?.version !== 1 ||
+    !Array.isArray(searchPayload.entries) ||
+    searchPayload.entries.length === 0 ||
+    !searchPayload.entries.some((entry) => entry?.locale === "zh") ||
+    !searchPayload.entries.some((entry) => entry?.locale === "en")
+  ) {
+    fail("search-index.json is missing a valid bilingual v1 index");
+  }
+
   await verifySecurityHeaders();
 
   await verifyScriptBundles(scriptSources);

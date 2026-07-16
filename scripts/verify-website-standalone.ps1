@@ -85,6 +85,18 @@ try {
     }
   }
 
+  $searchResponse = Invoke-WebRequest -Uri "$baseUrl/search-index.json" -UseBasicParsing -TimeoutSec 15
+  if ($searchResponse.StatusCode -ne 200) {
+    throw "Health request failed for /search-index.json with status $($searchResponse.StatusCode)."
+  }
+  if ([string]$searchResponse.Headers["X-Robots-Tag"] -ne "noindex, nofollow") {
+    throw "/search-index.json must return X-Robots-Tag: noindex, nofollow."
+  }
+  $searchPayload = $searchResponse.Content | ConvertFrom-Json
+  if ($searchPayload.version -ne 1 -or -not $searchPayload.entries -or $searchPayload.entries.Count -lt 1) {
+    throw "/search-index.json does not contain a valid v1 index."
+  }
+
   Write-Host "Standalone release verified at $baseUrl (commit $($manifest.shortSha))."
 }
 catch {

@@ -26,6 +26,8 @@ test('labs page avoids page-level locale cookie reads', () => {
   assert.match(clientSource, /<TimestampTool \/>/);
   assert.match(clientSource, /getHref\("\/labs\/query"\)/);
   assert.match(clientSource, /copy\.queryTitle/);
+  assert.match(clientSource, /getHref\("\/labs\/tools"\)/);
+  assert.match(clientSource, /copy\.toolsTitle/);
 });
 
 test('timestamp tool reads locale from client i18n context', () => {

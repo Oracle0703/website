@@ -155,7 +155,7 @@ test("browser verification covers D3 routes, console errors, preferences, and sc
   const publicRoutes = await importFresh("apps/website/lib/public-routes.mjs");
 
   assert.match(source, /PUBLIC_WEBSITE_LOCALE_ROUTES/);
-  assert.equal(publicRoutes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 20);
+  assert.equal(publicRoutes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 28);
   assert.doesNotMatch(source, /publicRouteNames/);
   assert.match(source, /getRouteName/);
 

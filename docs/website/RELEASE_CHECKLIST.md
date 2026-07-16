@@ -16,6 +16,7 @@
 | D9 AI Page Analysis API 改动 | 是 | 涉及 `/api/analyze`、AI 页面分析 schema、SSRF guard 或 Safe Mock API 前端调用时必须跑测试、英文审计、构建和 whitespace 检查 |
 | D10 AI Page Analysis Capture Harness 改动 | 是 | 涉及 DNS resolve、redirect guard、HTML size limit、auth/content capture 或 `/api/analyze` capture pipeline 时必须跑测试、英文审计、构建和 whitespace 检查 |
 | WeatherAPI 查询代理改动 | 是 | 涉及 `/api/query`、城市/天气/空气质量、缓存、并发、`WEATHERAPI_KEY` 或 attribution 时必须检查 server-only 密钥边界、构建、健康检查与 Nginx 日志 |
+| Local-first 功能改动 | 是 | 涉及搜索、Tracker、Blog engagement、Resume/Now 或 Developer toolbox 时按 `docs/website/LOCAL_FIRST_FEATURES.md` 检查静态/本地边界与可选第三方配置 |
 | 服务器部署操作 | 否 | 服务器上线、Nginx、NSSM、回滚流程见 `docs/website/GO_LIVE_CHECKLIST.md` |
 | D2 状态审计 | 参考 | D2 当前验收结论见 `docs/website/D2_ACCEPTANCE_REPORT.md` |
 | D4 英文内容审计 | 参考 | D4 当前验收结论见 `docs/website/D4_ACCEPTANCE_REPORT.md` |
@@ -50,6 +51,7 @@
 | 改动截图预期或视觉设计被确认接受 | `npm run verify:website-browser -- --update-snapshots` | 新截图基线符合预期，并在 review 中说明原因 |
 | 改动静态入口清单、sitemap、公开页面新增/删除 | `npm test` + `npm run verify:website-static` + `npm run verify:website-browser` | `PUBLIC_WEBSITE_ROUTES` 保持中文根路径，`PUBLIC_WEBSITE_LOCALE_ROUTES`、sitemap、HTML 验收和浏览器验收保持一致 |
 | 改动 RSS、`next.config.js` 安全头或反向代理响应头 | `npm test` + `npm run build:website` + `npm run verify:website-static` | `/rss.xml` 为合法 RSS 2.0；HSTS、nosniff、Referrer-Policy、Permissions-Policy 与 frame protection 在实际响应中存在 |
+| 改动搜索、Tracker、Blog engagement、Resume/Now 或 Developer toolbox | `npm test` + `npm run build:website` + `npm run verify:website-static` + `npm run verify:website-browser` | 搜索索引仍为静态且按需加载；Tracker 导入失败不覆盖数据；工具输入不离开浏览器；评论关闭时不加载 Giscus；中英文入口、键盘路径与 canonical 正常 |
 | 验证部署预览地址 | `NEXT_STATIC_VERIFY_BASE_URL=https://example.com npm run verify:website-static` | 远端公开入口返回 200，HTML 和静态脚本信号通过 |
 | 触及 dashboard-api | `npm test -w apps/dashboard-api` | API 工作区测试通过 |
 | 触及 knock | `npm run build:knock` | 只跑构建；完整 knock 测试可能受 `better-sqlite3` ABI 影响 |

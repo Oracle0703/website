@@ -7,6 +7,10 @@ import type { Locale, Messages } from "../../../lib/i18n";
 import { BlogCoverImage } from "../../../components/blog-cover-image";
 import { getLocalePath } from "../../../lib/locale-routing";
 import { getBlogTopicLabel } from "../../../lib/blog-topics";
+import { BlogEngagement } from "../../../components/blog-engagement";
+import { BlogReadingProgress } from "../../../components/blog-reading-progress";
+
+const ARTICLE_BODY_ID = "blog-article-body";
 
 type BlogDetailPost = Pick<
   BlogPost,
@@ -19,6 +23,7 @@ type BlogDetailPost = Pick<
   | "author"
   | "category"
   | "readingTime"
+  | "comments"
 >;
 
 type BlogDetailClientProps = {
@@ -68,9 +73,22 @@ export function BlogDetailClient({
 }: BlogDetailClientProps) {
   const getHref = (href: string) => getLocalePath(href, locale);
   const hasReadingRail = tocHeadings.length > 0 || Boolean(currentSeries);
+  const articlePath = getHref(`/blog/${encodeURIComponent(post.slug)}`);
+  const discussionConfig = {
+    repo: process.env.GISCUS_REPO ?? process.env.NEXT_PUBLIC_GISCUS_REPO ?? "",
+    repoId: process.env.GISCUS_REPO_ID ?? process.env.NEXT_PUBLIC_GISCUS_REPO_ID ?? "",
+    category: process.env.GISCUS_CATEGORY ?? process.env.NEXT_PUBLIC_GISCUS_CATEGORY ?? "",
+    categoryId:
+      process.env.GISCUS_CATEGORY_ID ?? process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID ?? ""
+  };
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-12 px-4 py-14 sm:px-6 md:space-y-16 md:py-20">
+      <BlogReadingProgress
+        key={articlePath}
+        targetId={ARTICLE_BODY_ID}
+        label={locale === "zh" ? "文章阅读进度" : "Article reading progress"}
+      />
       <header className="max-w-4xl space-y-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold text-muted">
           {post.category ? (
@@ -230,7 +248,7 @@ export function BlogDetailClient({
           </aside>
         ) : null}
 
-        <article className="min-w-0 border-y border-edge/70 py-8 sm:py-11 lg:order-1">
+        <article className="min-w-0 border-y border-edge/70 py-8 sm:py-11 lg:order-1" id={ARTICLE_BODY_ID}>
           {mdxError ? (
             <div className="rounded-xl border border-dashed border-edge p-6 text-lg leading-8 text-muted">
               {copy.invalidContent}
@@ -240,6 +258,15 @@ export function BlogDetailClient({
           )}
         </article>
       </div>
+
+      <BlogEngagement
+        key={articlePath}
+        locale={locale}
+        title={post.title}
+        pathname={articlePath}
+        commentsEnabled={Boolean(post.comments?.enabled)}
+        discussionConfig={discussionConfig}
+      />
 
       {previousPost || nextPost ? (
         <section className="section-plain pt-8">

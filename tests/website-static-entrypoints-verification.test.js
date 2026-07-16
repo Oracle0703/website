@@ -64,7 +64,7 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
   assert.match(source, /findAvailablePort/);
   assert.match(portSource, /EADDRINUSE/);
   assert.match(source, /serverProcess/);
-  assert.equal(publicRoutes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 20);
+  assert.equal(publicRoutes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 28);
 
   assert.match(source, /NEXT_STATIC_VERIFY_BASE_URL/);
   assert.match(source, /localStorage/);
@@ -83,6 +83,9 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
   assert.match(source, /og\.png/);
   assert.match(source, /rss\.xml/);
   assert.match(source, /application\\\/rss\\\+xml/);
+  assert.match(source, /search-index\.json/);
+  assert.match(source, /noindex, nofollow/);
+  assert.match(source, /valid bilingual v1 index/);
   assert.match(source, /verifySecurityHeaders/);
   assert.match(source, /strict-transport-security/);
   assert.match(source, /permissions-policy/);

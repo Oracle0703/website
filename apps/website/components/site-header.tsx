@@ -8,6 +8,7 @@ import { useTheme } from "./theme-provider";
 import { getShellMessages } from "../lib/i18n-shell";
 import { getLocalePath, isNavigationPathActive } from "../lib/locale-routing";
 import { TEXT_BASE_SECONDARY } from "../lib/typography";
+import { SiteSearch } from "./site-search";
 
 const MOBILE_MENU_ID = "site-mobile-menu";
 
@@ -69,12 +70,13 @@ export function SiteHeader() {
               );
             })}
           </nav>
-          <div className="hidden items-center gap-4 text-sm md:flex md:justify-self-end">
+          <div className="flex items-center gap-2 text-sm md:justify-self-end md:gap-4">
+            <SiteSearch />
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={themeAriaLabel}
-              className="cursor-pointer font-medium text-secondary transition hover:text-primary"
+              className="hidden cursor-pointer font-medium text-secondary transition hover:text-primary md:block"
             >
               {themeLabel}
             </button>
@@ -82,19 +84,17 @@ export function SiteHeader() {
               type="button"
               onClick={handleLocaleToggle}
               aria-label={toggleAriaLabel}
-              className="cursor-pointer font-medium text-secondary transition hover:text-primary"
+              className="hidden cursor-pointer font-medium text-secondary transition hover:text-primary md:block"
             >
               {toggleLabel}
             </button>
-          </div>
-          <div className="flex items-center md:hidden">
             <button
               type="button"
               aria-label={menuLabel}
               aria-expanded={menuOpen}
               aria-controls={MOBILE_MENU_ID}
               onClick={() => setMenuOpen((open) => !open)}
-              className="cursor-pointer rounded-full border border-edge bg-base/80 p-2 text-secondary transition hover:text-primary"
+              className="cursor-pointer rounded-full border border-edge bg-base/80 p-2 text-secondary transition hover:text-primary md:hidden"
             >
               <span className="sr-only">{menuLabel}</span>
               <svg viewBox="0 0 20 20" className="h-4 w-4" aria-hidden="true">

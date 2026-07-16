@@ -28,16 +28,20 @@ test("D3 locale routing exposes Chinese root paths and English /en paths", async
     "/en",
     "/en/blog",
     "/en/projects",
+    "/en/explore",
     "/en/labs",
     "/en/labs/query",
+    "/en/labs/tools",
     "/en/tracker",
+    "/en/resume",
+    "/en/now",
     "/en/about",
     "/en/contact",
     "/en/enter",
     "/en/ai-page-analysis"
   ]);
 
-  assert.equal(routes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 20);
+  assert.equal(routes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 28);
   assert.deepEqual(routes.PUBLIC_WEBSITE_LOCALE_ROUTES[0], {
     locale: "zh",
     path: "/",
@@ -89,9 +93,13 @@ test("English public entrypoints exist as static App Router pages", () => {
     "apps/website/app/en/page.tsx",
     "apps/website/app/en/blog/page.tsx",
     "apps/website/app/en/projects/page.tsx",
+    "apps/website/app/en/explore/page.tsx",
     "apps/website/app/en/labs/page.tsx",
     "apps/website/app/en/labs/query/page.tsx",
+    "apps/website/app/en/labs/tools/page.tsx",
     "apps/website/app/en/tracker/page.tsx",
+    "apps/website/app/en/resume/page.tsx",
+    "apps/website/app/en/now/page.tsx",
     "apps/website/app/en/about/page.tsx",
     "apps/website/app/en/contact/page.tsx",
     "apps/website/app/en/enter/page.tsx",

@@ -30,6 +30,8 @@ test("GitHub builds and verifies the release on Windows x64", () => {
   assert.match(source, /package-website-standalone\.ps1/);
   assert.match(source, /verify-website-standalone\.ps1/);
   assert.match(source, /actions\/upload-artifact@v4/);
+  assert.match(read("scripts/verify-website-standalone.ps1"), /search-index\.json/);
+  assert.match(read("scripts/verify-website-standalone.ps1"), /X-Robots-Tag/);
 });
 
 test("packager assembles static, public, content and Windows-native runtime files", () => {

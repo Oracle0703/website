@@ -47,6 +47,26 @@ export function SiteFooter() {
             ))}
           </div>
           <div className="flex flex-wrap gap-4 md:justify-end">
+            {messages.footer.links.map((item) =>
+              item.localized ? (
+                <Link
+                  key={item.href}
+                  href={getLocalePath(item.href, locale)}
+                  className="font-medium text-secondary transition-colors hover:text-accent"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  type={item.href.endsWith(".xml") ? "application/rss+xml" : undefined}
+                  className="font-medium text-secondary transition-colors hover:text-accent"
+                >
+                  {item.label}
+                </a>
+              )
+            )}
             {socialLinks.map((item) => (
               <a
                 key={item.href}

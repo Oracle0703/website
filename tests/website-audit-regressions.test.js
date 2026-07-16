@@ -80,6 +80,8 @@ test("GitHub CI uses the supported runtime and a portable public lockfile", () =
   assert.match(workflowSource, /run:\s*npm test/);
   assert.match(workflowSource, /run:\s*npm run build:website/);
   assert.match(workflowSource, /run:\s*npm run verify:website-static/);
+  assert.match(workflowSource, /playwright install --with-deps chromium/);
+  assert.match(workflowSource, /run:\s*npm run verify:website-browser/);
   assert.match(giteeCiSource, /node-version:\s*"22\.22\.0"/);
   assert.match(giteeCdSource, /node-version:\s*"22\.22\.0"/);
   assert.doesNotMatch(lockfileSource, /192\.168\.5\.16|http:\/\/[^"\s]+\.tgz/);

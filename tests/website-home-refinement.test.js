@@ -133,7 +133,7 @@ test('header and footer consume the focused navigation without exposing secondar
   const headerSource = read('apps/website/components/site-header.tsx');
   const footerSource = read('apps/website/components/site-footer.tsx');
   const i18nSource = read('apps/website/lib/i18n-shell.ts');
-  const expectedPrimaryHrefs = ['/projects', '/blog', '/about', '/contact'];
+  const expectedPrimaryHrefs = ['/projects', '/blog', '/explore', '/about', '/contact'];
 
   for (const locale of ['zh', 'en']) {
     assert.deepEqual(
