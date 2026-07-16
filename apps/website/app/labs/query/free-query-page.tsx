@@ -42,16 +42,16 @@ export function FreeQueryPage({ locale, copy }: FreeQueryPageProps) {
             </h2>
             <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{copy.apiDescription}</p>
           </div>
-          <div className="space-y-5">
+          <div className="min-w-0 space-y-5">
             <div>
               <p className="text-sm font-semibold text-primary">{copy.locationsEndpoint}</p>
-              <pre className="mt-2 overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
+              <pre className="mt-2 max-w-full overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
                 <code>{`GET /api/query/locations?q=Shanghai&lang=${locale}`}</code>
               </pre>
             </div>
             <div>
               <p className="text-sm font-semibold text-primary">{copy.weatherEndpoint}</p>
-              <pre className="mt-2 overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
+              <pre className="mt-2 max-w-full overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
                 <code>{`GET /api/query/weather?q=31.2304%2C121.4737&lang=${locale}&units=metric`}</code>
               </pre>
             </div>

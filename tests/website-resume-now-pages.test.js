@@ -67,6 +67,8 @@ test('capability resume is evidence-based and offers native browser printing', (
   assert.match(source, /\/projects\/\$\{encodeURIComponent\(project\.slug\)\}/);
   assert.match(source, /https:\/\/github\.com\/Oracle0703/);
   assert.match(source, /@media print/);
+  assert.match(source, /dangerouslySetInnerHTML/);
+  assert.doesNotMatch(source, /<style>\{/);
   assert.match(source, /@page \{ size: A4/);
   assert.match(source, /meaningful\.ink\/contact/);
   assert.match(source, /github\.com\/Oracle0703/);

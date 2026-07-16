@@ -76,7 +76,7 @@ const browserErrorsByPage = new WeakMap<Page, string[]>();
 const englishContentChecks = [
   {
     path: "/en",
-    heading: /Full-Stack Developer/,
+    heading: /Turning complex ideas into clear, useful products\./,
     text: /AI tools/
   },
   {

@@ -182,29 +182,33 @@ export function ResumePage({ locale }: ResumePageProps) {
         </section>
       </main>
 
-      <style>{`
-        @media print {
-          @page { size: A4; margin: 13mm; }
-          body { background: #fff !important; }
-          body:has(.resume-page) .min-h-screen > header,
-          body:has(.resume-page) .min-h-screen > footer,
-          body:has(.resume-page) .min-h-screen > .skip-link,
-          .resume-no-print { display: none !important; }
-          .resume-print-contact { display: block !important; }
-          .resume-page { max-width: none !important; padding: 0 !important; }
-          .resume-page, .resume-page * {
-            color: #171717 !important;
-            border-color: #c9c9c9 !important;
-            box-shadow: none !important;
-            text-shadow: none !important;
-          }
-          .resume-page .panel-surface,
-          .resume-page .brand-banner,
-          .resume-page [class*="bg-surface"] { background: transparent !important; }
-          .resume-page .resume-print-card { break-inside: avoid; page-break-inside: avoid; }
-          .resume-page a { text-decoration: none !important; }
-        }
-      `}</style>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @media print {
+              @page { size: A4; margin: 13mm; }
+              body { background: #fff !important; }
+              body:has(.resume-page) .min-h-screen > header,
+              body:has(.resume-page) .min-h-screen > footer,
+              body:has(.resume-page) .min-h-screen > .skip-link,
+              .resume-no-print { display: none !important; }
+              .resume-print-contact { display: block !important; }
+              .resume-page { max-width: none !important; padding: 0 !important; }
+              .resume-page, .resume-page * {
+                color: #171717 !important;
+                border-color: #c9c9c9 !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+              }
+              .resume-page .panel-surface,
+              .resume-page .brand-banner,
+              .resume-page [class*="bg-surface"] { background: transparent !important; }
+              .resume-page .resume-print-card { break-inside: avoid; page-break-inside: avoid; }
+              .resume-page a { text-decoration: none !important; }
+            }
+          `
+        }}
+      />
     </>
   );
 }
