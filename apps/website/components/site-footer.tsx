@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useI18n } from "./language-provider";
 import { getLocalePath } from "../lib/locale-routing";
+import { getShellMessages } from "../lib/i18n-shell";
 
 const socialLinks = [
   { href: "https://github.com/Oracle0703", label: "GitHub" }
 ];
 
 export function SiteFooter() {
-  const { locale, messages } = useI18n();
+  const { locale } = useI18n();
+  const messages = getShellMessages(locale);
 
   return (
     <footer className="border-t border-edge/70 bg-base/80">

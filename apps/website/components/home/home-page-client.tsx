@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { RevealSection } from "../reveal-section";
-import { useI18n } from "../language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
+import type { Locale, Messages } from "../../lib/i18n";
 import {
   EYEBROW_ACCENT,
   TEXT_BASE_SECONDARY,
@@ -40,18 +40,22 @@ type HomeProjectItem = {
 };
 
 type HomePageClientProps = {
+  locale: Locale;
+  copy: Messages["home"];
+  common: Messages["pages"]["common"];
+  projectStatusLabels: Messages["pages"]["projects"]["status"];
   latestBlogItems?: HomeLatestBlogItem[];
   featuredProjects?: HomeProjectItem[];
 };
 
 export function HomePageClient({
+  locale,
+  copy,
+  common,
+  projectStatusLabels,
   latestBlogItems = [],
   featuredProjects = []
 }: HomePageClientProps) {
-  const { locale, messages } = useI18n();
-  const copy = messages.home;
-  const common = messages.pages.common;
-  const projectStatusLabels = messages.pages.projects.status;
   const getHref = (href: string) => getLocalePath(href, locale);
   const flagshipProject = featuredProjects[0];
   const supportingProjects = featuredProjects.slice(1, 3);

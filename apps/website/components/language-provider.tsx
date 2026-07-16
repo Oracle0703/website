@@ -6,11 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   defaultLocale,
   getHtmlLang,
-  getMessages,
   LOCALE_COOKIE,
-  type Locale,
-  type Messages
-} from "../lib/i18n";
+  type Locale
+} from "../lib/i18n-core";
 import {
   getAlternateLocalePath,
   getLocalePath,
@@ -19,7 +17,6 @@ import {
 
 type I18nContextValue = {
   locale: Locale;
-  messages: Messages;
   setLocale: (locale: Locale) => void;
   toggleLocale: () => void;
 };
@@ -74,7 +71,6 @@ export const LanguageProvider = ({
   const value = useMemo<I18nContextValue>(
     () => ({
       locale,
-      messages: getMessages(locale),
       setLocale: updateLocale,
       toggleLocale
     }),

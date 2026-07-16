@@ -27,5 +27,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function EnterPage() {
-  return <EnterClient />;
+  const { enter, pages } = getMessages(defaultLocale);
+
+  return <EnterClient copy={enter} common={pages.common} />;
 }

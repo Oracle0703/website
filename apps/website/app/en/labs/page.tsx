@@ -31,5 +31,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function Page() {
-  return <LabsClient />;
+  const { pages } = getMessages(locale);
+
+  return <LabsClient locale={locale} copy={pages.labs} common={pages.common} />;
 }

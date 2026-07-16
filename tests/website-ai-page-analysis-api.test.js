@@ -181,6 +181,7 @@ test("D9 AI page analysis mock output keeps a stable actionable schema", async (
 
 test("D9 AI page analysis request gate rate limits high frequency clients", async () => {
   const {
+    ANALYSIS_GATE_MAX_IDENTITIES,
     checkAnalysisRequestGate,
     createAnalysisRequestGate
   } = await importFresh("apps/website/lib/ai-page-analysis.ts");
@@ -198,6 +199,24 @@ test("D9 AI page analysis request gate rate limits high frequency clients", asyn
 
   const later = checkAnalysisRequestGate(gate, { identityKey: "client-a", now: now + 16 * 60 * 1000 });
   assert.equal(later.ok, true);
+  assert.equal(gate.attemptsByIdentity.size, 1);
+
+  const capacityGate = createAnalysisRequestGate();
+  for (let index = 0; index < ANALYSIS_GATE_MAX_IDENTITIES; index += 1) {
+    capacityGate.attemptsByIdentity.set(`client-${index}`, [now]);
+  }
+  capacityGate.lastCleanupAt = now;
+
+  assert.equal(
+    checkAnalysisRequestGate(capacityGate, {
+      identityKey: "new-client",
+      now: now + 1
+    }).ok,
+    true
+  );
+  assert.equal(capacityGate.attemptsByIdentity.size, ANALYSIS_GATE_MAX_IDENTITIES);
+  assert.equal(capacityGate.attemptsByIdentity.has("client-0"), false);
+  assert.equal(capacityGate.attemptsByIdentity.has("new-client"), true);
 });
 
 test("D9 AI page analysis API routes, frontend, and docs are wired", () => {

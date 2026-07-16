@@ -17,12 +17,12 @@ test('labs page avoids page-level locale cookie reads', () => {
   assert.doesNotMatch(pageSource, /getLocale\(/);
   assert.match(pageSource, /defaultLocale/);
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
-  assert.match(pageSource, /<LabsClient \/>/);
+  assert.match(pageSource, /<LabsClient locale=\{defaultLocale\} copy=\{pages\.labs\} common=\{pages\.common\} \/>/);
 
   assert.match(clientSource, /"use client"/);
-  assert.match(clientSource, /useI18n/);
-  assert.match(clientSource, /messages\.pages\.labs/);
-  assert.match(clientSource, /messages\.pages\.common/);
+  assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
+  assert.match(clientSource, /copy: Messages\["pages"\]\["labs"\]/);
+  assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
   assert.match(clientSource, /<TimestampTool \/>/);
 });
 

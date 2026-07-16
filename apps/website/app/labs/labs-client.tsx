@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useI18n } from "../../components/language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
+import type { Locale, Messages } from "../../lib/i18n";
 import { TEXT_SM_MUTED, TITLE_2XL } from "../../lib/typography";
 import { TimestampTool } from "./timestamp-tool";
 
-export function LabsClient() {
-  const { locale, messages } = useI18n();
-  const copy = messages.pages.labs;
-  const common = messages.pages.common;
+type LabsClientProps = {
+  locale: Locale;
+  copy: Messages["pages"]["labs"];
+  common: Messages["pages"]["common"];
+};
+
+export function LabsClient({ locale, copy, common }: LabsClientProps) {
   const getHref = (href: string) => getLocalePath(href, locale);
 
   return (

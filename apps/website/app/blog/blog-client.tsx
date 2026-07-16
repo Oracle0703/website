@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useI18n } from "../../components/language-provider";
+import type { Locale, Messages } from "../../lib/i18n";
 import {
   BlogListView,
   type BlogListPost,
@@ -13,6 +13,9 @@ export type { BlogListPost, BlogListSeries } from "./blog-list-view";
 type BlogClientProps = {
   posts: BlogListPost[];
   series: BlogListSeries[];
+  locale: Locale;
+  copy: Messages["pages"]["blog"];
+  common: Messages["pages"]["common"];
 };
 
 function normalizeTopicParam(topic: string | null) {
@@ -21,9 +24,8 @@ function normalizeTopicParam(topic: string | null) {
   return topic.trim();
 }
 
-export function BlogClient({ posts, series }: BlogClientProps) {
+export function BlogClient({ posts, series, locale, copy, common }: BlogClientProps) {
   const searchParams = useSearchParams();
-  const { locale, messages } = useI18n();
   const selectedTopic = normalizeTopicParam(searchParams.get("topic"));
 
   return (
@@ -31,8 +33,8 @@ export function BlogClient({ posts, series }: BlogClientProps) {
       posts={posts}
       series={series}
       locale={locale}
-      copy={messages.pages.blog}
-      common={messages.pages.common}
+      copy={copy}
+      common={common}
       selectedTopic={selectedTopic}
     />
   );

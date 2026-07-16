@@ -1,4 +1,4 @@
-import { defaultLocale, isLocale, type Locale } from "./i18n";
+import { defaultLocale, isLocale, type Locale } from "./i18n-core";
 
 const EN_PREFIX = "/en";
 

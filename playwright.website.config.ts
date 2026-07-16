@@ -19,6 +19,8 @@ export default defineConfig({
   snapshotPathTemplate: "tests/__screenshots__/{testFilePath}/{projectName}/{arg}{ext}",
   use: {
     baseURL: verifyBaseUrl,
+    actionTimeout: 10_000,
+    reducedMotion: "reduce",
     trace: "retain-on-failure",
     screenshot: "only-on-failure"
   },

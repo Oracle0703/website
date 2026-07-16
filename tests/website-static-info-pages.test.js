@@ -19,11 +19,13 @@ test('about and contact pages avoid page-level server cookie reads', () => {
     assert.match(pageSource, /defaultLocale/);
     assert.match(pageSource, /getMessages\(defaultLocale\)/);
     assert.match(pageSource, new RegExp(`${route[0].toUpperCase()}${route.slice(1)}Client`));
+    assert.match(pageSource, new RegExp(`copy=\\{pages\\.${route}\\}`));
+    assert.match(pageSource, /common=\{pages\.common\}/);
 
     assert.match(clientSource, /"use client"/);
-    assert.match(clientSource, /useI18n/);
-    assert.match(clientSource, new RegExp(`messages\\.pages\\.${route}`));
-    assert.match(clientSource, /messages\.pages\.common/);
+    assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
+    assert.match(clientSource, new RegExp(`copy: Messages\\["pages"\\]\\["${route}"\\]`));
+    assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
   }
 });
 

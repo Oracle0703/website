@@ -44,7 +44,7 @@ test('website projects system has the planned files and first project set', () =
 });
 
 test('website projects routes are discoverable from navigation and sitemap', () => {
-  const i18nSource = read('apps/website/lib/i18n.ts');
+  const i18nSource = read('apps/website/lib/i18n-shell.ts');
   assert.match(i18nSource, /\{\s*href:\s*"\/projects",\s*label:\s*"作品"\s*\}/);
   assert.match(i18nSource, /\{\s*href:\s*"\/projects",\s*label:\s*"Work"\s*\}/);
 

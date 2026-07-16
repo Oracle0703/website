@@ -4,13 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { useI18n } from "./language-provider";
 import { useTheme } from "./theme-provider";
+import { getShellMessages } from "../lib/i18n-shell";
 import { getLocalePath } from "../lib/locale-routing";
 import {
   TEXT_BASE_SECONDARY
 } from "../lib/typography";
 
 export function SiteHeader() {
-  const { locale, messages, toggleLocale } = useI18n();
+  const { locale, toggleLocale } = useI18n();
+  const messages = getShellMessages(locale);
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleLabel = locale === "zh" ? "EN" : "中文";
@@ -134,4 +136,3 @@ export function SiteHeader() {
     </header>
   );
 }
-

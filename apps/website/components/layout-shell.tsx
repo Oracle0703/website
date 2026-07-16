@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { LanguageProvider } from "./language-provider";
-import type { Locale } from "../lib/i18n";
+import type { Locale } from "../lib/i18n-core";
 import { ThemeProvider } from "./theme-provider";
 import type { Theme } from "../lib/theme";
 

@@ -19,11 +19,13 @@ test('home page avoids page-level locale cookie reads', () => {
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
   assert.match(pageSource, /getJsonLdLanguage\(defaultLocale\)/);
   assert.match(pageSource, /<HomePageClient/);
+  assert.match(pageSource, /locale=\{defaultLocale\}/);
+  assert.match(pageSource, /copy=\{home\}/);
 
   assert.match(clientSource, /"use client"/);
-  assert.match(clientSource, /useI18n/);
-  assert.match(clientSource, /messages\.home/);
-  assert.match(clientSource, /messages\.pages\.projects\.status/);
+  assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
+  assert.match(clientSource, /copy: Messages\["home"\]/);
+  assert.match(clientSource, /projectStatusLabels: Messages\["pages"\]\["projects"\]\["status"\]/);
 });
 
 test('home server passes project status keys instead of localized labels', () => {

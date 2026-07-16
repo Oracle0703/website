@@ -31,5 +31,7 @@ export const generateMetadata = (): Metadata => {
 };
 
 export default function Page() {
-  return <ContactClient />;
+  const { pages } = getMessages(locale);
+
+  return <ContactClient locale={locale} copy={pages.contact} common={pages.common} />;
 }
