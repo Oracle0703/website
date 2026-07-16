@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { TEXT_XS_SECONDARY } from "../lib/typography";
 
 type AnnouncementTickerProps = {
@@ -7,14 +8,19 @@ type AnnouncementTickerProps = {
   label: string;
   kicker: string;
   emptyMessage: string;
+  pauseLabel: string;
+  resumeLabel: string;
 };
 
 export function AnnouncementTicker({
   items,
   label,
   kicker,
-  emptyMessage
+  emptyMessage,
+  pauseLabel,
+  resumeLabel
 }: AnnouncementTickerProps) {
+  const [isPaused, setIsPaused] = useState(false);
   const announcements = items.length > 0 ? items : [emptyMessage];
 
   return (
@@ -24,7 +30,7 @@ export function AnnouncementTicker({
           {kicker}
         </span>
         <div className="ticker" aria-label={label}>
-          <div className="ticker-track">
+          <div className={`ticker-track ${isPaused ? "ticker-track-paused" : ""}`}>
             <ul className="ticker-group">
               {announcements.map((item, index) => (
                 <li key={`${item}-${index}`} className="flex items-center gap-2">
@@ -43,6 +49,14 @@ export function AnnouncementTicker({
             </ul>
           </div>
         </div>
+        <button
+          type="button"
+          aria-pressed={isPaused}
+          onClick={() => setIsPaused((current) => !current)}
+          className="shrink-0 rounded-full border border-edge px-2.5 py-1 text-[11px] font-semibold text-secondary transition hover:border-edge-strong hover:text-primary sm:text-xs"
+        >
+          {isPaused ? resumeLabel : pauseLabel}
+        </button>
       </div>
     </div>
   );

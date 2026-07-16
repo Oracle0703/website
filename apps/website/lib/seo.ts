@@ -27,7 +27,10 @@ export function getLanguageAlternates(
 
   return {
     canonical: toAbsoluteUrl(basePath),
-    languages
+    languages,
+    types: {
+      "application/rss+xml": toAbsoluteUrl("/rss.xml")
+    }
   };
 }
 

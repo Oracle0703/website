@@ -29,6 +29,8 @@ type TrackerContent = {
     label: string;
     kicker: string;
     emptyMessage: string;
+    pauseLabel: string;
+    resumeLabel: string;
   };
   panel: {
     eyebrow: string;
@@ -82,7 +84,9 @@ const trackerContent: Record<Locale, TrackerContent> = {
     ticker: {
       label: "修行公告",
       kicker: "天机",
-      emptyMessage: "暂无最新动态"
+      emptyMessage: "暂无最新动态",
+      pauseLabel: "暂停滚动",
+      resumeLabel: "继续滚动"
     },
     panel: {
       eyebrow: "今日修行",
@@ -221,7 +225,9 @@ const trackerContent: Record<Locale, TrackerContent> = {
     ticker: {
       label: "Practice announcements",
       kicker: "Updates",
-      emptyMessage: "No recent updates"
+      emptyMessage: "No recent updates",
+      pauseLabel: "Pause",
+      resumeLabel: "Resume"
     },
     panel: {
       eyebrow: "Daily Practice",
@@ -421,6 +427,8 @@ export function TrackerClient() {
           label={content.ticker.label}
           kicker={content.ticker.kicker}
           emptyMessage={content.ticker.emptyMessage}
+          pauseLabel={content.ticker.pauseLabel}
+          resumeLabel={content.ticker.resumeLabel}
         />
       </section>
 

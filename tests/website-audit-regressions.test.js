@@ -72,11 +72,15 @@ test("P1 article alternates and sitemap respect locale and indexability boundari
 
 test("GitHub CI uses the supported runtime and a portable public lockfile", () => {
   const workflowSource = read(".github/workflows/website-ci.yml");
+  const giteeCiSource = read(".gitee/workflows/website-ci.yml");
+  const giteeCdSource = read(".gitee/workflows/website-cd.yml");
   const lockfileSource = read("package-lock.json");
 
   assert.match(workflowSource, /node-version:\s*22\.22\.0/);
   assert.match(workflowSource, /run:\s*npm test/);
   assert.match(workflowSource, /run:\s*npm run build:website/);
   assert.match(workflowSource, /run:\s*npm run verify:website-static/);
+  assert.match(giteeCiSource, /node-version:\s*"22\.22\.0"/);
+  assert.match(giteeCdSource, /node-version:\s*"22\.22\.0"/);
   assert.doesNotMatch(lockfileSource, /192\.168\.5\.16|http:\/\/[^"\s]+\.tgz/);
 });

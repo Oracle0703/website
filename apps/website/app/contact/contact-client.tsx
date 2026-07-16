@@ -127,9 +127,6 @@ export function ContactClient() {
           </Link>
         </div>
         <div className={`mt-6 flex flex-wrap items-center gap-5 ${TEXT_SM_MUTED}`}>
-          <Link href={getHref("/enter")} className="link-accent font-medium">
-            {common.backToEnter}
-          </Link>
           <Link href={getHref("/")} className="link-muted font-medium">
             {common.backToHome}
           </Link>
@@ -163,29 +160,16 @@ export function ContactClient() {
       </section>
 
       <section className="panel-surface p-5 sm:p-6">
-        <p className="section-kicker">{copy.contactPathTitle}</p>
+        <p className="section-kicker">{copy.contactPathEyebrow}</p>
         <h2 className={`mt-2 ${TITLE_BASE}`}>{copy.contactPathTitle}</h2>
         <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{copy.contactPathDescription}</p>
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <article className="evidence-card">
-            <p className="text-sm font-semibold text-primary">{copy.contactDecisionTitle}</p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-accent">
-              {copy.contactDecisionStatus}
-            </p>
-            <p className={`mt-2 ${TEXT_SM_MUTED} leading-6`}>{copy.contactDecisionDescription}</p>
-          </article>
-          <article className="evidence-card">
-            <p className="text-sm font-semibold text-primary">{copy.formSpecTitle}</p>
-            <p className={`mt-2 ${TEXT_SM_MUTED} leading-6`}>{copy.formSpecAction}</p>
-          </article>
-        </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {copy.contactChannels.map((channel) => (
             <Link
               key={channel.href}
               href={channel.href.startsWith("http") ? channel.href : getHref(channel.href)}
               target={channel.href.startsWith("http") ? "_blank" : undefined}
-              rel={channel.href.startsWith("http") ? "noreferrer" : undefined}
+              rel={channel.href.startsWith("http") ? "noopener noreferrer" : undefined}
               className="evidence-card card-interactive flex h-full flex-col"
             >
               <span className="text-sm font-semibold text-accent">{channel.label}</span>

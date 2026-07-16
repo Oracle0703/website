@@ -52,7 +52,7 @@ function mapPostForList(post: BlogPost): BlogListPost {
     updatedAt: post.updatedAt,
     summary: post.summary,
     cover: getCover(post),
-    tags: post.tags,
+    category: post.category,
     readingTime: post.readingTime
   };
 }

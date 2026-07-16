@@ -15,16 +15,16 @@ type BlogClientProps = {
   series: BlogListSeries[];
 };
 
-function normalizeTagParam(tag: string | null) {
-  if (!tag) return "";
+function normalizeTopicParam(topic: string | null) {
+  if (!topic) return "";
 
-  return tag.trim();
+  return topic.trim();
 }
 
 export function BlogClient({ posts, series }: BlogClientProps) {
   const searchParams = useSearchParams();
   const { locale, messages } = useI18n();
-  const selectedTag = normalizeTagParam(searchParams.get("tag"));
+  const selectedTopic = normalizeTopicParam(searchParams.get("topic"));
 
   return (
     <BlogListView
@@ -33,7 +33,7 @@ export function BlogClient({ posts, series }: BlogClientProps) {
       locale={locale}
       copy={messages.pages.blog}
       common={messages.pages.common}
-      selectedTag={selectedTag}
+      selectedTopic={selectedTopic}
     />
   );
 }

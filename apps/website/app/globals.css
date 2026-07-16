@@ -56,6 +56,43 @@ a {
   @apply transition-colors duration-200;
 }
 
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid rgb(var(--ui-accent-strong-rgb) / 1);
+  outline-offset: 3px;
+}
+
+#main-content {
+  scroll-margin-top: 1rem;
+}
+
+#main-content:focus {
+  outline: none;
+}
+
+.skip-link {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  max-width: calc(100vw - 2rem);
+  transform: translateY(calc(-100% - 2rem));
+  border-radius: 0.5rem;
+  background: rgb(var(--ui-text-primary-rgb) / 1);
+  color: rgb(var(--ui-base-rgb) / 1);
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.24);
+  transition: transform 150ms ease-out;
+}
+
+.skip-link:visited {
+  color: rgb(var(--ui-base-rgb) / 1);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 ::selection {
   background: rgb(var(--ui-accent-rgb) / 0.28);
   color: rgb(var(--ui-text-primary-rgb) / 1);
@@ -178,6 +215,10 @@ a {
   animation: ticker-scroll 22s linear infinite;
 }
 
+.ticker-track-paused {
+  animation-play-state: paused;
+}
+
 .ticker-group {
   display: flex;
   gap: 24px;
@@ -196,6 +237,10 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
+
   .ticker-track {
     animation: none;
     transform: none;

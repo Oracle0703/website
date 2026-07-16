@@ -61,6 +61,39 @@ async function fetchPublicAsset(pathname, contentTypePattern) {
   return response;
 }
 
+async function verifySecurityHeaders(pathname = "/") {
+  const response = await fetch(new URL(pathname, baseUrl), {
+    headers: {
+      "user-agent": "website-static-entrypoint-verifier"
+    }
+  });
+
+  if (!response.ok) {
+    fail(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const exactHeaders = new Map([
+    ["strict-transport-security", "max-age=31536000; includeSubDomains"],
+    ["x-content-type-options", "nosniff"],
+    ["referrer-policy", "strict-origin-when-cross-origin"],
+    ["x-frame-options", "DENY"]
+  ]);
+
+  for (const [name, expected] of exactHeaders) {
+    const actual = response.headers.get(name);
+    if (actual !== expected) {
+      fail(`${pathname} ${name} is ${actual ?? "<missing>"}; expected ${expected}`);
+    }
+  }
+
+  const permissionsPolicy = response.headers.get("permissions-policy") ?? "";
+  for (const directive of ["camera=()", "microphone=()", "geolocation=()"]) {
+    if (!permissionsPolicy.includes(directive)) {
+      fail(`${pathname} permissions-policy is missing ${directive}`);
+    }
+  }
+}
+
 async function waitForServer() {
   const deadline = Date.now() + 30_000;
   let lastError;
@@ -262,6 +295,14 @@ async function main() {
   if (Number(socialImage.headers.get("content-length") ?? 0) < 10_000) {
     fail("og.png is unexpectedly small; verify that the branded image replaced the flat placeholder");
   }
+
+  const rss = await fetchPublicAsset("/rss.xml", /^application\/rss\+xml/i);
+  const rssText = await rss.text();
+  if (!rssText.includes("<rss version=\"2.0\"") || !rssText.includes("<atom:link")) {
+    fail("rss.xml is missing the RSS 2.0 root or Atom self-discovery link");
+  }
+
+  await verifySecurityHeaders();
 
   await verifyScriptBundles(scriptSources);
 

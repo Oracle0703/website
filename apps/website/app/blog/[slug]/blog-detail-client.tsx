@@ -8,6 +8,7 @@ import type { TocHeading } from "../../../lib/blog-headings";
 import { BlogCoverImage } from "../../../components/blog-cover-image";
 import { useI18n } from "../../../components/language-provider";
 import { getLocalePath } from "../../../lib/locale-routing";
+import { getBlogTopicLabel } from "../../../lib/blog-topics";
 import { TITLE_2XL } from "../../../lib/typography";
 
 type BlogDetailPost = Pick<
@@ -19,7 +20,7 @@ type BlogDetailPost = Pick<
   | "summary"
   | "cover"
   | "author"
-  | "tags"
+  | "category"
   | "readingTime"
 >;
 
@@ -81,14 +82,12 @@ export function BlogDetailClient({
         <p className="max-w-3xl text-lg leading-8 text-secondary">{post.summary}</p>
         <div className="flex flex-wrap items-center gap-3 text-base text-secondary">
           <span className="text-muted">{post.author}</span>
-          {post.tags && post.tags.length > 0 && (
+          {post.category && (
             <div className="flex flex-wrap gap-2">
-              <span className="text-muted">{copy.tagsLabel}:</span>
-              {post.tags.map((tag) => (
-                <span key={tag} className="rounded-full border border-edge-strong px-3 py-1">
-                  {tag}
-                </span>
-              ))}
+              <span className="text-muted">{copy.topicLabel}:</span>
+              <span className="rounded-full border border-edge-strong px-3 py-1">
+                {getBlogTopicLabel(post.category, locale)}
+              </span>
             </div>
           )}
         </div>

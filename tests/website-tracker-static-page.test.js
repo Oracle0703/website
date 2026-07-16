@@ -31,6 +31,9 @@ test('tracker page avoids page-level locale cookie reads', () => {
   assert.match(clientSource, /Concept prototype · Mock data/);
   assert.match(clientSource, /content\.prototypeNotice\.description/);
   assert.match(clientSource, /label=\{content\.ticker\.label\}/);
+  assert.match(clientSource, /pauseLabel=\{content\.ticker\.pauseLabel\}/);
+  assert.match(clientSource, /resumeLabel=\{content\.ticker\.resumeLabel\}/);
+  assert.match(read("apps/website/components/announcement-ticker.tsx"), /aria-pressed=\{isPaused\}/);
   assert.match(clientSource, /getLocalePath\("\/enter", locale\)/);
   assert.match(clientSource, /getLocalePath\("\/", locale\)/);
 });
