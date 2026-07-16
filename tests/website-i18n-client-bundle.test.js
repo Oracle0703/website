@@ -40,6 +40,7 @@ test("page clients receive locale-specific copy through typed static props", () 
     "apps/website/app/projects/projects-client.tsx",
     "apps/website/app/projects/[slug]/project-detail-client.tsx",
     "apps/website/app/labs/labs-client.tsx",
+    "apps/website/app/labs/query/free-query-client.tsx",
     "apps/website/app/tracker/tracker-client.tsx"
   ];
 
@@ -58,6 +59,7 @@ test("both static locale trees inject their own copy without request-time locale
     ["apps/website/app/blog/page.tsx", "apps/website/app/en/blog/page.tsx"],
     ["apps/website/app/projects/page.tsx", "apps/website/app/en/projects/page.tsx"],
     ["apps/website/app/labs/page.tsx", "apps/website/app/en/labs/page.tsx"],
+    ["apps/website/app/labs/query/page.tsx", "apps/website/app/en/labs/query/page.tsx"],
     ["apps/website/app/tracker/page.tsx", "apps/website/app/en/tracker/page.tsx"]
   ];
 

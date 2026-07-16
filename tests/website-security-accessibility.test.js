@@ -50,6 +50,7 @@ test("all public page surfaces retain one main landmark", () => {
     "apps/website/app/projects/projects-client.tsx",
     "apps/website/app/projects/[slug]/project-detail-client.tsx",
     "apps/website/app/labs/labs-client.tsx",
+    "apps/website/app/labs/query/free-query-page.tsx",
     "apps/website/app/tracker/tracker-client.tsx",
     "apps/website/app/about/about-client.tsx",
     "apps/website/app/contact/contact-client.tsx",

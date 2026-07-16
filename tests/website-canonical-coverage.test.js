@@ -10,6 +10,7 @@ const publicRoutes = [
   ['/blog', 'apps/website/app/blog/page.tsx'],
   ['/projects', 'apps/website/app/projects/page.tsx'],
   ['/labs', 'apps/website/app/labs/page.tsx'],
+  ['/labs/query', 'apps/website/app/labs/query/page.tsx'],
   ['/tracker', 'apps/website/app/tracker/page.tsx'],
   ['/about', 'apps/website/app/about/page.tsx'],
   ['/contact', 'apps/website/app/contact/page.tsx'],

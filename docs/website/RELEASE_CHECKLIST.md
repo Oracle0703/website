@@ -1,5 +1,7 @@
 # Website Release Checklist
 
+> **生产流程与端口不可混用：当前预构建 standalone + 宝塔流程使用 `127.0.0.1:3001`；旧源码构建 + NSSM 流程使用 `127.0.0.1:3000`。一次发布的启动命令、部署脚本、健康检查和 Nginx `proxy_pass` 必须全部采用所选流程的同一端口。**
+
 ## 1. 使用范围
 
 | 场景 | 是否适用 | 说明 |
@@ -13,6 +15,7 @@
 | D8 Contact Operations 改动 | 是 | 涉及 Contact JSONL retention cleanup、存储目录护栏或运维脚本时必须跑测试、`contact:ops` dry run、构建和 whitespace 检查 |
 | D9 AI Page Analysis API 改动 | 是 | 涉及 `/api/analyze`、AI 页面分析 schema、SSRF guard 或 Safe Mock API 前端调用时必须跑测试、英文审计、构建和 whitespace 检查 |
 | D10 AI Page Analysis Capture Harness 改动 | 是 | 涉及 DNS resolve、redirect guard、HTML size limit、auth/content capture 或 `/api/analyze` capture pipeline 时必须跑测试、英文审计、构建和 whitespace 检查 |
+| WeatherAPI 查询代理改动 | 是 | 涉及 `/api/query`、城市/天气/空气质量、缓存、并发、`WEATHERAPI_KEY` 或 attribution 时必须检查 server-only 密钥边界、构建、健康检查与 Nginx 日志 |
 | 服务器部署操作 | 否 | 服务器上线、Nginx、NSSM、回滚流程见 `docs/website/GO_LIVE_CHECKLIST.md` |
 | D2 状态审计 | 参考 | D2 当前验收结论见 `docs/website/D2_ACCEPTANCE_REPORT.md` |
 | D4 英文内容审计 | 参考 | D4 当前验收结论见 `docs/website/D4_ACCEPTANCE_REPORT.md` |
@@ -42,6 +45,7 @@
 | 改动 D8 Contact Operations、retention cleanup 或 storage guard | `npm test` + `npm run contact:ops -- --check-storage` + `npm run contact:ops -- --cleanup --dry-run` + `npm run build:website` + `git diff --check` | `unsafe_storage_directory` 护栏有效；cleanup dry run 不改文件；malformed JSONL 行保留；默认 retention 为 90 天 |
 | 改动 D9 AI Page Analysis API、SSRF guard、mock output schema 或前端 API 调用链 | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | `/api/analyze` 只接受 URL mode；localhost、内网和 cloud metadata 被拒绝；Safe Mock API 不抓取真实网页、不调用模型、不保存历史 |
 | 改动 D10 AI Page Analysis capture、DNS resolver、redirect guard、size limit 或 content extraction | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | DNS 解析后复检 SSRF；redirect 每跳复检；2 MB 上限生效；登录页、内容不足、超时和不可达错误码稳定 |
+| 改动 `/api/query`、WeatherAPI client、查询缓存/限流或 attribution | `npm test` + `npm run build:website` + `npm run verify:website-static` + `git diff --check` | 测试使用 mock，不要求真实 key；`WEATHERAPI_KEY` 仅服务端读取且不得进入响应或应用日志；healthz 不请求第三方；current/forecast 缓存不超过 60 分钟/24 小时；Free attribution/免责声明可见；Nginx 专用 access log 与其他日志源分别验收 |
 | 改动 AI 页面分析 V1 后端规格或计划接入真实模型 | `npm test` + `npm run audit:website-english-content` | `AI_PAGE_ANALYSIS_V1_TECH_SPEC.md` 覆盖 SSRF、内网、cloud metadata、input schema、output schema、错误码和 D6 非实现边界 |
 | 改动截图预期或视觉设计被确认接受 | `npm run verify:website-browser -- --update-snapshots` | 新截图基线符合预期，并在 review 中说明原因 |
 | 改动静态入口清单、sitemap、公开页面新增/删除 | `npm test` + `npm run verify:website-static` + `npm run verify:website-browser` | `PUBLIC_WEBSITE_ROUTES` 保持中文根路径，`PUBLIC_WEBSITE_LOCALE_ROUTES`、sitemap、HTML 验收和浏览器验收保持一致 |
@@ -75,6 +79,7 @@
 | `verify:website-static` 失败 | 公开入口 200、`<html lang>`、`data-theme`、`localStorage` boot script、hydration warning 签名 |
 | `verify:website-browser` 失败 | 浏览器 console、pageerror、偏好恢复 DOM、截图差异 |
 | 截图基线失败 | 先判断是否真实视觉回退；只有确认设计变化合理时才更新截图基线 |
+| `/api/query/healthz` 未就绪 | 确认 `WEATHERAPI_KEY` 设置在实际运行的宝塔/NSSM 进程环境，完整重启进程；healthz 不应通过联网请求验证 key |
 
 ## 6. 截图基线规则
 
@@ -86,7 +91,30 @@
 | 移动端和桌面端一起看 | `verify:website-browser` 覆盖 `website-mobile` 和 `website-desktop` |
 | 不用截图替代静态验收 | 截图只覆盖视觉和浏览器行为，HTML/静态脚本信号仍由 `verify:website-static` 覆盖 |
 
-## 7. 最小发布判断
+## 7. WeatherAPI.com Free 发布边界
+
+| 判断项 | 要求 |
+|---|---|
+| Free key | 查询功能首次上线前在 WeatherAPI.com 注册；PR、CI、评审和构建过程不要求用户提供真实 key |
+| 环境变量 | 真实值只设置为服务器进程的 `WEATHERAPI_KEY`；禁止提交到 Git、写进 `.env*`/Artifact/Nginx/URL，禁止使用 `NEXT_PUBLIC_WEATHERAPI_KEY` |
+| 示例文件 | `apps/website/.env.example` 只保留空的 `WEATHERAPI_KEY=` 和 server-only 说明，不填真实值 |
+| 进程重启 | 新增或轮换 key 后完整重启宝塔/NSSM Node 进程，再检查 `http://127.0.0.1:<port>/api/query/healthz` |
+| 健康语义 | `/api/query/healthz` 只检查本地路由/配置就绪，不请求 WeatherAPI.com、不返回 key；第三方故障不得触发整站重启循环 |
+| Free 配额与缓存 | 每月调用不超过 100,000；current 缓存不超过 60 分钟，forecast 缓存不超过 24 小时 |
+| 应用保护 | 每 IP：locations 20/分钟、weather 10/分钟；上游并发 4、队列 16；cache miss 预算 60/分钟、500/小时、2,500/UTC 日、75,000/UTC 月；进程内预算重启会清零，不能代替供应商控制台监控 |
+| 进程模型 | 小机器只运行一个 Node 实例，不启用 cluster/PM2 多实例/多副本；横向扩容前必须把限流和配额迁移到持久、原子、共享 authority |
+| Attribution | 公网页面显示 WeatherAPI.com attribution 和 Free 方案要求的免责声明 |
+| Nginx 配置层级 | 从宝塔全局 Nginx 主配置入口编辑顶层 `http {}`；`log_format`、`limit_req_zone`、`limit_conn_zone` 不得放入站点 `server`/`location` |
+| Nginx access log | `/api/query/` 使用仅含 `$uri` 的专用 access log，不使用 `$request`、`$request_uri` 或 `$args`；此结论只适用于该条 access log，不代表其他日志已脱敏 |
+| 日志路径 | 相对路径 `logs/query-access.log` 必须通过宝塔实际 `nginx.exe -V`/prefix 或实际安装目录、启动工作目录和主配置确认，不假定绝对路径 |
+| 其他日志审计 | 分别检查 Nginx `error_log`、Node stdout/stderr/异常/APM、CDN/WAF/负载均衡及其他 access log；完整 URL 若落盘，在对应层过滤/脱敏并设置保留期 |
+| 外围限流 | 可选 `limit_req`/`limit_conn` 先灰度观察再启用，不替代应用缓存、并发控制或 WeatherAPI 月调用预算 |
+| 生产端口 | 预构建 standalone + 宝塔为 3001，旧源码构建 + NSSM 为 3000；启动、healthz 与 `proxy_pass` 不得跨流程混用 |
+| 上线实测 | 本地 healthz 就绪后，从页面完成一次 current/forecast 查询并确认出站访问；检查浏览器、响应及上述各日志源均未出现真实 key |
+
+服务器设置与可复制 Nginx 配置见 `docs/website/DEPLOY_WINDOWS_BAOTA.md`。密钥仅在真正上线查询功能时由管理员直接填入宝塔/NSSM 环境，现在不需要提供。
+
+## 8. 最小发布判断
 
 | 判断项 | 要求 |
 |---|---|
@@ -95,3 +123,4 @@
 | 偏好恢复 | locale/theme 相关改动必须跑浏览器验收 |
 | SEO | 新增公开页面必须有 canonical，并进入 sitemap 或明确不进入 sitemap |
 | 文档 | 若新增验收流程或端口策略，需要同步 README、D2 报告或本 checklist |
+| WeatherAPI 查询 | 上线前完成上一节全部边界；没有 server-only key、attribution 或完整日志审计时保持查询入口关闭 |
