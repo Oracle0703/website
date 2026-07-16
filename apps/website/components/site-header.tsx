@@ -42,6 +42,7 @@ export function SiteHeader() {
         <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
           <Link
             href={getHref("/")}
+            prefetch={false}
             onClick={() => setMenuOpen(false)}
             className="inline-flex items-center gap-2.5 whitespace-nowrap text-base font-semibold tracking-wide text-primary sm:text-lg md:justify-self-start"
           >
@@ -58,6 +59,7 @@ export function SiteHeader() {
                 <Link
                   key={item.href}
                   href={getHref(item.href)}
+                  prefetch={false}
                   aria-current={isActive ? "page" : undefined}
                   className={`relative font-medium after:absolute after:-bottom-1 after:left-0 after:h-px after:bg-accent after:transition-all ${
                     isActive
@@ -130,6 +132,7 @@ export function SiteHeader() {
                   <Link
                     key={item.href}
                     href={getHref(item.href)}
+                    prefetch={false}
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => setMenuOpen(false)}
                     className={`rounded-lg border-l-2 px-3 py-2 font-medium transition-colors ${

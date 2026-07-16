@@ -652,8 +652,8 @@ export function TrackerClient({ locale, copy, common }: TrackerClientProps) {
       </Card>
 
       <footer className={`flex flex-wrap gap-4 ${TEXT_SM_MUTED}`}>
-        <Link href={getLocalePath("/enter", locale)} className="text-accent hover:text-accent-strong">{common.backToEnter}</Link>
-        <Link href={getLocalePath("/", locale)} className="text-muted hover:text-primary">{common.backToHome}</Link>
+        <Link href={getLocalePath("/enter", locale)} prefetch={false} className="text-accent hover:text-accent-strong">{common.backToEnter}</Link>
+        <Link href={getLocalePath("/", locale)} prefetch={false} className="text-muted hover:text-primary">{common.backToHome}</Link>
       </footer>
     </main>
   );

@@ -22,6 +22,24 @@ function assertNoCjk(value, label) {
   assert.doesNotMatch(String(value), cjkPattern, `${label} should not contain CJK characters`);
 }
 
+function assertAssetNoCjk(asset, label) {
+  if (["screenshot", "mock", "diagram"].includes(asset.kind)) {
+    assertNoCjk(asset.alt, `${label} alt`);
+    assertNoCjk(asset.caption, `${label} caption`);
+    return;
+  }
+
+  if (asset.kind === "doc") {
+    assertNoCjk(asset.label, `${label} label`);
+    assertNoCjk(asset.description, `${label} description`);
+    return;
+  }
+
+  assert.equal(asset.kind, "none");
+  assertNoCjk(asset.reason, `${label} unavailable reason`);
+  assertNoCjk(asset.nextAssetStep, `${label} next step`);
+}
+
 test("D4 plan records English content audit scope and Task 1 completion criteria", () => {
   const source = read("docs/website/D4_ENGLISH_CONTENT_REFINEMENT_PLAN.md");
 
@@ -121,6 +139,17 @@ test("Projects expose locale-aware English view data without CJK body fields", a
 
   assertNoCjk(view.architecture, "project view architecture");
 
+  for (const step of view.architectureSteps) {
+    assertNoCjk(step.title, "project architecture step title");
+    assertNoCjk(step.description, "project architecture step description");
+  }
+
+  for (const decision of view.decisions) {
+    assertNoCjk(decision.decision, "project decision");
+    assertNoCjk(decision.rationale, "project decision rationale");
+    assertNoCjk(decision.impact, "project decision impact");
+  }
+
   for (const listField of ["tradeoffs", "roadmap"]) {
     for (const item of view[listField]) {
       assertNoCjk(item, `project view ${listField}`);
@@ -131,20 +160,55 @@ test("Projects expose locale-aware English view data without CJK body fields", a
     assertNoCjk(link.label, "project link label");
   }
 
-  if (["screenshot", "mock", "diagram"].includes(view.asset.kind)) {
-    assertNoCjk(view.asset.alt, "project asset alt");
-    assertNoCjk(view.asset.caption, "project asset caption");
-  } else if (view.asset.kind === "doc") {
-    assertNoCjk(view.asset.label, "project asset label");
-    assertNoCjk(view.asset.description, "project asset description");
-  } else {
-    assert.equal(view.asset.kind, "none");
-    assertNoCjk(view.asset.reason, "project asset unavailable reason");
-    assertNoCjk(view.asset.nextAssetStep, "project asset next step");
+  assertAssetNoCjk(view.asset, "project asset");
+  for (const [index, asset] of view.gallery.entries()) {
+    assertAssetNoCjk(asset, `project gallery asset ${index + 1}`);
   }
+
+  if (view.entry.demo.status === "available") {
+    assertNoCjk(view.entry.demo.label, "project demo label");
+    assertNoCjk(view.entry.demo.description, "project demo description");
+  } else {
+    assertNoCjk(view.entry.demo.reason, "project unavailable demo reason");
+  }
+  assertNoCjk(view.entry.source.label, "project source label");
+  assertNoCjk(view.entry.source.description, "project source description");
 
   assert.equal(getAllProjects().length, 5);
   assert.ok(getFeaturedProjectViews("en").length > 0);
+});
+
+test("all English project views localize structured evidence fields", async () => {
+  const { getAllProjects, getProjectView } = await importFresh("apps/website/lib/projects.ts");
+
+  for (const project of getAllProjects()) {
+    const view = getProjectView(project, "en");
+    assert.ok(view.gallery.length > 0, `${project.slug} should expose gallery evidence`);
+    assert.ok(view.architectureSteps.length >= 4, `${project.slug} should expose architecture steps`);
+    assert.ok(view.decisions.length >= 3, `${project.slug} should expose structured decisions`);
+
+    for (const step of view.architectureSteps) {
+      assertNoCjk(step.title, `${project.slug} architecture title`);
+      assertNoCjk(step.description, `${project.slug} architecture description`);
+    }
+    for (const decision of view.decisions) {
+      assertNoCjk(decision.decision, `${project.slug} decision`);
+      assertNoCjk(decision.rationale, `${project.slug} rationale`);
+      assertNoCjk(decision.impact, `${project.slug} impact`);
+    }
+    assertAssetNoCjk(view.asset, `${project.slug} primary asset`);
+    view.gallery.forEach((asset, index) => {
+      assertAssetNoCjk(asset, `${project.slug} gallery asset ${index + 1}`);
+    });
+    if (view.entry.demo.status === "available") {
+      assertNoCjk(view.entry.demo.label, `${project.slug} demo label`);
+      assertNoCjk(view.entry.demo.description, `${project.slug} demo description`);
+    } else {
+      assertNoCjk(view.entry.demo.reason, `${project.slug} unavailable demo reason`);
+    }
+    assertNoCjk(view.entry.source.label, `${project.slug} source label`);
+    assertNoCjk(view.entry.source.description, `${project.slug} source description`);
+  }
 });
 
 test("English project pages and home consume localized project views", () => {

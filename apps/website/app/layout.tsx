@@ -17,6 +17,7 @@ export const generateMetadata = (): Metadata => {
       template: `%s | ${seo.siteName}`
     },
     description: seo.defaultDescription,
+    manifest: "/manifest.webmanifest",
     alternates: {
       types: {
         "application/rss+xml": `${baseUrl}/rss.xml`

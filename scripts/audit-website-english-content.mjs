@@ -42,8 +42,8 @@ const audits = [
     kind: "localized-source",
     route: "/en/projects",
     file: "apps/website/lib/projects.ts",
-    maxCjkCharacters: 2_500,
-    note: "Source keeps zh/en project copy together; English ProjectView is checked separately."
+    maxCjkCharacters: 4_500,
+    note: "Source keeps zh/en project copy, gallery evidence, architecture steps, and decisions together; English ProjectView is checked separately."
   },
   {
     kind: "localized-source",

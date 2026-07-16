@@ -87,7 +87,7 @@ const englishContentChecks = [
   {
     path: "/en/projects/ai-page-analysis",
     heading: /AI Page Analysis and Redesign Assistant/,
-    text: /Evidence|Asset status|Product mock|Roadmap/
+    text: /Evidence gallery|Demo and source|Architecture|Roadmap/
   },
   {
     path: "/en/ai-page-analysis",
@@ -103,6 +103,11 @@ const englishContentChecks = [
     path: "/en/explore",
     heading: /One map for the tools/,
     text: /Local habit tracker|Developer toolbox/
+  },
+  {
+    path: "/en/changelog",
+    heading: /A record of what actually shipped/,
+    text: /Local-first site experience suite|Free weather query lab/
   },
   {
     path: "/en/labs/tools",
@@ -416,7 +421,7 @@ test("site command palette restores focus and opens a selected result", async ({
   await page.keyboard.press("Control+K");
   await expect(dialog).toBeVisible();
   await page.getByRole("combobox").fill("开发者工具箱");
-  await expect(page.getByRole("option", { name: /开发者工具箱/ })).toBeVisible();
+  await expect(page.getByRole("option", { name: /^开发者工具箱/ })).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/labs\/tools$/);
   await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
@@ -567,11 +572,122 @@ test("free query lab selects a location and refreshes results when units change"
 test("project detail evidence sections are visible", async ({ page }) => {
   await page.goto("/en/projects/ai-page-analysis");
 
-  await expect(page.getByRole("heading", { name: /Evidence/ })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /Asset status/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Evidence$/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Evidence gallery/ })).toBeVisible();
   await expect(page.locator("main")).toContainText(/Product mock|Asset unavailable|Screenshot/);
-  await expect(page.getByRole("heading", { name: /Trade-offs/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Architecture$/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Key decisions and impact/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Roadmap/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Try the public demo/ })).toHaveAttribute(
+    "href",
+    "/en/ai-page-analysis"
+  );
+});
+
+test("project entries keep unavailable demos honest while exposing source evidence", async ({
+  page
+}) => {
+  await page.goto("/en/projects/knock");
+
+  await expect(page.getByRole("heading", { name: /Knock Access Log Monitor/ })).toBeVisible();
+  await expect(page.locator("main")).toContainText(/No public demo/);
+  await expect(page.locator("main")).toContainText(/real access logs|IP addresses/);
+  const sourceLink = page.locator("main a[href^='https://github.com/Oracle0703/website']").first();
+  await expect(sourceLink).toBeVisible();
+  await expect(sourceLink).toHaveAttribute("target", "_blank");
+});
+
+test("Tracker and developer tools remain usable from the bounded offline cache", async ({
+  context,
+  page
+}) => {
+  await page.goto("/tracker");
+  await expect(page.getByRole("heading", { name: /^打卡平台$/ })).toBeVisible();
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+    if (navigator.serviceWorker.controller) return;
+
+    await new Promise<void>((resolve, reject) => {
+      const timeout = window.setTimeout(
+        () => reject(new Error("Service worker did not control the page in time.")),
+        10_000
+      );
+      navigator.serviceWorker.addEventListener(
+        "controllerchange",
+        () => {
+          window.clearTimeout(timeout);
+          resolve();
+        },
+        { once: true }
+      );
+    });
+  });
+
+  await context.setOffline(true);
+  try {
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: /^打卡平台$/ })).toBeVisible();
+    const offlineStatus = page.getByTestId("offline-navigation-status");
+    await expect(offlineStatus).toContainText(/仅 Tracker 与开发者工具箱可用/);
+    await expect(page.getByRole("button", { name: "打开全站搜索" })).toBeDisabled();
+
+    await page.locator("footer").getByRole("link", { name: "作品", exact: true }).click();
+    await expect(page).toHaveURL(/\/tracker$/);
+    await expect(offlineStatus).toContainText("这个页面没有离线副本");
+
+    await page.getByLabel("习惯名称").fill("离线阅读");
+    await page.getByRole("button", { name: "添加习惯" }).click();
+    await expect(page.locator("main")).toContainText("离线阅读");
+    await page.getByRole("button", { name: "完成今日打卡" }).click();
+    await expect(page.locator("main")).toContainText("今日打卡已保存");
+
+    await clickLanguageToggle(page, /切换到英文|Switch to English/);
+    await expect(page).toHaveURL(/\/en\/tracker$/);
+    await expect(page.getByRole("heading", { name: /^Tracker$/ })).toBeVisible();
+    await expect(page.locator("main")).toContainText("离线阅读");
+
+    await page.getByTestId("offline-navigation-status").locator("a[data-offline-route='tools']").click();
+    await expect(page).toHaveURL(/\/en\/labs\/tools$/);
+    await expect(page.getByRole("heading", { name: /developer toolbox/ })).toBeVisible();
+    const jsonTool = page.locator("#json-tool");
+    await jsonTool.locator("textarea").first().fill('{"offline":true}');
+    await jsonTool.getByRole("button", { name: "Format" }).click();
+    await expect(jsonTool.locator("textarea").nth(1)).toHaveValue(/"offline": true/);
+
+    await clickLanguageToggle(page, /切换到中文|Switch to Chinese/);
+    await expect(page).toHaveURL(/\/labs\/tools$/);
+    await expect(page.getByRole("heading", { name: /开发者工具/ })).toBeVisible();
+    await page.getByTestId("offline-navigation-status").locator("a[data-offline-route='tracker']").click();
+    await expect(page).toHaveURL(/\/tracker$/);
+    await expect(page.getByRole("heading", { name: /^打卡平台$/ })).toBeVisible();
+
+    const cachedUrls = await page.evaluate(async () => {
+      const urls: string[] = [];
+      for (const cacheName of await caches.keys()) {
+        const cache = await caches.open(cacheName);
+        urls.push(...(await cache.keys()).map((request) => request.url));
+      }
+      return urls;
+    });
+    expect(cachedUrls.some((url) => url.endsWith("/tracker"))).toBe(true);
+    expect(cachedUrls.some((url) => url.endsWith("/en/labs/tools"))).toBe(true);
+    for (const forbiddenPath of [
+      "/api/",
+      "/contact",
+      "/ai-page-analysis",
+      "/labs/query",
+      "/search-index.json",
+      "/rss.xml"
+    ]) {
+      expect(cachedUrls.some((url) => new URL(url).pathname.includes(forbiddenPath))).toBe(false);
+    }
+    expect(cachedUrls.some((url) => new URL(url).searchParams.has("_rsc"))).toBe(false);
+  } finally {
+    await context.setOffline(false);
+  }
+
+  await expectNoBrowserErrors(page);
 });
 
 // Pixel matching via toHaveScreenshot is intentionally not the default gate. The two home

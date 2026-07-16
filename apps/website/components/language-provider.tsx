@@ -14,6 +14,10 @@ import {
   getLocalePath,
   getRouteLocale
 } from "../lib/locale-routing";
+import {
+  announceBlockedOfflineNavigation,
+  isOfflinePagePath
+} from "../lib/pwa-navigation";
 
 type I18nContextValue = {
   locale: Locale;
@@ -56,16 +60,36 @@ export const LanguageProvider = ({
   }, [routeLocale]);
 
   const updateLocale = useCallback((nextLocale: Locale) => {
+    const targetPath = getLocalePath(routePathname, nextLocale);
+    if (isOfflinePagePath(routePathname) && isOfflinePagePath(targetPath)) {
+      persistLocale(nextLocale);
+      window.location.assign(targetPath);
+      return;
+    }
+    if (!navigator.onLine) {
+      announceBlockedOfflineNavigation();
+      return;
+    }
     persistLocale(nextLocale);
     setLocale(nextLocale);
-    router.push(getLocalePath(routePathname, nextLocale));
+    router.push(targetPath);
   }, [routePathname, router]);
 
   const toggleLocale = useCallback(() => {
     const nextLocale = routeLocale === "zh" ? "en" : "zh";
+    const targetPath = getAlternateLocalePath(routePathname);
+    if (isOfflinePagePath(routePathname) && isOfflinePagePath(targetPath)) {
+      persistLocale(nextLocale);
+      window.location.assign(targetPath);
+      return;
+    }
+    if (!navigator.onLine) {
+      announceBlockedOfflineNavigation();
+      return;
+    }
     persistLocale(nextLocale);
     setLocale(nextLocale);
-    router.push(getAlternateLocalePath(routePathname));
+    router.push(targetPath);
   }, [routeLocale, routePathname, router]);
 
   const value = useMemo<I18nContextValue>(

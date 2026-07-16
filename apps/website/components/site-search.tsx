@@ -11,6 +11,7 @@ import {
 import { useI18n } from "./language-provider";
 import { getShellMessages } from "../lib/i18n-shell";
 import type { SiteSearchEntry } from "../lib/site-search";
+import { announceBlockedOfflineNavigation } from "../lib/pwa-navigation";
 
 type SearchEnvelope = {
   version: number;
@@ -75,11 +76,35 @@ export function SiteSearch() {
   const [entries, setEntries] = useState<SiteSearchEntry[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [online, setOnline] = useState(true);
+
+  useEffect(() => {
+    const updateConnectivity = () => {
+      const nextOnline = navigator.onLine;
+      setOnline(nextOnline);
+      if (!nextOnline) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+
+    updateConnectivity();
+    window.addEventListener("online", updateConnectivity);
+    window.addEventListener("offline", updateConnectivity);
+    return () => {
+      window.removeEventListener("online", updateConnectivity);
+      window.removeEventListener("offline", updateConnectivity);
+    };
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") {
         event.preventDefault();
+        if (!online) {
+          announceBlockedOfflineNavigation();
+          return;
+        }
         if (open) {
           setOpen(false);
           setQuery("");
@@ -98,7 +123,7 @@ export function SiteSearch() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  }, [online, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -218,8 +243,11 @@ export function SiteSearch() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={copy.open}
+        aria-describedby={!online ? "site-search-offline-hint" : undefined}
         aria-keyshortcuts="Control+K Meta+K"
-        className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-edge px-2.5 py-1.5 font-medium text-secondary transition-colors hover:border-edge-strong hover:text-primary"
+        disabled={!online}
+        title={!online ? copy.offline : undefined}
+        className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-edge px-2.5 py-1.5 font-medium text-secondary transition-colors hover:border-edge-strong hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
       >
         <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
           <circle cx="8.5" cy="8.5" r="5" />
@@ -230,6 +258,7 @@ export function SiteSearch() {
           {copy.shortcut}
         </kbd>
       </button>
+      {!online ? <span id="site-search-offline-hint" className="sr-only">{copy.offline}</span> : null}
 
       {open ? (
         <div

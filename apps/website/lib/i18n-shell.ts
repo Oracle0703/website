@@ -28,6 +28,7 @@ export const shellMessages = {
       clear: "清空",
       loading: "正在加载静态搜索索引…",
       error: "搜索索引暂时不可用，你仍可以从探索页浏览全部入口。",
+      offline: "全站搜索需要联网。离线时可继续使用 Tracker 与开发者工具箱。",
       retry: "重新加载",
       empty: "没有找到匹配内容，试试更短的关键词。",
       resultCount: "找到 {count} 个结果。当前选择：{title}。",
@@ -53,6 +54,7 @@ export const shellMessages = {
       links: [
         { href: "/resume", label: "简历", localized: true },
         { href: "/now", label: "Now", localized: true },
+        { href: "/changelog", label: "更新日志", localized: true },
         { href: "/rss.xml", label: "RSS", localized: false }
       ]
     }
@@ -84,6 +86,7 @@ export const shellMessages = {
       clear: "Clear",
       loading: "Loading the static search index…",
       error: "Search is temporarily unavailable. You can still browse every entry from Explore.",
+      offline: "Site search needs a connection. Tracker and Developer Tools remain available offline.",
       retry: "Try again",
       empty: "No matching content. Try a shorter term.",
       resultCount: "{count} results. Current selection: {title}.",
@@ -109,6 +112,7 @@ export const shellMessages = {
       links: [
         { href: "/resume", label: "Resume", localized: true },
         { href: "/now", label: "Now", localized: true },
+        { href: "/changelog", label: "Changelog", localized: true },
         { href: "/rss.xml", label: "RSS", localized: false }
       ]
     }
