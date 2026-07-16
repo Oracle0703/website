@@ -44,6 +44,19 @@ export function LabsClient({ locale, copy, common }: LabsClientProps) {
         </Link>
       </section>
 
+      <section className="feature-surface grid gap-6 p-6 sm:p-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <div>
+          <p className="section-kicker">{copy.toolsEyebrow}</p>
+          <h2 className={`mt-2 ${TITLE_2XL}`}>{copy.toolsTitle}</h2>
+          <p className={`mt-3 max-w-2xl ${TEXT_SM_MUTED} leading-7`}>
+            {copy.toolsDescription}
+          </p>
+        </div>
+        <Link href={getHref("/labs/tools")} className="btn-primary md:mb-1">
+          {copy.toolsAction} <span aria-hidden="true">{common.arrowRight}</span>
+        </Link>
+      </section>
+
       <TimestampTool />
     </main>
   );

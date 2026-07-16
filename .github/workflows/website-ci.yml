@@ -44,3 +44,9 @@ jobs:
 
       - name: Verify static entrypoints and metadata
         run: npm run verify:website-static
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify browser interactions and accessibility
+        run: npm run verify:website-browser

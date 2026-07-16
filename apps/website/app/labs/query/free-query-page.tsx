@@ -34,7 +34,7 @@ export function FreeQueryPage({ locale, copy }: FreeQueryPageProps) {
       </div>
 
       <section className="mt-12 border-t border-edge/70 pt-8 md:mt-16 md:pt-10" aria-labelledby="query-api-title">
-        <div className="grid gap-7 md:grid-cols-[0.42fr_0.58fr] md:gap-12">
+        <div className="grid grid-cols-1 gap-7 md:grid-cols-[0.42fr_0.58fr] md:gap-12">
           <div>
             <p className="section-kicker">{copy.apiEyebrow}</p>
             <h2 id="query-api-title" className="mt-2 text-2xl font-semibold tracking-tight text-primary">
@@ -42,16 +42,16 @@ export function FreeQueryPage({ locale, copy }: FreeQueryPageProps) {
             </h2>
             <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{copy.apiDescription}</p>
           </div>
-          <div className="space-y-5">
-            <div>
+          <div className="min-w-0 space-y-5">
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-primary">{copy.locationsEndpoint}</p>
-              <pre className="mt-2 overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
+              <pre className="mt-2 w-full min-w-0 max-w-full overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
                 <code>{`GET /api/query/locations?q=Shanghai&lang=${locale}`}</code>
               </pre>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-primary">{copy.weatherEndpoint}</p>
-              <pre className="mt-2 overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
+              <pre className="mt-2 w-full min-w-0 max-w-full overflow-x-auto rounded-xl border border-edge bg-base/70 p-4 text-xs leading-6 text-accent-secondary">
                 <code>{`GET /api/query/weather?q=31.2304%2C121.4737&lang=${locale}&units=metric`}</code>
               </pre>
             </div>

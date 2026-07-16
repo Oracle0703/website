@@ -7,6 +7,7 @@ export const shellMessages = {
       items: [
         { href: "/projects", label: "作品" },
         { href: "/blog", label: "文章" },
+        { href: "/explore", label: "探索" },
         { href: "/about", label: "关于" },
         { href: "/contact", label: "联系" }
       ],
@@ -16,6 +17,30 @@ export const shellMessages = {
       switchToEnglish: "切换到英文",
       switchToChinese: "切换到中文"
     },
+    search: {
+      label: "搜索",
+      open: "打开全站搜索",
+      shortcut: "⌘K",
+      title: "搜索 Meaningful · Ink",
+      description: "查找文章、作品、工具、实验与页面。索引只在打开时加载。",
+      placeholder: "输入标题、主题或工具名称…",
+      close: "关闭",
+      clear: "清空",
+      loading: "正在加载静态搜索索引…",
+      error: "搜索索引暂时不可用，你仍可以从探索页浏览全部入口。",
+      retry: "重新加载",
+      empty: "没有找到匹配内容，试试更短的关键词。",
+      resultCount: "找到 {count} 个结果。当前选择：{title}。",
+      results: "搜索结果",
+      quickLinks: "快捷入口",
+      keyboardHint: "↑ ↓ 选择 · Enter 打开 · Esc 关闭",
+      kinds: {
+        page: "页面",
+        article: "文章",
+        project: "作品",
+        tool: "工具"
+      }
+    },
     theme: {
       light: "亮色",
       dark: "暗色",
@@ -24,7 +49,12 @@ export const shellMessages = {
     },
     footer: {
       copyright: "© 2026 Meaningful · Ink",
-      tagline: "AI 产品 · 全栈工程 · 独立创作"
+      tagline: "AI 产品 · 全栈工程 · 独立创作",
+      links: [
+        { href: "/resume", label: "简历", localized: true },
+        { href: "/now", label: "Now", localized: true },
+        { href: "/rss.xml", label: "RSS", localized: false }
+      ]
     }
   },
   en: {
@@ -33,6 +63,7 @@ export const shellMessages = {
       items: [
         { href: "/projects", label: "Work" },
         { href: "/blog", label: "Writing" },
+        { href: "/explore", label: "Explore" },
         { href: "/about", label: "About" },
         { href: "/contact", label: "Contact" }
       ],
@@ -42,6 +73,30 @@ export const shellMessages = {
       switchToEnglish: "Switch to English",
       switchToChinese: "Switch to Chinese"
     },
+    search: {
+      label: "Search",
+      open: "Open site search",
+      shortcut: "⌘K",
+      title: "Search Meaningful · Ink",
+      description: "Find writing, projects, tools, experiments, and pages. The index loads only when opened.",
+      placeholder: "Search by title, topic, or tool…",
+      close: "Close",
+      clear: "Clear",
+      loading: "Loading the static search index…",
+      error: "Search is temporarily unavailable. You can still browse every entry from Explore.",
+      retry: "Try again",
+      empty: "No matching content. Try a shorter term.",
+      resultCount: "{count} results. Current selection: {title}.",
+      results: "Results",
+      quickLinks: "Quick links",
+      keyboardHint: "↑ ↓ select · Enter open · Esc close",
+      kinds: {
+        page: "Page",
+        article: "Article",
+        project: "Project",
+        tool: "Tool"
+      }
+    },
     theme: {
       light: "Light",
       dark: "Dark",
@@ -50,7 +105,12 @@ export const shellMessages = {
     },
     footer: {
       copyright: "© 2026 Meaningful · Ink",
-      tagline: "AI products · Full-stack engineering · Independent making"
+      tagline: "AI products · Full-stack engineering · Independent making",
+      links: [
+        { href: "/resume", label: "Resume", localized: true },
+        { href: "/now", label: "Now", localized: true },
+        { href: "/rss.xml", label: "RSS", localized: false }
+      ]
     }
   }
 } as const;
