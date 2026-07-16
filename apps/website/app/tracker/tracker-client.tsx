@@ -375,7 +375,7 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6 ${className}`}
+      className={`rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-6 ${className}`}
     >
       <div className="space-y-2">
         <h2 className={TITLE_LG}>{title}</h2>
@@ -433,7 +433,7 @@ export function TrackerClient() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-6">
+        <div className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
               <p className={EYEBROW_ACCENT}>{content.panel.eyebrow}</p>
@@ -580,7 +580,7 @@ export function TrackerClient() {
         <Card title={content.exchange.title}>
           <BulletList items={content.exchange.items} />
         </Card>
-        <div className="rounded-2xl border border-edge bg-base/60 p-6 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+        <div className="rounded-2xl border border-edge bg-base/60 p-6 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none">
           <p className={TEXT_SM_MUTED}>{content.footerNote}</p>
           <div className={`mt-4 flex gap-4 ${TEXT_SM_MUTED}`}>
             <Link href={getLocalePath("/enter", locale)} className="text-accent hover:text-accent-strong">

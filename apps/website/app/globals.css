@@ -1,10 +1,13 @@
 @import 'tailwindcss';
+@source inline("bg-accent-secondary text-accent-secondary text-on-accent");
 
 @theme inline {
   --color-base: rgb(var(--ui-base-rgb));
   --color-surface: rgb(var(--ui-surface-rgb));
   --color-accent: rgb(var(--ui-accent-rgb));
   --color-accent-strong: rgb(var(--ui-accent-strong-rgb));
+  --color-accent-secondary: rgb(var(--ui-accent-secondary-rgb));
+  --color-on-accent: rgb(var(--ui-on-accent-rgb));
   --color-primary: rgb(var(--ui-text-primary-rgb));
   --color-secondary: rgb(var(--ui-text-secondary-rgb));
   --color-muted: rgb(var(--ui-text-muted-rgb));
@@ -15,30 +18,34 @@
 
 :root {
   color-scheme: dark;
-  --ui-base-rgb: 11 15 26;
-  --ui-surface-rgb: 16 24 39;
-  --ui-edge-rgb: 30 41 59;
-  --ui-edge-strong-rgb: 51 65 85;
-  --ui-text-primary-rgb: 241 245 249;
-  --ui-text-secondary-rgb: 203 213 225;
-  --ui-text-muted-rgb: 148 163 184;
-  --ui-text-subtle-rgb: 226 232 240;
-  --ui-accent-rgb: 91 140 255;
-  --ui-accent-strong-rgb: 147 197 253;
+  --ui-base-rgb: 12 12 15;
+  --ui-surface-rgb: 23 23 28;
+  --ui-edge-rgb: 104 97 104;
+  --ui-edge-strong-rgb: 140 131 139;
+  --ui-text-primary-rgb: 245 242 235;
+  --ui-text-secondary-rgb: 216 208 198;
+  --ui-text-muted-rgb: 170 163 154;
+  --ui-text-subtle-rgb: 231 222 211;
+  --ui-accent-rgb: 231 167 91;
+  --ui-accent-strong-rgb: 245 194 122;
+  --ui-accent-secondary-rgb: 95 212 208;
+  --ui-on-accent-rgb: 12 12 15;
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --ui-base-rgb: 248 250 252;
-  --ui-surface-rgb: 255 255 255;
-  --ui-edge-rgb: 226 232 240;
-  --ui-edge-strong-rgb: 203 213 225;
-  --ui-text-primary-rgb: 15 23 42;
-  --ui-text-secondary-rgb: 51 65 85;
-  --ui-text-muted-rgb: 100 116 139;
-  --ui-text-subtle-rgb: 71 85 105;
-  --ui-accent-rgb: 37 99 235;
-  --ui-accent-strong-rgb: 29 78 216;
+  --ui-base-rgb: 246 241 232;
+  --ui-surface-rgb: 255 252 247;
+  --ui-edge-rgb: 155 144 133;
+  --ui-edge-strong-rgb: 116 106 98;
+  --ui-text-primary-rgb: 36 32 39;
+  --ui-text-secondary-rgb: 81 74 72;
+  --ui-text-muted-rgb: 113 106 101;
+  --ui-text-subtle-rgb: 70 63 61;
+  --ui-accent-rgb: 154 78 18;
+  --ui-accent-strong-rgb: 120 55 11;
+  --ui-accent-secondary-rgb: 15 118 110;
+  --ui-on-accent-rgb: 255 255 255;
 }
 
 [data-theme="dark"] {
@@ -48,8 +55,8 @@
 body {
   @apply bg-base text-primary antialiased;
   background-image:
-    radial-gradient(circle at 15% 10%, rgb(var(--ui-accent-rgb) / 0.12), transparent 42%),
-    radial-gradient(circle at 85% 0%, rgb(var(--ui-accent-strong-rgb) / 0.08), transparent 38%);
+    radial-gradient(circle at 15% 10%, rgb(var(--ui-accent-rgb) / 0.1), transparent 42%),
+    radial-gradient(circle at 85% 0%, rgb(var(--ui-accent-secondary-rgb) / 0.08), transparent 38%);
 }
 
 a {
@@ -100,15 +107,46 @@ a {
 
 @layer components {
   .panel-surface {
-    @apply rounded-2xl border border-edge/80 bg-surface/70 shadow-sm shadow-black/5 backdrop-blur-sm;
+    @apply rounded-2xl border border-edge/80 bg-surface shadow-sm shadow-black/10;
+  }
+
+  .section-plain {
+    @apply border-t border-edge/70 bg-transparent;
+  }
+
+  .feature-surface {
+    @apply rounded-2xl border border-edge bg-surface shadow-lg;
+    background-image: linear-gradient(
+      135deg,
+      rgb(var(--ui-accent-rgb) / 0.12),
+      transparent 48%,
+      rgb(var(--ui-accent-secondary-rgb) / 0.1)
+    );
+    box-shadow: 0 18px 48px rgb(var(--ui-accent-secondary-rgb) / 0.08);
+  }
+
+  .brand-banner {
+    @apply rounded-2xl border border-edge bg-surface shadow-lg;
+    background-image:
+      linear-gradient(120deg, rgb(var(--ui-accent-rgb) / 0.16), transparent 52%),
+      radial-gradient(circle at 92% 15%, rgb(var(--ui-accent-secondary-rgb) / 0.14), transparent 34%);
+    box-shadow: 0 20px 56px rgb(var(--ui-accent-rgb) / 0.1);
+  }
+
+  .list-row {
+    @apply border-b border-edge/70 py-4 transition-colors hover:bg-surface/70;
+  }
+
+  .list-row:last-child {
+    border-bottom-width: 0;
   }
 
   .card-interactive {
-    @apply transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none;
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/15 motion-reduce:transform-none;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-blue-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transform-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-on-accent shadow-lg shadow-accent/25 transition hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-70 motion-reduce:transform-none;
   }
 
   .btn-secondary {
@@ -128,7 +166,7 @@ a {
   }
 
   .link-accent {
-    @apply rounded-sm px-1 -mx-1 text-accent transition-colors hover:bg-accent hover:text-white;
+    @apply rounded-sm px-1 -mx-1 text-accent transition-colors hover:bg-accent hover:text-on-accent;
   }
 
   .link-muted:hover,
@@ -141,7 +179,7 @@ a {
   .btn-primary:visited,
   .btn-primary:hover,
   .btn-primary:focus-visible {
-    color: #fff !important;
+    color: rgb(var(--ui-on-accent-rgb) / 1) !important;
   }
 
   .btn-secondary,

@@ -259,7 +259,7 @@ export function TimestampTool() {
       : copy.showUtcLabel;
 
   return (
-    <section className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none sm:p-8">
+    <section className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-8">
       <div className="space-y-2">
         <p className={EYEBROW_ACCENT}>{copy.eyebrow}</p>
         <h2 className={TITLE_XL}>{copy.title}</h2>
@@ -302,7 +302,7 @@ export function TimestampTool() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+        <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none">
           <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.timeToTimestamp}</p>
           <label className={`mt-4 block ${EYEBROW_SECONDARY}`}>
             {copy.timeInputLabel}
@@ -347,7 +347,7 @@ export function TimestampTool() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+        <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none">
           <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.timestampToTime}</p>
           <label className={`mt-4 block ${EYEBROW_SECONDARY}`}>
             {copy.timestampInputLabel}
@@ -412,7 +412,7 @@ export function TimestampTool() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
+      <div className="mt-6 rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none">
         <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.currentTitle}</p>
         <div className={`mt-3 grid gap-2 ${TEXT_SM_MUTED} sm:grid-cols-2 lg:grid-cols-3`}>
           <div className="flex items-center justify-between gap-3">

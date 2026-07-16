@@ -46,7 +46,7 @@ test('website projects system has the planned files and first project set', () =
 test('website projects routes are discoverable from navigation and sitemap', () => {
   const i18nSource = read('apps/website/lib/i18n.ts');
   assert.match(i18nSource, /\{\s*href:\s*"\/projects",\s*label:\s*"作品"\s*\}/);
-  assert.match(i18nSource, /\{\s*href:\s*"\/projects",\s*label:\s*"Projects"\s*\}/);
+  assert.match(i18nSource, /\{\s*href:\s*"\/projects",\s*label:\s*"Work"\s*\}/);
 
   const sitemapSource = read('apps/website/app/sitemap.ts');
   const publicRoutesSource = read('apps/website/lib/public-routes.mjs');
@@ -136,11 +136,23 @@ test('D6 project model carries an explicit public asset strategy for every proje
   }
 });
 
-test('projects list exposes summary-level evidence without turning cards into detail pages', () => {
+test('projects list uses a flagship hierarchy, real assets, and a compact archive', () => {
   const clientSource = read('apps/website/app/projects/projects-client.tsx');
 
-  assert.match(clientSource, /project\.evidence\.slice\(0,\s*2\)/);
+  assert.match(clientSource, /\[flagshipProject,\s*\.\.\.supportingFeaturedProjects\]/);
+  assert.match(clientSource, /function FlagshipProject\(/);
+  assert.match(clientSource, /function SupportingFeaturedProject\(/);
+  assert.match(clientSource, /function ArchiveProjectRow\(/);
+  assert.match(clientSource, /asset\.kind === "none"/);
+  assert.match(clientSource, /asset\.kind === "doc"/);
+  assert.match(clientSource, /src=\{asset\.src\}/);
+  assert.match(clientSource, /alt=\{asset\.alt\}/);
+  assert.match(clientSource, /\{asset\.caption\}/);
+  assert.match(clientSource, /project\.evidence\[0\]/);
   assert.match(clientSource, /project\.stack\.slice\(0,\s*3\)/);
   assert.match(clientSource, /project\.updatedAt/);
   assert.match(clientSource, /copy\.updatedAtLabel/);
+  assert.match(clientSource, /prefetch=\{false\}/);
+  assert.match(clientSource, /divide-y divide-edge\/70 border-y/);
+  assert.doesNotMatch(clientSource, /project\.evidence\.slice\(0,\s*2\)/);
 });

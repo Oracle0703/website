@@ -1026,7 +1026,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
         </div>
 
         <div className="panel-surface relative p-6">
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/15 via-transparent to-cyan-400/10" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent/15 via-transparent to-accent-secondary/10" />
           <div className="relative space-y-4">
             <p className={TEXT_SM_MUTED}>{copy.demoPathTitle}</p>
             <ol className="space-y-2 text-sm text-secondary">

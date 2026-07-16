@@ -99,6 +99,7 @@ export type PageCaptureSummary = {
 export type AnalysisFetchResponse = {
   status: number;
   headers?: Headers | Record<string, string> | Map<string, string>;
+  body?: ReadableStream<Uint8Array> | null;
   text: () => Promise<string>;
 };
 
@@ -118,6 +119,7 @@ const MAX_ATTEMPTS_PER_WINDOW = 5;
 const MAX_URL_LENGTH = 2048;
 const MAX_CAPTURE_REDIRECTS = 3;
 const MAX_CAPTURE_HTML_BYTES = 2 * 1024 * 1024;
+export const ANALYSIS_CAPTURE_TIMEOUT_MS = 10_000;
 const MIN_CAPTURE_TEXT_LENGTH = 120;
 const MAX_BRIEF_LENGTH = {
   audience: 240,
@@ -481,6 +483,53 @@ async function resolveAndValidate(
   return validateAnalysisUrlSafety(url, { resolvedAddresses: addresses });
 }
 
+async function readCaptureResponseBody(
+  response: AnalysisFetchResponse
+): Promise<{ ok: true; value: string } | { ok: false; error: AnalysisError }> {
+  const declaredLength = Number(getHeaderValue(response.headers, "content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_CAPTURE_HTML_BYTES) {
+    return failure("page_too_large", "The target page is larger than the D10 capture limit.");
+  }
+
+  if (!response.body) {
+    const html = await response.text();
+    if (Buffer.byteLength(html, "utf8") > MAX_CAPTURE_HTML_BYTES) {
+      return failure("page_too_large", "The target page is larger than the D10 capture limit.");
+    }
+    return { ok: true, value: html };
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let byteLength = 0;
+  let html = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+
+      byteLength += value.byteLength;
+      if (byteLength > MAX_CAPTURE_HTML_BYTES) {
+        try {
+          await reader.cancel("capture body exceeded byte limit");
+        } catch {
+          // The size failure remains authoritative even if cancellation races an abort.
+        }
+        return failure("page_too_large", "The target page is larger than the D10 capture limit.");
+      }
+
+      html += decoder.decode(value, { stream: true });
+    }
+
+    html += decoder.decode();
+    return { ok: true, value: html };
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export function extractPageSummary(
   html: string,
   finalUrl: string
@@ -535,6 +584,7 @@ export async function capturePageForAnalysis(
     resolver?: AnalysisResolver;
     fetcher?: AnalysisFetcher;
     maxRedirects?: number;
+    timeoutMs?: number;
   } = {}
 ): Promise<{ ok: true; value: PageCaptureSummary } | { ok: false; error: AnalysisError }> {
   const resolver = options.resolver ?? resolveAnalysisHostname;
@@ -548,68 +598,79 @@ export async function capturePageForAnalysis(
     return failure("invalid_url", "URL must be valid.");
   }
 
-  for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
-    const resolved = await resolveAndValidate(currentUrl, resolver);
-    if (!resolved.ok) {
-      return resolved;
-    }
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    options.timeoutMs ?? ANALYSIS_CAPTURE_TIMEOUT_MS
+  );
 
-    let response: AnalysisFetchResponse;
-    try {
-      response = await fetcher(currentUrl, {
-        headers: {
-          "accept": "text/html,application/xhtml+xml",
-          "user-agent": "website-ai-page-analysis-capture/1.0"
-        },
-        redirect: "manual"
-      });
-    } catch (error) {
-      if (isTimeoutLikeError(error)) {
-        return failure("capture_timeout", "The target page capture timed out.");
-      }
-      return failure("url_unreachable", "The target page could not be reached.");
-    }
-
-    if (response.status >= 300 && response.status < 400) {
-      const location = getHeaderValue(response.headers, "location");
-      if (!location) {
-        return failure("url_unreachable", "The target page redirected without a location.");
+  try {
+    for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
+      const resolved = await resolveAndValidate(currentUrl, resolver);
+      if (!resolved.ok) {
+        return resolved;
       }
 
-      if (redirectCount >= maxRedirects) {
-        return failure("url_unreachable", "The target page redirected too many times.");
-      }
-
+      let response: AnalysisFetchResponse;
       try {
-        currentUrl = new URL(location, currentUrl);
-      } catch {
-        return failure("invalid_url", "Redirect target must be a valid URL.");
+        response = await fetcher(currentUrl, {
+          headers: {
+            "accept": "text/html,application/xhtml+xml",
+            "user-agent": "website-ai-page-analysis-capture/1.0"
+          },
+          redirect: "manual",
+          signal: abortController.signal
+        });
+      } catch (error) {
+        if (isTimeoutLikeError(error)) {
+          return failure("capture_timeout", "The target page capture timed out.");
+        }
+        return failure("url_unreachable", "The target page could not be reached.");
       }
-      continue;
-    }
 
-    let html = "";
-    try {
-      html = await response.text();
-    } catch (error) {
-      if (isTimeoutLikeError(error)) {
-        return failure("capture_timeout", "The target page capture timed out.");
+      if (response.status >= 300 && response.status < 400) {
+        const location = getHeaderValue(response.headers, "location");
+        if (!location) {
+          return failure("url_unreachable", "The target page redirected without a location.");
+        }
+
+        if (redirectCount >= maxRedirects) {
+          return failure("url_unreachable", "The target page redirected too many times.");
+        }
+
+        try {
+          currentUrl = new URL(location, currentUrl);
+        } catch {
+          return failure("invalid_url", "Redirect target must be a valid URL.");
+        }
+        continue;
       }
-      return failure("url_unreachable", "The target page body could not be read.");
+
+      let bodyResult: Awaited<ReturnType<typeof readCaptureResponseBody>>;
+      try {
+        bodyResult = await readCaptureResponseBody(response);
+      } catch (error) {
+        if (isTimeoutLikeError(error)) {
+          return failure("capture_timeout", "The target page capture timed out.");
+        }
+        return failure("url_unreachable", "The target page body could not be read.");
+      }
+
+      if (!bodyResult.ok) {
+        return bodyResult;
+      }
+
+      if (detectAuthPage(response.status, bodyResult.value)) {
+        return failure("auth_required_page", "The target page appears to require authentication.");
+      }
+
+      return extractPageSummary(bodyResult.value, currentUrl.toString());
     }
 
-    if (detectAuthPage(response.status, html)) {
-      return failure("auth_required_page", "The target page appears to require authentication.");
-    }
-
-    if (Buffer.byteLength(html, "utf8") > MAX_CAPTURE_HTML_BYTES) {
-      return failure("page_too_large", "The target page is larger than the D10 capture limit.");
-    }
-
-    return extractPageSummary(html, currentUrl.toString());
+    return failure("url_unreachable", "The target page redirected too many times.");
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return failure("url_unreachable", "The target page redirected too many times.");
 }
 
 export function createMockPageAnalysis(

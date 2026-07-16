@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { HomePageClient } from "../../components/home/home-page-client";
 import { getPublishedPostsForLocale } from "../../lib/blog";
-import { getPublishedSeriesForLocale } from "../../lib/blog-series";
 import { getMessages, type Locale } from "../../lib/i18n";
 import { getFeaturedProjectViews } from "../../lib/projects";
 import { getJsonLdLanguage, getLanguageAlternates } from "../../lib/seo";
@@ -51,21 +50,19 @@ export default function HomePage() {
       status: project.status,
       type: project.type,
       stack: project.stack,
+      evidence: project.evidence[0]?.value,
+      asset:
+        project.asset.kind === "screenshot" ||
+        project.asset.kind === "mock" ||
+        project.asset.kind === "diagram"
+          ? {
+              src: project.asset.src,
+              alt: project.asset.alt,
+              caption: project.asset.caption
+            }
+          : undefined,
       href: `/en/projects/${encodeURIComponent(project.slug)}`
     }));
-  const featuredSeries = getPublishedSeriesForLocale(locale)
-    .slice(0, 3)
-    .flatMap((series) => {
-      const firstPost = series.posts[0];
-      if (!firstPost) return [];
-      return [
-        {
-          title: series.title,
-          count: series.posts.length,
-          href: `/en/blog/${encodeURIComponent(firstPost.slug)}`
-        }
-      ];
-    });
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -92,7 +89,6 @@ export default function HomePage() {
       <HomePageClient
         latestBlogItems={latestBlogItems}
         featuredProjects={featuredProjects}
-        featuredSeries={featuredSeries}
       />
       <script
         type="application/ld+json"

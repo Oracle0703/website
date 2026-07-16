@@ -49,8 +49,8 @@ test("P0 homepage positioning states a specific outcome and exposes three direct
   const i18nSource = read("apps/website/lib/i18n.ts");
   const homeSource = read("apps/website/components/home/home-page-client.tsx");
 
-  assert.match(i18nSource, /专注 AI 工程与产品体验的全栈开发者/);
-  assert.match(i18nSource, /Full-Stack Developer for AI Products/);
+  assert.match(i18nSource, /把复杂想法，做成清晰、可用的产品。/);
+  assert.match(i18nSource, /Turning complex ideas into clear, useful products\./);
   assert.match(i18nSource, /ctaContact:/);
   assert.match(homeSource, /getHref\("\/projects"\)/);
   assert.match(homeSource, /getHref\("\/blog"\)/);

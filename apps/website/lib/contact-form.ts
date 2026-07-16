@@ -80,6 +80,7 @@ const FIFTEEN_MINUTES = 15 * 60 * 1000;
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS_PER_WINDOW = 3;
 export const CONTACT_RETENTION_DAYS = 90;
+export const CONTACT_NOTIFICATION_TIMEOUT_MS = 5_000;
 const PLACEHOLDER_CONTACT_PATTERN = /(^|\b)(hello@example\.com|test@example\.com|example\.com|example\.org|example\.net)(\b|$)/i;
 const UNSAFE_CONTACT_STORAGE_SEGMENTS = [
   ["apps", "website", "public"],
@@ -375,16 +376,26 @@ export async function cleanupContactSubmissionsFile({
   };
 }
 
-export async function sendContactNotification(submission: ContactSubmission) {
+export async function sendContactNotification(
+  submission: ContactSubmission,
+  options: { fetcher?: typeof fetch; timeoutMs?: number } = {}
+) {
   const webhookUrl = process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
   if (!webhookUrl) {
     return { ok: true as const, skipped: true as const };
   }
 
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    options.timeoutMs ?? CONTACT_NOTIFICATION_TIMEOUT_MS
+  );
+
   try {
-    const response = await fetch(webhookUrl, {
+    const response = await (options.fetcher ?? fetch)(webhookUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
+      signal: abortController.signal,
       body: JSON.stringify({
         type: "website.contact.received",
         submissionId: submission.submissionId,
@@ -405,5 +416,7 @@ export async function sendContactNotification(submission: ContactSubmission) {
     return { ok: true as const, skipped: false as const };
   } catch {
     return { ok: false as const, error: "notification_failure" as const };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

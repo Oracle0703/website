@@ -6,8 +6,7 @@ import { useI18n } from "./language-provider";
 import { useTheme } from "./theme-provider";
 import { getLocalePath } from "../lib/locale-routing";
 import {
-  TEXT_BASE_SECONDARY,
-  TEXT_BASE_SEMIBOLD_SECONDARY
+  TEXT_BASE_SECONDARY
 } from "../lib/typography";
 
 export function SiteHeader() {
@@ -24,17 +23,18 @@ export function SiteHeader() {
   const getHref = (href: string) => getLocalePath(href, locale);
 
   return (
-    <header className="border-b border-edge/70 bg-base/80 backdrop-blur-sm">
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-7">
+    <header className="border-b border-edge/70 bg-base/95">
+      <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
           <Link
             href={getHref("/")}
-            className="text-lg font-semibold tracking-wide whitespace-nowrap sm:text-xl md:justify-self-start"
+            className="inline-flex items-center gap-2.5 whitespace-nowrap text-base font-semibold tracking-wide text-primary sm:text-lg md:justify-self-start"
           >
+            <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
             {messages.nav.brand}
           </Link>
           <nav
-            className={`hidden items-center gap-8 ${TEXT_BASE_SECONDARY} text-base lg:text-lg md:flex md:justify-self-center`}
+            className={`hidden items-center gap-6 ${TEXT_BASE_SECONDARY} text-sm md:flex md:justify-self-center lg:gap-8`}
           >
             {messages.nav.items.map((item) => (
               <Link
@@ -46,12 +46,12 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <div className="hidden items-center gap-6 md:flex md:justify-self-end">
+          <div className="hidden items-center gap-4 text-sm md:flex md:justify-self-end">
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={themeAriaLabel}
-              className={`${TEXT_BASE_SEMIBOLD_SECONDARY} cursor-pointer transition hover:text-primary`}
+              className="cursor-pointer font-medium text-secondary transition hover:text-primary"
             >
               {themeLabel}
             </button>
@@ -59,24 +59,12 @@ export function SiteHeader() {
               type="button"
               onClick={toggleLocale}
               aria-label={toggleAriaLabel}
-              className={`${TEXT_BASE_SEMIBOLD_SECONDARY} cursor-pointer transition hover:text-primary`}
+              className="cursor-pointer font-medium text-secondary transition hover:text-primary"
             >
               {toggleLabel}
             </button>
-            <Link
-              href={getHref("/enter")}
-              className="link-accent text-base font-semibold"
-            >
-              {messages.nav.enter}
-            </Link>
           </div>
-          <div className="flex items-center gap-4 md:hidden">
-            <Link
-              href={getHref("/enter")}
-              className="link-accent text-base font-semibold"
-            >
-              {messages.nav.enter}
-            </Link>
+          <div className="flex items-center md:hidden">
             <button
               type="button"
               aria-label={menuLabel}
@@ -108,7 +96,7 @@ export function SiteHeader() {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-edge/70 bg-base/95 backdrop-blur-sm md:hidden">
+        <div className="border-t border-edge/70 bg-base md:hidden">
           <div className="mx-auto w-full max-w-6xl space-y-5 px-4 py-5 sm:px-6">
             <nav className="flex flex-col gap-3 text-base text-secondary sm:text-lg">
               {messages.nav.items.map((item) => (
@@ -146,5 +134,4 @@ export function SiteHeader() {
     </header>
   );
 }
-
 

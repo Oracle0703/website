@@ -130,6 +130,53 @@ test("D7 contact submission gate catches rate limits and duplicate submissions",
   assert.equal(limited.error.code, "rate_limited");
 });
 
+test("D7 contact webhook delivery has a bounded timeout", async () => {
+  const { sendContactNotification } = await importFresh("apps/website/lib/contact-form.ts");
+  const previousWebhook = process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+  process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "https://hooks.example.test/contact";
+
+  try {
+    const result = await sendContactNotification({
+      submissionId: "contact_timeout",
+      receivedAt: "2026-07-15T10:00:00.000Z",
+      name: "Ada Lovelace",
+      contact: "ada@lovelace.dev",
+      projectGoal: "Review the product page and improve its conversion path.",
+      timeline: "This month",
+      budgetRange: "Exploratory",
+      links: [],
+      ipHash: "test-hash",
+      userAgent: "node-test"
+    }, {
+      timeoutMs: 5,
+      fetcher: async (_url, init) => new Promise((_resolve, reject) => {
+        const rejectAsAborted = () => {
+          const error = new Error("webhook aborted");
+          error.name = "AbortError";
+          reject(error);
+        };
+
+        if (init?.signal?.aborted) {
+          rejectAsAborted();
+          return;
+        }
+        init?.signal?.addEventListener("abort", rejectAsAborted, { once: true });
+      })
+    });
+
+    assert.deepEqual(result, {
+      ok: false,
+      error: "notification_failure"
+    });
+  } finally {
+    if (previousWebhook === undefined) {
+      delete process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+    } else {
+      process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = previousWebhook;
+    }
+  }
+});
+
 test("D7 contact API route exposes healthz and post handlers without leaking private counts", () => {
   assert.ok(exists("apps/website/app/api/contact/route.ts"), "contact API route should exist");
   assert.ok(exists("apps/website/app/api/contact/healthz/route.ts"), "contact healthz route should exist");

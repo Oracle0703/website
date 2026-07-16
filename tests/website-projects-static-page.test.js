@@ -19,6 +19,9 @@ test('projects list page avoids page-level locale cookie reads', () => {
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
   assert.match(pageSource, /getProjectViews\(defaultLocale\)/);
   assert.match(pageSource, /getFeaturedProjectViews\(defaultLocale\)/);
+  assert.match(pageSource, /new Set\(featuredProjects\.map\(\(project\) => project\.slug\)\)/);
+  assert.match(pageSource, /projects\.filter\(\(project\) => !featuredSlugs\.has\(project\.slug\)\)/);
+  assert.match(pageSource, /archiveProjects=\{archiveProjects\}/);
   assert.match(pageSource, /<ProjectsClient/);
 
   assert.match(clientSource, /"use client"/);
@@ -26,8 +29,19 @@ test('projects list page avoids page-level locale cookie reads', () => {
   assert.match(clientSource, /messages\.pages\.projects/);
   assert.match(clientSource, /messages\.pages\.common/);
   assert.match(clientSource, /type ProjectsClientProps/);
-  assert.match(clientSource, /projects:\s*ProjectView\[\]/);
+  assert.match(clientSource, /archiveProjects:\s*ProjectView\[\]/);
   assert.match(clientSource, /featuredProjects:\s*ProjectView\[\]/);
+  assert.doesNotMatch(clientSource, /projects:\s*ProjectView\[\]/);
+});
+
+test('English projects page also removes featured projects from its archive', () => {
+  const pageSource = read('apps/website/app/en/projects/page.tsx');
+
+  assert.match(pageSource, /getProjectViews\("en"\)/);
+  assert.match(pageSource, /getFeaturedProjectViews\("en"\)/);
+  assert.match(pageSource, /new Set\(featuredProjects\.map\(\(project\) => project\.slug\)\)/);
+  assert.match(pageSource, /projects\.filter\(\(project\) => !featuredSlugs\.has\(project\.slug\)\)/);
+  assert.match(pageSource, /archiveProjects=\{archiveProjects\}/);
 });
 
 test('static rendering document records projects as the next migrated page', () => {

@@ -9,45 +9,112 @@ function read(relPath) {
   return fs.readFileSync(path.join(root, relPath), 'utf8');
 }
 
-test('home page receives featured projects and blog series from server data', () => {
-  const homePageSource = read('apps/website/app/page.tsx');
+function count(source, token) {
+  return source.split(token).length - 1;
+}
 
-  assert.match(homePageSource, /getFeaturedProjectViews\(defaultLocale\)/);
-  assert.match(homePageSource, /getPublishedSeries/);
-  assert.match(homePageSource, /featuredProjects/);
-  assert.match(homePageSource, /featuredSeries/);
-  assert.match(homePageSource, /<HomePageClient[\s\S]*featuredProjects=\{featuredProjects\}/);
-  assert.match(homePageSource, /<HomePageClient[\s\S]*featuredSeries=\{featuredSeries\}/);
+function readNavHrefs(source, locale) {
+  const localeStart = source.indexOf(`  ${locale}: {`);
+  const navStart = source.indexOf('nav:', localeStart);
+  const itemsStart = source.indexOf('items: [', navStart);
+  const itemsEnd = source.indexOf(']', itemsStart);
+
+  assert.notEqual(localeStart, -1, `${locale} messages should exist`);
+  assert.notEqual(navStart, -1, `${locale} navigation should exist`);
+  assert.notEqual(itemsStart, -1, `${locale} navigation items should exist`);
+  assert.notEqual(itemsEnd, -1, `${locale} navigation items should close`);
+
+  return Array.from(
+    source.slice(itemsStart, itemsEnd).matchAll(/href:\s*"([^"]+)"/g),
+    (match) => match[1]
+  );
+}
+
+function tagBlockContaining(source, marker, tagName) {
+  const markerIndex = source.indexOf(marker);
+  assert.notEqual(markerIndex, -1, `${marker} should exist`);
+
+  const start = source.lastIndexOf(`<${tagName}`, markerIndex);
+  const end = source.indexOf(`</${tagName}>`, markerIndex);
+  assert.notEqual(start, -1, `${marker} should be inside <${tagName}>`);
+  assert.notEqual(end, -1, `${marker} should be inside a closed <${tagName}>`);
+
+  return source.slice(start, end + tagName.length + 3);
+}
+
+test('home pages provide recent posts and asset-backed featured projects without series data', () => {
+  for (const relPath of ['apps/website/app/page.tsx', 'apps/website/app/en/page.tsx']) {
+    const source = read(relPath);
+
+    assert.match(source, /getPublishedPosts(?:ForLocale)?/);
+    assert.match(source, /getFeaturedProjectViews\(/);
+    assert.match(source, /latestBlogItems=\{latestBlogItems\}/);
+    assert.match(source, /featuredProjects=\{featuredProjects\}/);
+    assert.match(source, /project\.asset\.kind === "screenshot"/);
+    assert.match(source, /project\.asset\.kind === "mock"/);
+    assert.match(source, /project\.asset\.kind === "diagram"/);
+    assert.match(source, /src:\s*project\.asset\.src/);
+    assert.match(source, /alt:\s*project\.asset\.alt/);
+    assert.match(source, /caption:\s*project\.asset\.caption/);
+    assert.doesNotMatch(source, /getPublishedSeries|featuredSeries/);
+  }
 });
 
-test('home client has content-project loop sections and typed props', () => {
+test('home client has four focused sections and no ParticleTime or series dependency', () => {
   const clientSource = read('apps/website/components/home/home-page-client.tsx');
 
-  assert.match(clientSource, /type HomeProjectItem/);
-  assert.match(clientSource, /type HomeSeriesItem/);
-  assert.match(clientSource, /featuredProjects\?: HomeProjectItem\[\]/);
-  assert.match(clientSource, /featuredSeries\?: HomeSeriesItem\[\]/);
-  assert.match(clientSource, /currentFocusTitle/);
-  assert.match(clientSource, /featuredProjectsTitle/);
-  assert.match(clientSource, /featuredSeriesTitle/);
-  assert.match(clientSource, /featuredSeriesSectionItems/);
-  assert.match(clientSource, /latestBlogSectionItems/);
+  assert.equal(count(clientSource, '<section'), 1, 'home should have one semantic hero section');
+  assert.equal(
+    count(clientSource, '<RevealSection'),
+    3,
+    'home should add projects, latest writing, and contact sections'
+  );
+  assert.match(clientSource, /supportingProjects\.map/);
+  assert.match(clientSource, /latestBlogSectionItems\.map/);
+  assert.match(clientSource, /copy\.contactTitle/);
+  assert.doesNotMatch(clientSource, /ParticleTime|particle-time/);
+  assert.doesNotMatch(clientSource, /HomeSeriesItem|featuredSeries/);
 });
 
-test('home i18n copy supports the refined information architecture', () => {
+test('home flagship uses the first project and renders its real asset with Next Image', () => {
+  const clientSource = read('apps/website/components/home/home-page-client.tsx');
+
+  assert.match(clientSource, /import Image from "next\/image"/);
+  assert.match(clientSource, /type HomeProjectAsset/);
+  assert.match(clientSource, /asset\?: HomeProjectAsset/);
+  assert.match(clientSource, /const flagshipProject = featuredProjects\[0\]/);
+  assert.match(clientSource, /const supportingProjects = featuredProjects\.slice\(1, 3\)/);
+  assert.match(clientSource, /flagshipProject\.asset \? \(/);
+  assert.match(clientSource, /<Image[\s\S]*src=\{flagshipProject\.asset\.src\}/);
+  assert.match(clientSource, /<Image[\s\S]*alt=\{flagshipProject\.asset\.alt\}/);
+});
+
+test('home latest-writing links disable eager prefetch for the dense article list', () => {
+  const clientSource = read('apps/website/components/home/home-page-client.tsx');
+  const loopStart = clientSource.indexOf('latestBlogSectionItems.map');
+  const loopEnd = clientSource.indexOf('</RevealSection>', loopStart);
+
+  assert.notEqual(loopStart, -1);
+  assert.notEqual(loopEnd, -1);
+  const latestWritingBlock = clientSource.slice(loopStart, loopEnd);
+  assert.match(latestWritingBlock, /<Link[\s\S]*prefetch=\{false\}/);
+});
+
+test('home i18n copy supports the four-section information architecture', () => {
   const i18nSource = read('apps/website/lib/i18n.ts');
 
   for (const key of [
     'ctaProjects',
     'ctaContact',
+    'ctaBlog',
     'heroEvidenceTitle',
     'heroEvidenceItems',
     'currentFocusTitle',
     'featuredProjectsTitle',
-    'featuredSeriesTitle',
     'latestFallbackTitle',
-    'labsTrackerTitle',
-    'contactTitle'
+    'latestBlog',
+    'contactTitle',
+    'contactAction'
   ]) {
     assert.match(i18nSource, new RegExp(`${key}:`));
   }
@@ -62,25 +129,34 @@ test('English home copy names the actual product surfaces', () => {
   assert.match(i18nSource, /product prototypes/);
 });
 
-test('About and contact clients render refined information sections', () => {
-  const aboutClient = read('apps/website/app/about/about-client.tsx');
-  const contactClient = read('apps/website/app/contact/contact-client.tsx');
+test('header and footer consume the focused navigation without exposing secondary demos', () => {
+  const headerSource = read('apps/website/components/site-header.tsx');
+  const footerSource = read('apps/website/components/site-footer.tsx');
   const i18nSource = read('apps/website/lib/i18n.ts');
+  const expectedPrimaryHrefs = ['/projects', '/blog', '/about', '/contact'];
+
+  for (const locale of ['zh', 'en']) {
+    assert.deepEqual(
+      readNavHrefs(i18nSource, locale),
+      expectedPrimaryHrefs,
+      `${locale} primary navigation should stay focused`
+    );
+  }
+
+  assert.match(headerSource, /messages\.nav\.items\.map/);
+  assert.match(footerSource, /messages\.nav\.items\.map/);
+  assert.doesNotMatch(headerSource, /getHref\("\/enter"\)|messages\.nav\.enter/);
+  assert.match(footerSource, /https:\/\/github\.com\/Oracle0703/);
+});
+
+test('About client retains its narrative sections and principles', () => {
+  const aboutClient = read('apps/website/app/about/about-client.tsx');
 
   assert.match(aboutClient, /copy\.sections\.map/);
   assert.match(aboutClient, /copy\.principles\.map/);
-  assert.match(contactClient, /copy\.collaborationAreas\.map/);
-  assert.match(contactClient, /copy\.boundaries\.map/);
-  assert.match(contactClient, /copy\.contactPathTitle/);
-  assert.match(contactClient, /copy\.contactChannels\.map/);
-  assert.match(i18nSource, /collaborationAreas/);
-  assert.match(i18nSource, /boundaries/);
-  assert.match(i18nSource, /contactPathTitle/);
-  assert.match(i18nSource, /contactChannels/);
-  assert.match(i18nSource, /Small product delivery/);
 });
 
-test('D5 UI tokens define shared actions and evidence cards', () => {
+test('shared UI tokens keep the action and evidence primitives', () => {
   const globalsSource = read('apps/website/app/globals.css');
 
   for (const className of ['btn-primary', 'btn-secondary', 'evidence-card', 'section-kicker']) {
@@ -88,29 +164,47 @@ test('D5 UI tokens define shared actions and evidence cards', () => {
   }
 });
 
-test('home client renders D5 hero evidence without replacing server data loops', () => {
-  const clientSource = read('apps/website/components/home/home-page-client.tsx');
+test('contact uses a two-column intake layout with collapsible boundaries and privacy details', () => {
+  const contactClient = read('apps/website/app/contact/contact-client.tsx');
+  const asideIndex = contactClient.indexOf('<aside');
+  const formIndex = contactClient.indexOf('<form');
+  const layoutStart = contactClient.lastIndexOf('<div className="grid', asideIndex);
+  const layoutTagEnd = contactClient.indexOf('>', layoutStart);
 
-  assert.match(clientSource, /copy\.heroEvidenceTitle/);
-  assert.match(clientSource, /copy\.heroEvidenceItems\.map/);
-  assert.match(clientSource, /evidence-card/);
-  assert.match(clientSource, /featuredProjects\.map/);
-  assert.match(clientSource, /featuredSeriesSectionItems/);
+  assert.notEqual(asideIndex, -1, 'contact guidance should be in an aside');
+  assert.notEqual(formIndex, -1, 'contact form should be present');
+  assert.ok(asideIndex < formIndex, 'guidance should precede the form in source order');
+  assert.notEqual(layoutStart, -1, 'aside and form should share a grid layout');
+  assert.match(contactClient.slice(layoutStart, layoutTagEnd + 1), /lg:grid-cols-/);
+
+  const boundaryDetails = tagBlockContaining(contactClient, 'copy.boundariesTitle', 'details');
+  assert.match(boundaryDetails, /<summary/);
+  assert.match(boundaryDetails, /copy\.boundaries\.map/);
+
+  const privacyDetails = tagBlockContaining(
+    contactClient,
+    'copy.contactForm.privacyNotice',
+    'details'
+  );
+  assert.match(privacyDetails, /<summary/);
+  assert.match(privacyDetails, /copy\.contactForm\.retentionNotice/);
+  assert.match(privacyDetails, /copy\.contactForm\.deletionNotice/);
 });
 
-test('contact copy avoids placeholder contact channels and exposes a clear contact strategy', () => {
+test('contact exposes one verified GitHub fallback instead of a channel-card matrix', () => {
   const i18nSource = read('apps/website/lib/i18n.ts');
   const contactClient = read('apps/website/app/contact/contact-client.tsx');
 
   assert.doesNotMatch(i18nSource, /hello@example\.com|mailto:hello|example\.com/);
-  assert.match(i18nSource, /contactPathDescription/);
-  assert.match(i18nSource, /responseExpectation/);
   assert.match(i18nSource, /https:\/\/github\.com\/Oracle0703/);
-  assert.match(contactClient, /href=\{channel\.href\.startsWith\("http"\)/);
-  assert.match(contactClient, /noopener noreferrer/);
+  assert.match(contactClient, /copy\.contactChannels\.find/);
+  assert.match(contactClient, /href=\{githubChannel\.href\}/);
+  assert.match(contactClient, /target="_blank"/);
+  assert.match(contactClient, /rel="noopener noreferrer"/);
+  assert.doesNotMatch(contactClient, /copy\.contactChannels\.map/);
 });
 
-test('contact page presents the live form and visitor-facing fallback without rollout jargon', () => {
+test('contact page presents the live form without rollout jargon', () => {
   const i18nSource = read('apps/website/lib/i18n.ts');
   const contactClient = read('apps/website/app/contact/contact-client.tsx');
 
@@ -118,24 +212,34 @@ test('contact page presents the live form and visitor-facing fallback without ro
   assert.match(i18nSource, /填写下方表单/);
   assert.match(i18nSource, /Use the form below/);
   assert.match(contactClient, /copy\.contactPathEyebrow/);
-  assert.doesNotMatch(i18nSource, /contactDecisionTitle|contactDecisionStatus|contactDecisionDescription|formSpecTitle|formSpecAction/);
-  assert.doesNotMatch(i18nSource, /D6|D7|联系闭环决策|表单规格|Contact-loop decision|form spec/);
+  assert.doesNotMatch(
+    i18nSource,
+    /contactDecisionTitle|contactDecisionStatus|contactDecisionDescription|formSpecTitle|formSpecAction/
+  );
+  assert.doesNotMatch(
+    i18nSource,
+    /D6|D7|联系闭环决策|表单规格|Contact-loop decision|form spec/
+  );
   assert.doesNotMatch(contactClient, /contactDecision|formSpec/);
 });
 
-test('D7 contact client renders a real intake form without placeholder channels', () => {
+test('contact client keeps the real intake fields and privacy contract', () => {
   const i18nSource = read('apps/website/lib/i18n.ts');
   const contactClient = read('apps/website/app/contact/contact-client.tsx');
 
   assert.match(contactClient, /<form/);
   assert.match(contactClient, /onSubmit=\{handleSubmit\}/);
-  assert.match(contactClient, /name="name"/);
-  assert.match(contactClient, /name="contact"/);
-  assert.match(contactClient, /name="project_goal"/);
-  assert.match(contactClient, /name="timeline"/);
-  assert.match(contactClient, /name="budget_range"/);
-  assert.match(contactClient, /name="links"/);
-  assert.match(contactClient, /name="honeypot"/);
+  for (const field of [
+    'name',
+    'contact',
+    'project_goal',
+    'timeline',
+    'budget_range',
+    'links',
+    'honeypot'
+  ]) {
+    assert.match(contactClient, new RegExp(`name="${field}"`));
+  }
   assert.match(contactClient, /copy\.contactForm\.privacyNotice/);
   assert.match(contactClient, /copy\.contactForm\.retentionNotice/);
   assert.match(contactClient, /copy\.contactForm\.deletionNotice/);
@@ -143,5 +247,4 @@ test('D7 contact client renders a real intake form without placeholder channels'
   assert.match(i18nSource, /submitBusy/);
   assert.match(i18nSource, /successTitle/);
   assert.match(i18nSource, /received_with_notification_failure/);
-  assert.doesNotMatch(i18nSource, /hello@example\.com|mailto:hello|example\.com/);
 });

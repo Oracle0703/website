@@ -18,7 +18,7 @@ test("blog discovery uses a stable five-topic taxonomy instead of a long tag clo
   assert.deepEqual(topicIds, ["engineering", "product", "security", "seo", "labs"]);
   assert.match(clientSource, /searchParams\.get\("topic"\)/);
   assert.doesNotMatch(clientSource, /searchParams\.get\("tag"\)/);
-  assert.match(listSource, /BLOG_TOPICS\.filter/);
+  assert.match(listSource, /BLOG_TOPICS\.map/);
   assert.match(listSource, /\?topic=/);
   assert.doesNotMatch(listSource, /post\.tags\.map|sortedTags/);
   assert.doesNotMatch(listSource, /tags\?:\s*string\[\]/);
