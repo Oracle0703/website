@@ -72,14 +72,9 @@ export function EnterClient() {
   const homeHref = getLocalePath("/", locale);
   const router = useRouter();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const [isMounted, setIsMounted] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [activeHref, setActiveHref] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const handleBack = useCallback(
     (event?: MouseEvent<HTMLAnchorElement>) => {
@@ -132,7 +127,7 @@ export function EnterClient() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleBack]);
 
-  const containerState = isMounted && !isExiting ? "opacity-100 scale-100" : "opacity-0 scale-95";
+  const containerState = isExiting ? "opacity-0 scale-95" : "opacity-100 scale-100";
   const containerDuration = isExiting ? "duration-300" : "duration-700";
 
   return (

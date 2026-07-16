@@ -21,6 +21,9 @@ test('blog detail page emits BlogPosting JSON-LD from the post data', () => {
   assert.match(source, /dateModified:\s*post\.updatedAt/);
   assert.match(source, /author:\s*\{\s*"@type":\s*"Person",\s*name:\s*post\.author\s*\}/s);
   assert.match(source, /url:\s*toAbsoluteUrl\(canonicalPath\)/);
+  assert.match(source, /mainEntityOfPage:\s*\{/);
+  assert.match(source, /"@type":\s*"WebPage"/);
+  assert.match(source, /"@id":\s*toAbsoluteUrl\(canonicalPath\)/);
   assert.match(source, /image:\s*getStructuredDataImageUrl\(cover\)/);
   assert.match(source, /function getStructuredDataImageUrl\(src: string\)/);
   assert.match(source, /return src\.startsWith\("http:\/\/"\) \|\| src\.startsWith\("https:\/\/"\)/);

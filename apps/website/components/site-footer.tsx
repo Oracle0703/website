@@ -6,9 +6,7 @@ import { getLocalePath } from "../lib/locale-routing";
 import { TEXT_BASE_MUTED } from "../lib/typography";
 
 const socialLinks = [
-  { href: "https://github.com", label: "GitHub" },
-  { href: "https://x.com", label: "X" },
-  { href: "https://www.linkedin.com", label: "LinkedIn" },
+  { href: "https://github.com/Oracle0703", label: "GitHub" }
 ];
 
 export function SiteFooter() {

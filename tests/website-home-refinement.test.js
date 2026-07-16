@@ -39,6 +39,7 @@ test('home i18n copy supports the refined information architecture', () => {
 
   for (const key of [
     'ctaProjects',
+    'ctaContact',
     'heroEvidenceTitle',
     'heroEvidenceItems',
     'currentFocusTitle',

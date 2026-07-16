@@ -4,20 +4,24 @@ import { TEXT_XS_SECONDARY } from "../lib/typography";
 
 type AnnouncementTickerProps = {
   items: string[];
-  label?: string;
+  label: string;
+  kicker: string;
+  emptyMessage: string;
 };
 
 export function AnnouncementTicker({
   items,
-  label = "修行公告"
+  label,
+  kicker,
+  emptyMessage
 }: AnnouncementTickerProps) {
-  const announcements = items.length > 0 ? items : ["暂无最新动态"];
+  const announcements = items.length > 0 ? items : [emptyMessage];
 
   return (
     <div className="rounded-2xl border border-edge bg-surface/60 px-3 py-3 sm:px-4">
       <div className={`flex items-center gap-2 ${TEXT_XS_SECONDARY} sm:gap-3 sm:text-sm`}>
         <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent sm:text-xs">
-          天机
+          {kicker}
         </span>
         <div className="ticker" aria-label={label}>
           <div className="ticker-track">

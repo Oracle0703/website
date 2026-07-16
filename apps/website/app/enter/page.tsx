@@ -10,6 +10,7 @@ export const generateMetadata = (): Metadata => {
   return {
     title: seo.enterTitle,
     description: seo.enterDescription,
+    robots: { index: false, follow: true },
     alternates: getLanguageAlternates("/enter"),
     openGraph: {
       title: seo.enterTitle,

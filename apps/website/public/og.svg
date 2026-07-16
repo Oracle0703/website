@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Meaningful Ink</title>
+  <desc id="description">Social preview for a full-stack developer focused on AI products.</desc>
+  <defs>
+    <linearGradient id="background" x1="70" y1="30" x2="1110" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111A2E" />
+      <stop offset="0.58" stop-color="#0B0F1A" />
+      <stop offset="1" stop-color="#15102B" />
+    </linearGradient>
+    <radialGradient id="blueGlow" cx="0" cy="0" r="1" gradientTransform="translate(250 95) rotate(38) scale(540 430)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5B8CFF" stop-opacity="0.42" />
+      <stop offset="1" stop-color="#5B8CFF" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="violetGlow" cx="0" cy="0" r="1" gradientTransform="translate(1080 540) rotate(-145) scale(510 390)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6" stop-opacity="0.3" />
+      <stop offset="1" stop-color="#8B5CF6" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#94A3B8" stroke-opacity="0.08" />
+    </pattern>
+    <linearGradient id="mark" x1="96" y1="85" x2="194" y2="183" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5B8CFF" />
+      <stop offset="1" stop-color="#8B5CF6" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#background)" />
+  <rect width="1200" height="630" fill="url(#blueGlow)" />
+  <rect width="1200" height="630" fill="url(#violetGlow)" />
+  <rect width="1200" height="630" fill="url(#grid)" />
+
+  <rect x="72" y="62" width="1056" height="506" rx="32" fill="#0B0F1A" fill-opacity="0.62" stroke="#CBD5E1" stroke-opacity="0.16" />
+  <rect x="104" y="96" width="84" height="84" rx="22" fill="url(#mark)" />
+  <path d="M126 150V124L146 145L166 124V150" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+
+  <text x="104" y="263" fill="#F1F5F9" font-family="DejaVu Sans, Arial, sans-serif" font-size="66" font-weight="700" letter-spacing="-1.5">Meaningful · Ink</text>
+  <text x="106" y="324" fill="#93C5FD" font-family="DejaVu Sans, Arial, sans-serif" font-size="28" font-weight="600" letter-spacing="1.1">FULL-STACK DEVELOPER FOR AI PRODUCTS</text>
+  <text x="106" y="390" fill="#CBD5E1" font-family="DejaVu Sans, Arial, sans-serif" font-size="31">Working prototypes. Clear product evidence.</text>
+  <text x="106" y="438" fill="#CBD5E1" font-family="DejaVu Sans, Arial, sans-serif" font-size="31">Systems designed to keep evolving.</text>
+
+  <g transform="translate(106 492)">
+    <rect width="132" height="42" rx="21" fill="#5B8CFF" fill-opacity="0.16" stroke="#5B8CFF" stroke-opacity="0.5" />
+    <text x="66" y="27" text-anchor="middle" fill="#BFDBFE" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="600">Next.js</text>
+    <rect x="148" width="152" height="42" rx="21" fill="#5B8CFF" fill-opacity="0.16" stroke="#5B8CFF" stroke-opacity="0.5" />
+    <text x="224" y="27" text-anchor="middle" fill="#BFDBFE" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="600">TypeScript</text>
+    <rect x="316" width="132" height="42" rx="21" fill="#8B5CF6" fill-opacity="0.16" stroke="#8B5CF6" stroke-opacity="0.5" />
+    <text x="382" y="27" text-anchor="middle" fill="#DDD6FE" font-family="DejaVu Sans, Arial, sans-serif" font-size="16" font-weight="600">Node.js</text>
+  </g>
+
+  <text x="1096" y="520" text-anchor="end" fill="#94A3B8" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" letter-spacing="0.5">meaningful.ink</text>
+</svg>

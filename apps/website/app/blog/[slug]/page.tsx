@@ -84,7 +84,7 @@ export const generateMetadata = ({ params }: PageProps): Metadata => {
     title: post.title,
     description,
     alternates: {
-      ...getLanguageAlternates(canonicalPath),
+      ...getLanguageAlternates(canonicalPath, post.availableLocales ?? [defaultLocale]),
       canonical: toAbsoluteUrl(canonicalPath)
     },
     openGraph: {
@@ -99,7 +99,7 @@ export const generateMetadata = ({ params }: PageProps): Metadata => {
       description,
       images: cover ? [cover] : []
     },
-    robots: post.seo?.noindex ? { index: false, follow: false } : undefined
+    robots: post.seo?.noindex ? { index: false, follow: true } : undefined
   };
 };
 
@@ -164,6 +164,10 @@ export default async function Page({ params }: PageProps) {
     dateModified: post.updatedAt,
     author: { "@type": "Person", name: post.author },
     url: toAbsoluteUrl(canonicalPath),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": toAbsoluteUrl(canonicalPath)
+    },
     inLanguage: getJsonLdLanguage(defaultLocale),
     image: getStructuredDataImageUrl(cover)
   };

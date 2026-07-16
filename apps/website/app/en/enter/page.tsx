@@ -12,6 +12,7 @@ export const generateMetadata = (): Metadata => {
   return {
     title: seo.enterTitle,
     description: seo.enterDescription,
+    robots: { index: false, follow: true },
     alternates: {
       ...getLanguageAlternates("/en/enter"),
       canonical: toAbsoluteUrl("/en/enter")

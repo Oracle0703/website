@@ -7,7 +7,7 @@ export const LOCALE_COOKIE = "locale";
 export const messages = {
   zh: {
     nav: {
-      brand: "开发者工作室",
+      brand: "Meaningful · Ink",
       items: [
         { href: "/", label: "首页" },
         { href: "/blog", label: "博客" },
@@ -30,17 +30,18 @@ export const messages = {
       switchToDark: "切换到暗色"
     },
     footer: {
-      copyright: "© 2026 开发者工作室",
+      copyright: "© 2026 Meaningful · Ink",
       tagline: "开发者作品集 · 博客 · 实验室 · 打卡"
     },
     home: {
-      heroTitle: "全栈开发者",
-      heroSubtitle: "构建内容与体验的数字空间",
+      heroTitle: "专注 AI 工程与产品体验的全栈开发者",
+      heroSubtitle: "把 AI 与产品想法做成可运行、可验证的原型",
       heroIntro:
-        "我把 AI 工具、内容系统、后台控制台和产品原型打磨成可展示、可维护、可继续产品化的个人网站系统。",
+        "我使用 Next.js、TypeScript 与 Node.js，构建 AI 工具、内容系统、后台控制台和可以持续演进的小产品。",
       ctaEnter: "查看作品",
       ctaBlog: "阅读博客",
       ctaProjects: "查看作品",
+      ctaContact: "联系我",
       heroEvidenceTitle: "当前证据链",
       heroEvidenceItems: [
         {
@@ -418,11 +419,11 @@ export const messages = {
       }
     },
     seo: {
-      siteName: "开发者工作室",
-      defaultTitle: "开发者主页",
-      defaultDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
-      homeTitle: "开发者主页",
-      homeDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
+      siteName: "Meaningful · Ink",
+      defaultTitle: "AI 工程与产品体验",
+      defaultDescription: "专注 AI 工程与产品体验，用 Next.js、TypeScript 与 Node.js 构建可运行、可验证的产品原型。",
+      homeTitle: "AI 工程与产品体验",
+      homeDescription: "专注 AI 工程与产品体验，用 Next.js、TypeScript 与 Node.js 构建可运行、可验证的产品原型。",
       enterTitle: "进入站点",
       enterDescription: "选择进入博客、实验室或打卡平台。",
       blogTitle: "博客",
@@ -445,7 +446,7 @@ export const messages = {
   },
   en: {
     nav: {
-      brand: "Developer Studio",
+      brand: "Meaningful · Ink",
       items: [
         { href: "/", label: "Home" },
         { href: "/blog", label: "Blog" },
@@ -468,17 +469,18 @@ export const messages = {
       switchToDark: "Switch to dark mode"
     },
     footer: {
-      copyright: "© 2026 Developer Studio",
+      copyright: "© 2026 Meaningful · Ink",
       tagline: "Developer Portfolio · Blog · Labs · Tracker"
     },
     home: {
-      heroTitle: "Full-Stack Developer",
-      heroSubtitle: "Building content-driven experiences",
+      heroTitle: "Full-Stack Developer for AI Products",
+      heroSubtitle: "Turning AI and product ideas into working, testable prototypes",
       heroIntro:
-        "I turn AI tools, content systems, dashboards, and product prototypes into a maintainable personal product system.",
+        "I use Next.js, TypeScript, and Node.js to build AI tools, content systems, dashboards, and small products that can keep evolving.",
       ctaEnter: "View projects",
       ctaBlog: "Read the Blog",
       ctaProjects: "View projects",
+      ctaContact: "Contact me",
       heroEvidenceTitle: "Current proof chain",
       heroEvidenceItems: [
         {
@@ -857,11 +859,11 @@ export const messages = {
       }
     },
     seo: {
-      siteName: "Developer Studio",
-      defaultTitle: "Developer Portfolio",
-      defaultDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
-      homeTitle: "Developer Portfolio",
-      homeDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
+      siteName: "Meaningful · Ink",
+      defaultTitle: "AI Engineering and Product Experience",
+      defaultDescription: "A full-stack developer building working, testable AI products with Next.js, TypeScript, and Node.js.",
+      homeTitle: "AI Engineering and Product Experience",
+      homeDescription: "A full-stack developer building working, testable AI products with Next.js, TypeScript, and Node.js.",
       enterTitle: "Enter",
       enterDescription: "Choose to enter the blog, labs, or tracker.",
       blogTitle: "Blog",

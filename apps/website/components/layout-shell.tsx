@@ -9,7 +9,7 @@ import type { Locale } from "../lib/i18n";
 import { ThemeProvider } from "./theme-provider";
 import type { Theme } from "../lib/theme";
 
-const CHROME_HIDDEN_ROUTES = new Set(["/enter"]);
+const CHROME_HIDDEN_ROUTES = new Set(["/enter", "/en/enter"]);
 
 export function LayoutShell({
   children,

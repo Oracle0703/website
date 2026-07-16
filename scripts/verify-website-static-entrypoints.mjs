@@ -9,6 +9,11 @@ const buildIdPath = `${root}/apps/website/.next/BUILD_ID`;
 const nextCliPath = `${root}/node_modules/next/dist/bin/next`;
 const providedBaseUrl = process.env.NEXT_STATIC_VERIFY_BASE_URL;
 const requestedPort = Number(process.env.NEXT_STATIC_VERIFY_PORT ?? 4321);
+const siteBaseUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  "https://www.meaningful.ink"
+).replace(/\/$/, "");
 const hydrationWarningPattern = /Hydration failed|Text content does not match|Minified React error/i;
 const scriptSrcPattern = /<script[^>]+src="([^"]+\/_next\/static\/[^"]+\.js[^"]*)"[^>]*>/g;
 
@@ -35,6 +40,25 @@ async function fetchText(pathname) {
   }
 
   return response.text();
+}
+
+async function fetchPublicAsset(pathname, contentTypePattern) {
+  const response = await fetch(new URL(pathname, baseUrl), {
+    headers: {
+      "user-agent": "website-static-entrypoint-verifier"
+    }
+  });
+
+  if (!response.ok) {
+    fail(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentTypePattern.test(contentType)) {
+    fail(`${pathname} returned unexpected content-type ${contentType || "<missing>"}`);
+  }
+
+  return response;
 }
 
 async function waitForServer() {
@@ -132,6 +156,53 @@ function verifyHtml(route, html) {
   }
 }
 
+function getTagAttribute(tag, attribute) {
+  const match = tag.match(new RegExp(`\\b${attribute}=["']([^"']+)["']`, "i"));
+  return match?.[1]?.replace(/&amp;/g, "&");
+}
+
+function findTag(html, tagName, identifyingAttribute, identifyingValue) {
+  const tags = html.match(new RegExp(`<${tagName}\\b[^>]*>`, "gi")) ?? [];
+  return tags.find(
+    (tag) => getTagAttribute(tag, identifyingAttribute)?.toLowerCase() === identifyingValue
+  );
+}
+
+function getExpectedPublicUrl(pathname) {
+  return new URL(pathname, `${siteBaseUrl}/`).toString().replace(/\/$/, "");
+}
+
+function verifyMetadata(route, html) {
+  const expectedCanonical = getExpectedPublicUrl(route.canonicalPath);
+  const canonicalTag = findTag(html, "link", "rel", "canonical");
+  const canonical = canonicalTag ? getTagAttribute(canonicalTag, "href") : undefined;
+  if (canonical !== expectedCanonical) {
+    fail(`${route.path} canonical is ${canonical ?? "<missing>"}; expected ${expectedCanonical}`);
+  }
+
+  const openGraphUrlTag = findTag(html, "meta", "property", "og:url");
+  const openGraphUrl = openGraphUrlTag ? getTagAttribute(openGraphUrlTag, "content") : undefined;
+  if (openGraphUrl !== expectedCanonical) {
+    fail(`${route.path} og:url is ${openGraphUrl ?? "<missing>"}; expected ${expectedCanonical}`);
+  }
+
+  for (const [label, identifyingAttribute, identifyingValue] of [
+    ["og:image", "property", "og:image"],
+    ["twitter:image", "name", "twitter:image"]
+  ]) {
+    const tag = findTag(html, "meta", identifyingAttribute, identifyingValue);
+    const value = tag ? getTagAttribute(tag, "content") : undefined;
+    if (!value) {
+      fail(`${route.path} is missing ${label}`);
+    }
+
+    const imageUrl = new URL(value);
+    if (imageUrl.protocol !== "https:" || imageUrl.hostname === "localhost") {
+      fail(`${route.path} ${label} must be a public HTTPS URL, received ${value}`);
+    }
+  }
+}
+
 function collectScriptSources(html) {
   return Array.from(html.matchAll(scriptSrcPattern), (match) => normalizeAssetUrl(match[1]));
 }
@@ -166,7 +237,30 @@ async function main() {
   for (const route of PUBLIC_WEBSITE_LOCALE_ROUTES) {
     const html = await fetchText(route.path);
     verifyHtml(route.path, html);
+    verifyMetadata(route, html);
     scriptSources.push(...collectScriptSources(html));
+  }
+
+  const robots = await fetchPublicAsset("/robots.txt", /^text\/plain/i);
+  const robotsText = await robots.text();
+  if (!robotsText.includes(`${siteBaseUrl}/sitemap.xml`)) {
+    fail("robots.txt does not point to the production sitemap URL");
+  }
+
+  const sitemap = await fetchPublicAsset("/sitemap.xml", /^(application|text)\/(xml|[^;]+\+xml)/i);
+  const sitemapText = await sitemap.text();
+  for (const route of PUBLIC_WEBSITE_LOCALE_ROUTES) {
+    const expectedUrl = getExpectedPublicUrl(route.canonicalPath);
+    const shouldBeIndexed = route.canonicalPath !== "/enter" && route.canonicalPath !== "/en/enter";
+    if (sitemapText.includes(`<loc>${expectedUrl}</loc>`) !== shouldBeIndexed) {
+      fail(`sitemap.xml has the wrong indexability state for ${route.canonicalPath}`);
+    }
+  }
+
+  await fetchPublicAsset("/favicon.ico", /^image\/(x-icon|vnd\.microsoft\.icon)/i);
+  const socialImage = await fetchPublicAsset("/og.png", /^image\/png/i);
+  if (Number(socialImage.headers.get("content-length") ?? 0) < 10_000) {
+    fail("og.png is unexpectedly small; verify that the branded image replaced the flat placeholder");
   }
 
   await verifyScriptBundles(scriptSources);

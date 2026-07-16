@@ -17,6 +17,9 @@ test('sitemap lastModified values are stable for static and project routes', () 
   assert.doesNotMatch(sitemapSource, /lastModified:\s*now/);
   assert.match(sitemapSource, /lastModified:\s*new Date\(project\.updatedAt\)/);
   assert.match(sitemapSource, /PUBLIC_WEBSITE_LOCALE_ROUTES/);
+  assert.match(sitemapSource, /NON_INDEXABLE_ROUTES/);
+  assert.match(sitemapSource, /\.filter\(\(route\)\s*=>\s*!NON_INDEXABLE_ROUTES\.has\(route\.canonicalPath\)\)/);
+  assert.match(sitemapSource, /getPublishedPosts\(\)\.filter\(\(post\)\s*=>\s*!post\.seo\?\.noindex\)/);
   assert.match(sitemapSource, /getLocalePath\(`\/blog\/\$\{slug\}`,\s*locale\)/);
   assert.match(sitemapSource, /getLocalePath\(\s*`\/projects\/\$\{encodeURIComponent\(project\.slug\)\}`,\s*locale\s*\)/);
 
