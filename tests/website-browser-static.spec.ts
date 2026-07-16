@@ -77,7 +77,7 @@ const englishContentChecks = [
   {
     path: "/en",
     heading: /Turning complex ideas into clear, useful products\./,
-    text: /AI tools/
+    text: /AI applications/
   },
   {
     path: "/en/projects",
