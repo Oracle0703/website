@@ -1,7 +1,7 @@
 # Website Phase 1 Go-Live Checklist (meaningful.ink / www.meaningful.ink)
 
-> Note: Yu currently deploys the website via Baota + copy mode. Prefer `docs/website/DEPLOY_WINDOWS_BAOTA.md` for the active process.
-> This checklist is kept as an alternative/legacy Windows Server + NSSM runbook.
+> Note: Yu currently deploys the website via Baota + prebuilt standalone copy mode. Prefer `docs/website/DEPLOY_WINDOWS_BAOTA.md` for the active, low-memory-server process; the server does not run npm install/build.
+> The remaining Gitee + source-build + NSSM sections below are kept as a legacy alternative only.
 
 目标：把 `apps/website/` 以 **Windows Server 2022 + Nginx + NSSM** 方式上线，并支持：
 - `https://meaningful.ink/`

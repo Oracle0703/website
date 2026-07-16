@@ -54,6 +54,7 @@ test("locale routing helpers define path conversion contracts", () => {
 
   assert.match(source, /getLocalePath/);
   assert.match(source, /getAlternateLocalePath/);
+  assert.match(source, /isNavigationPathActive/);
   assert.match(source, /stripLocalePrefix/);
   assert.match(source, /getRouteLocale/);
   assert.match(source, /defaultLocale/);
@@ -67,6 +68,19 @@ test("locale routing helpers cover root, trailing slash, and prefix edge cases",
   assert.match(source, /endsWith\("\/"\)/);
   assert.match(source, /normalized === EN_PREFIX/);
   assert.match(source, /normalized\.startsWith\(`\$\{EN_PREFIX\}\/`\)/);
+  assert.match(source, /currentPath === targetPath \|\| currentPath\.startsWith/);
+});
+
+test("header navigation tracks section routes and closes its mobile menu", () => {
+  const source = read("apps/website/components/site-header.tsx");
+
+  assert.match(source, /usePathname/);
+  assert.match(source, /isNavigationPathActive\(pathname, item\.href\)/);
+  assert.match(source, /aria-current=\{isActive \? "page" : undefined\}/);
+  assert.match(source, /aria-controls=\{MOBILE_MENU_ID\}/);
+  assert.match(source, /id=\{MOBILE_MENU_ID\}/);
+  assert.match(source, /useEffect\(\(\) => \{\s*setMenuOpen\(false\);\s*\}, \[pathname\]\)/);
+  assert.match(source, /const handleLocaleToggle = \(\) => \{\s*setMenuOpen\(false\);\s*toggleLocale\(\);/);
 });
 
 test("English public entrypoints exist as static App Router pages", () => {

@@ -22,7 +22,8 @@ test('home page avoids page-level locale cookie reads', () => {
   assert.match(pageSource, /locale=\{defaultLocale\}/);
   assert.match(pageSource, /copy=\{home\}/);
 
-  assert.match(clientSource, /"use client"/);
+  assert.doesNotMatch(clientSource, /["']use client["']/);
+  assert.doesNotMatch(clientSource, /\buse(?:State|Effect|Memo|Callback|Ref)\b|\bwindow\b|\bdocument\b/);
   assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
   assert.match(clientSource, /copy: Messages\["home"\]/);
   assert.match(clientSource, /projectStatusLabels: Messages\["pages"\]\["projects"\]\["status"\]/);

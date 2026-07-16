@@ -19,7 +19,8 @@ test("blog detail page avoids page-level locale cookie reads", () => {
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
   assert.match(pageSource, /<BlogDetailClient/);
 
-  assert.match(clientSource, /"use client"/);
+  assert.doesNotMatch(clientSource, /["']use client["']/);
+  assert.doesNotMatch(clientSource, /\buse(?:State|Effect|Memo|Callback|Ref)\b|\bwindow\b|\bdocument\b/);
   assert.doesNotMatch(clientSource, /useI18n/);
   assert.match(clientSource, /copy: Messages\["pages"\]\["blog"\]/);
   assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
@@ -36,7 +37,8 @@ test("project detail page avoids page-level locale cookie reads", () => {
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
   assert.match(pageSource, /<ProjectDetailClient/);
 
-  assert.match(clientSource, /"use client"/);
+  assert.doesNotMatch(clientSource, /["']use client["']/);
+  assert.doesNotMatch(clientSource, /\buse(?:State|Effect|Memo|Callback|Ref)\b|\bwindow\b|\bdocument\b/);
   assert.doesNotMatch(clientSource, /useI18n/);
   assert.match(clientSource, /copy: Messages\["pages"\]\["projects"\]/);
   assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);

@@ -40,3 +40,12 @@ export function getAlternateLocalePath(pathname: string) {
   const locale = getRouteLocale(pathname);
   return getLocalePath(pathname, locale === "en" ? defaultLocale : "en");
 }
+
+export function isNavigationPathActive(pathname: string, href: string) {
+  const currentPath = stripLocalePrefix(pathname);
+  const targetPath = stripLocalePrefix(href);
+
+  if (targetPath === "/") return currentPath === "/";
+
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+}

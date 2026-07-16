@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { getLocalePath } from "../../lib/locale-routing";
 import type { Locale, Messages } from "../../lib/i18n";
 import { TEXT_SM_MUTED, TITLE_2XL } from "../../lib/typography";
@@ -10,8 +10,11 @@ type SubmitState =
   | { status: "idle" }
   | { status: "submitting" }
   | { status: "error"; code: string; message: string }
-  | { status: "received"; submissionId: string }
-  | { status: "received_with_notification_failure"; submissionId: string };
+  | {
+      status: "saved";
+      submissionId: string;
+      notificationStatus: "delivered" | "skipped" | "failed";
+    };
 
 type ContactFormState = {
   name: string;
@@ -51,6 +54,15 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
   const getHref = (href: string) => getLocalePath(href, locale);
   const [formState, setFormState] = useState<ContactFormState>(initialFormState);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
+  const submissionInFlightRef = useRef(false);
+  const statusRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (submitState.status === "error" || submitState.status === "saved") {
+      statusRef.current?.focus();
+    }
+  }, [submitState.status]);
 
   const updateField = (field: keyof ContactFormState, value: string) => {
     setFormState((current) => ({
@@ -64,6 +76,9 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submissionInFlightRef.current || submitState.status === "saved") return;
+
+    submissionInFlightRef.current = true;
     setSubmitState({ status: "submitting" });
 
     try {
@@ -80,21 +95,22 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
 
       const payload = await response.json().catch(() => ({}));
       const submissionId = typeof payload.submission_id === "string" ? payload.submission_id : "";
+      const notificationStatus = payload.notification_status;
 
-      if (response.ok && payload.status === "received_with_notification_failure" && submissionId) {
-        setSubmitState({
-          status: "received_with_notification_failure",
-          submissionId
-        });
-        return;
-      }
-
-      if (response.ok && submissionId) {
-        setSubmitState({
-          status: "received",
-          submissionId
-        });
+      if (
+        response.ok &&
+        submissionId &&
+        payload.persistence_status === "saved" &&
+        (notificationStatus === "delivered" ||
+          notificationStatus === "skipped" ||
+          notificationStatus === "failed")
+      ) {
         setFormState(initialFormState);
+        setSubmitState({
+          status: "saved",
+          submissionId,
+          notificationStatus
+        });
         return;
       }
 
@@ -110,7 +126,15 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
         code: "submit_failure",
         message: formCopy.errors.submit_failure
       });
+    } finally {
+      submissionInFlightRef.current = false;
     }
+  };
+
+  const handleStartAnotherSubmission = () => {
+    setFormState(initialFormState);
+    setSubmitState({ status: "idle" });
+    requestAnimationFrame(() => nameInputRef.current?.focus());
   };
 
   const isSubmitting = submitState.status === "submitting";
@@ -184,9 +208,57 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
         <section className="feature-surface p-5 sm:p-7 md:p-8">
           <p className="section-kicker">{formCopy.eyebrow}</p>
           <h2 className={`mt-2 ${TITLE_2XL}`}>{formCopy.title}</h2>
-          <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{formCopy.description}</p>
+          <p id="contact-form-description" className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>
+            {formCopy.description}
+          </p>
 
-          <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+          {submitState.status === "saved" ? (
+            <div
+              ref={statusRef}
+              tabIndex={-1}
+              className="mt-6 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              aria-labelledby="contact-saved-title"
+            >
+              <h3 id="contact-saved-title" className="font-semibold text-primary">
+                {formCopy.successTitle}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-secondary" role="status" aria-live="polite" aria-atomic="true">
+                {submitState.notificationStatus === "delivered"
+                  ? formCopy.notificationDelivered
+                  : submitState.notificationStatus === "skipped"
+                    ? formCopy.notificationSkipped
+                    : formCopy.notificationFailed}
+              </p>
+              <p className="mt-3 text-sm text-secondary">
+                {formCopy.submissionIdLabel}:{" "}
+                <code className="rounded bg-base/70 px-1.5 py-0.5 font-mono text-xs text-primary">
+                  {submitState.submissionId}
+                </code>
+              </p>
+              <p className="mt-3 text-sm leading-6 text-muted">{formCopy.savedGuidance}</p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                {githubChannel ? (
+                  <Link
+                    href={githubChannel.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary"
+                  >
+                    {formCopy.githubFallbackAction}
+                  </Link>
+                ) : null}
+                <button type="button" className="link-accent px-2 py-2 text-sm font-semibold" onClick={handleStartAnotherSubmission}>
+                  {formCopy.submitAnotherAction}
+                </button>
+              </div>
+            </div>
+          ) : (
+          <form
+            className="mt-6 space-y-5"
+            onSubmit={handleSubmit}
+            aria-busy={isSubmitting}
+            aria-describedby="contact-form-description contact-form-status"
+          >
           <input
             type="text"
             name="honeypot"
@@ -202,6 +274,7 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
             <label className="space-y-2 text-sm font-medium text-secondary">
               <span>{formCopy.fields.name.label}</span>
               <input
+                ref={nameInputRef}
                 name="name"
                 value={formState.name}
                 onChange={(event) => updateField("name", event.target.value)}
@@ -231,9 +304,12 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
               value={formState.project_goal}
               onChange={(event) => updateField("project_goal", event.target.value)}
               className="min-h-32 w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+              aria-describedby="contact-project-goal-hint"
               required
             />
-            <span className="block text-xs font-normal text-muted">{formCopy.fields.project_goal.hint}</span>
+            <span id="contact-project-goal-hint" className="block text-xs font-normal text-muted">
+              {formCopy.fields.project_goal.hint}
+            </span>
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -265,8 +341,11 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
               value={formState.links}
               onChange={(event) => updateField("links", event.target.value)}
               className="min-h-24 w-full rounded-xl border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20"
+              aria-describedby="contact-links-hint"
             />
-            <span className="block text-xs font-normal text-muted">{formCopy.fields.links.hint}</span>
+            <span id="contact-links-hint" className="block text-xs font-normal text-muted">
+              {formCopy.fields.links.hint}
+            </span>
           </label>
 
             <details className="border-y border-edge/70 py-3 text-xs leading-6 text-muted">
@@ -279,28 +358,28 @@ export function ContactClient({ locale, copy, common }: ContactClientProps) {
               </div>
             </details>
 
-          {submitState.status === "error" ? (
-            <p className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm leading-6 text-red-200" role="alert">
-              {submitState.message}
-            </p>
-          ) : null}
-
-          {submitState.status === "received" ? (
-            <p className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm leading-6 text-emerald-200" role="status">
-              {formCopy.successTitle} {formCopy.submissionIdLabel}: {submitState.submissionId}
-            </p>
-          ) : null}
-
-          {submitState.status === "received_with_notification_failure" ? (
-            <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm leading-6 text-amber-100" role="status">
-              {formCopy.errors.received_with_notification_failure} {formCopy.submissionIdLabel}: {submitState.submissionId}
-            </p>
-          ) : null}
+          <div
+            id="contact-form-status"
+            ref={statusRef}
+            tabIndex={-1}
+            className="outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            role={submitState.status === "error" ? "alert" : "status"}
+            aria-live={submitState.status === "error" ? "assertive" : "polite"}
+            aria-atomic="true"
+          >
+            {submitState.status === "error" ? (
+              <p className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-sm leading-6 text-primary">
+                {submitState.message}
+              </p>
+            ) : null}
+            {isSubmitting ? <span className="sr-only">{formCopy.submitBusy}</span> : null}
+          </div>
 
             <button type="submit" className="btn-primary px-5 py-2.5" disabled={isSubmitting}>
               {isSubmitting ? formCopy.submitBusy : formCopy.submitIdle}
             </button>
           </form>
+          )}
         </section>
       </div>
     </main>

@@ -1,5 +1,16 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, appendFile, readFile, writeFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import {
+  access,
+  chmod,
+  lstat,
+  mkdir,
+  open,
+  readFile,
+  realpath,
+  rename,
+  unlink
+} from "node:fs/promises";
 import path from "node:path";
 
 export const CONTACT_FORM_ERROR_CODES = [
@@ -41,9 +52,19 @@ export type NormalizedContactFormInput = {
   links: string[];
 };
 
+type ContactGateAttempt = {
+  reservationId: string;
+  timestamp: number;
+};
+
+type ContactDuplicateReservation = {
+  reservationId: string;
+  timestamp: number;
+};
+
 export type ContactSubmissionGate = {
-  attemptsByIdentity: Map<string, number[]>;
-  duplicateByContactGoal: Map<string, number>;
+  attemptsByIdentity: Map<string, ContactGateAttempt[]>;
+  duplicateByContactGoal: Map<string, ContactDuplicateReservation>;
   lastCleanupAt: number;
 };
 
@@ -54,11 +75,28 @@ type GateInput = {
   now?: number;
 };
 
+export type ContactGateReservation = {
+  reservationId: string;
+  identityKey: string;
+  duplicateKey: string;
+};
+
 export type ContactSubmission = NormalizedContactFormInput & {
   submissionId: string;
   receivedAt: string;
   ipHash: string;
   userAgent: string;
+};
+
+export type ContactNotificationResult =
+  | { ok: true; status: "delivered" }
+  | { ok: true; status: "skipped" }
+  | { ok: false; status: "failed"; error: "notification_failure" };
+
+export type ContactServiceReadiness = {
+  ready: boolean;
+  persistence: "ready" | "failed";
+  notification: "configured" | "not_configured" | "invalid";
 };
 
 export type ContactStorageGuardResult =
@@ -83,6 +121,15 @@ const MAX_ATTEMPTS_PER_WINDOW = 3;
 export const CONTACT_GATE_MAX_ENTRIES = 5_000;
 export const CONTACT_RETENTION_DAYS = 90;
 export const CONTACT_NOTIFICATION_TIMEOUT_MS = 5_000;
+export const CONTACT_REQUEST_MAX_BYTES = 32 * 1024;
+export const CONTACT_FIELD_MAX_LENGTHS = {
+  name: 60,
+  contact: 160,
+  projectGoal: 4_000,
+  timeline: 120,
+  budgetRange: 120,
+  link: 2_048
+} as const;
 const PLACEHOLDER_CONTACT_PATTERN = /(^|\b)(hello@example\.com|test@example\.com|example\.com|example\.org|example\.net)(\b|$)/i;
 const UNSAFE_CONTACT_STORAGE_SEGMENTS = [
   ["apps", "website", "public"],
@@ -91,6 +138,25 @@ const UNSAFE_CONTACT_STORAGE_SEGMENTS = [
   ["apps", "website", "components"],
   ["apps", "website", "lib"]
 ];
+const CONTACT_SUBMISSIONS_FILENAME = "submissions.jsonl";
+
+export class ContactPayloadTooLargeError extends Error {
+  constructor() {
+    super(`Contact request body exceeds ${CONTACT_REQUEST_MAX_BYTES} bytes.`);
+    this.name = "ContactPayloadTooLargeError";
+  }
+}
+
+let contactStorageLockTail: Promise<void> = Promise.resolve();
+
+function withContactStorageLock<T>(operation: () => Promise<T>): Promise<T> {
+  const result = contactStorageLockTail.then(operation, operation);
+  contactStorageLockTail = result.then(
+    () => undefined,
+    () => undefined
+  );
+  return result;
+}
 
 function error(code: ContactFormErrorCode, message: string): { ok: false; error: ContactFormError } {
   return { ok: false, error: { code, message } };
@@ -114,6 +180,48 @@ function getLinks(value: unknown) {
     .filter(Boolean);
 }
 
+export async function readContactRequestJson(
+  request: Pick<Request, "body" | "headers">,
+  maximumBytes = CONTACT_REQUEST_MAX_BYTES
+): Promise<unknown> {
+  const contentLengthHeader = request.headers.get("content-length");
+  if (contentLengthHeader) {
+    const contentLength = Number(contentLengthHeader);
+    if (Number.isFinite(contentLength) && contentLength > maximumBytes) {
+      throw new ContactPayloadTooLargeError();
+    }
+  }
+
+  if (!request.body) {
+    throw new SyntaxError("Contact request body is empty.");
+  }
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  let totalBytes = 0;
+  let source = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      totalBytes += value.byteLength;
+      if (totalBytes > maximumBytes) {
+        await reader.cancel("contact_request_too_large").catch(() => undefined);
+        throw new ContactPayloadTooLargeError();
+      }
+
+      source += decoder.decode(value, { stream: true });
+    }
+    source += decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+
+  return JSON.parse(source) as unknown;
+}
+
 function isLowQualityProjectGoal(value: string) {
   const normalized = value.replace(/\s+/g, " ").trim();
   const compact = normalized.replace(/[^a-zA-Z0-9\u3400-\u9fff]/g, "");
@@ -131,12 +239,18 @@ function normalizeGoalFingerprint(value: string) {
     .slice(0, 120);
 }
 
+function getContactDuplicateKey(contact: string, projectGoal: string) {
+  return hashContactValue(
+    `${contact.trim().toLowerCase()}|${normalizeGoalFingerprint(projectGoal)}`
+  );
+}
+
 export function hashContactValue(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
-export function getContactIdentityKey(ipAddress: string, contact: string) {
-  return hashContactValue(`${ipAddress.trim().toLowerCase()}|${contact.trim().toLowerCase()}`);
+export function getContactIdentityKey(ipAddress: string) {
+  return hashContactValue(ipAddress.trim().toLowerCase());
 }
 
 export function validateContactFormSubmission(input: ContactFormInput):
@@ -150,15 +264,19 @@ export function validateContactFormSubmission(input: ContactFormInput):
   const name = getString(input.name);
   const contact = getString(input.contact);
   const projectGoal = getString(input.project_goal);
-  const timeline = getString(input.timeline).slice(0, 120);
-  const budgetRange = getString(input.budget_range).slice(0, 120);
+  const timeline = getString(input.timeline);
+  const budgetRange = getString(input.budget_range);
   const links = getLinks(input.links);
 
   if (!name || !contact || !projectGoal) {
     return error("missing_required_field", "Name, reply channel, and project goal are required.");
   }
 
-  if (name.length < 2 || name.length > 60 || contact.length > 160) {
+  if (
+    name.length < 2 ||
+    name.length > CONTACT_FIELD_MAX_LENGTHS.name ||
+    contact.length > CONTACT_FIELD_MAX_LENGTHS.contact
+  ) {
     return error("missing_required_field", "Name or reply channel is outside the accepted length.");
   }
 
@@ -166,7 +284,12 @@ export function validateContactFormSubmission(input: ContactFormInput):
     return error("invalid_contact", "Use a real reply channel instead of a placeholder address.");
   }
 
-  if (isLowQualityProjectGoal(projectGoal)) {
+  if (
+    isLowQualityProjectGoal(projectGoal) ||
+    projectGoal.length > CONTACT_FIELD_MAX_LENGTHS.projectGoal ||
+    timeline.length > CONTACT_FIELD_MAX_LENGTHS.timeline ||
+    budgetRange.length > CONTACT_FIELD_MAX_LENGTHS.budgetRange
+  ) {
     return error("low_quality_input", "Add more context about the goal, current state, and expected outcome.");
   }
 
@@ -175,6 +298,10 @@ export function validateContactFormSubmission(input: ContactFormInput):
   }
 
   for (const link of links) {
+    if (link.length > CONTACT_FIELD_MAX_LENGTHS.link) {
+      return error("invalid_link", "Links must be shorter than the supported URL limit.");
+    }
+
     try {
       const url = new URL(link);
       if (url.protocol !== "http:" && url.protocol !== "https:") {
@@ -237,7 +364,9 @@ function cleanupContactSubmissionGate(
   if (!cleanupDue && !needsRoom) return;
 
   for (const [identityKey, attempts] of gate.attemptsByIdentity) {
-    const activeAttempts = attempts.filter((timestamp) => now - timestamp < FIFTEEN_MINUTES);
+    const activeAttempts = attempts.filter(
+      (attempt) => now - attempt.timestamp < FIFTEEN_MINUTES
+    );
     if (activeAttempts.length === 0) {
       gate.attemptsByIdentity.delete(identityKey);
     } else if (activeAttempts.length !== attempts.length) {
@@ -245,8 +374,8 @@ function cleanupContactSubmissionGate(
     }
   }
 
-  for (const [duplicateKey, timestamp] of gate.duplicateByContactGoal) {
-    if (now - timestamp >= ONE_DAY) {
+  for (const [duplicateKey, reservation] of gate.duplicateByContactGoal) {
+    if (now - reservation.timestamp >= ONE_DAY) {
       gate.duplicateByContactGoal.delete(duplicateKey);
     }
   }
@@ -267,14 +396,16 @@ function cleanupContactSubmissionGate(
 export function checkContactSubmissionGate(
   gate: ContactSubmissionGate,
   input: GateInput
-): { ok: true } | { ok: false; error: ContactFormError } {
+):
+  | { ok: true; reservation: ContactGateReservation }
+  | { ok: false; error: ContactFormError } {
   const now = input.now ?? Date.now();
-  const duplicateKey = hashContactValue(
-    `${input.contact.trim().toLowerCase()}|${normalizeGoalFingerprint(input.projectGoal)}`
-  );
+  const duplicateKey = getContactDuplicateKey(input.contact, input.projectGoal);
   cleanupContactSubmissionGate(gate, now, input.identityKey, duplicateKey);
   const attempts = gate.attemptsByIdentity.get(input.identityKey) ?? [];
-  const activeAttempts = attempts.filter((timestamp) => now - timestamp < FIFTEEN_MINUTES);
+  const activeAttempts = attempts.filter(
+    (attempt) => now - attempt.timestamp < FIFTEEN_MINUTES
+  );
 
   if (activeAttempts.length >= MAX_ATTEMPTS_PER_WINDOW) {
     return error("rate_limited", "Too many requests. Please retry later.");
@@ -282,17 +413,48 @@ export function checkContactSubmissionGate(
 
   const previousDuplicate = gate.duplicateByContactGoal.get(duplicateKey);
 
-  if (previousDuplicate && now - previousDuplicate < ONE_DAY) {
-    activeAttempts.push(now);
+  if (previousDuplicate && now - previousDuplicate.timestamp < ONE_DAY) {
+    activeAttempts.push({ reservationId: randomUUID(), timestamp: now });
     gate.attemptsByIdentity.set(input.identityKey, activeAttempts);
     return error("duplicate_submit", "A similar request was already received.");
   }
 
-  activeAttempts.push(now);
+  const reservationId = randomUUID();
+  activeAttempts.push({ reservationId, timestamp: now });
   gate.attemptsByIdentity.set(input.identityKey, activeAttempts);
-  gate.duplicateByContactGoal.set(duplicateKey, now);
+  gate.duplicateByContactGoal.set(duplicateKey, { reservationId, timestamp: now });
 
-  return { ok: true };
+  return {
+    ok: true,
+    reservation: {
+      reservationId,
+      identityKey: input.identityKey,
+      duplicateKey
+    }
+  };
+}
+
+export function rollbackContactSubmissionGate(
+  gate: ContactSubmissionGate,
+  reservation: ContactGateReservation
+) {
+  const duplicateReservation = gate.duplicateByContactGoal.get(reservation.duplicateKey);
+  if (duplicateReservation?.reservationId === reservation.reservationId) {
+    gate.duplicateByContactGoal.delete(reservation.duplicateKey);
+  }
+
+  const attempts = gate.attemptsByIdentity.get(reservation.identityKey);
+  if (!attempts) return;
+
+  const remainingAttempts = attempts.filter(
+    (attempt) => attempt.reservationId !== reservation.reservationId
+  );
+  if (remainingAttempts.length === 0) {
+    gate.attemptsByIdentity.delete(reservation.identityKey);
+    return;
+  }
+
+  gate.attemptsByIdentity.set(reservation.identityKey, remainingAttempts);
 }
 
 export function createContactSubmission(
@@ -310,6 +472,24 @@ export function createContactSubmission(
 
 export function getContactSubmissionsDir() {
   return process.env.CONTACT_SUBMISSIONS_DIR ?? path.join(process.cwd(), ".data", "website-contact");
+}
+
+function getContactNotificationConfig():
+  | { status: "configured"; url: string }
+  | { status: "not_configured" }
+  | { status: "invalid" } {
+  const configuredValue = process.env.CONTACT_NOTIFICATION_WEBHOOK_URL?.trim();
+  if (!configuredValue) return { status: "not_configured" };
+
+  try {
+    const url = new URL(configuredValue);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return { status: "invalid" };
+    }
+    return { status: "configured", url: configuredValue };
+  } catch {
+    return { status: "invalid" };
+  }
 }
 
 function isPathInside(parent: string, candidate: string) {
@@ -343,15 +523,195 @@ export function validateContactSubmissionsDirectory(
   };
 }
 
-export async function appendContactSubmission(submission: ContactSubmission) {
+function isMissingPathError(value: unknown): value is NodeJS.ErrnoException {
+  return (value as NodeJS.ErrnoException)?.code === "ENOENT";
+}
+
+function unsafeStorageError() {
+  return new Error("unsafe_storage_directory");
+}
+
+async function resolvePathThroughExistingAncestor(candidate: string) {
+  let existingPath = path.resolve(candidate);
+  const missingSegments: string[] = [];
+
+  while (true) {
+    try {
+      const resolvedExistingPath = await realpath(existingPath);
+      return path.join(resolvedExistingPath, ...missingSegments);
+    } catch (error) {
+      if (!isMissingPathError(error)) throw error;
+
+      const parentPath = path.dirname(existingPath);
+      if (parentPath === existingPath) throw error;
+      missingSegments.unshift(path.basename(existingPath));
+      existingPath = parentPath;
+    }
+  }
+}
+
+async function assertPathDoesNotResolveInsideProtectedStorage(
+  directory: string,
+  root = process.cwd()
+) {
+  const resolvedRoot = path.resolve(root);
+  const resolvedCandidate = await resolvePathThroughExistingAncestor(directory);
+
+  for (const segment of UNSAFE_CONTACT_STORAGE_SEGMENTS) {
+    const protectedDirectory = await resolvePathThroughExistingAncestor(
+      path.join(resolvedRoot, ...segment)
+    );
+    if (isPathInside(protectedDirectory, resolvedCandidate)) {
+      throw unsafeStorageError();
+    }
+  }
+}
+
+async function setPrivateMode(targetPath: string, mode: number) {
+  if (process.platform === "win32") return;
+  await chmod(targetPath, mode);
+}
+
+async function assertSafeExistingPath(targetPath: string, expectedType: "directory" | "file") {
+  try {
+    const status = await lstat(targetPath);
+    if (status.isSymbolicLink()) throw unsafeStorageError();
+    if (expectedType === "directory" ? !status.isDirectory() : !status.isFile()) {
+      throw unsafeStorageError();
+    }
+    return true;
+  } catch (error) {
+    if (isMissingPathError(error)) return false;
+    throw error;
+  }
+}
+
+async function prepareContactSubmissionsDirectory() {
   const directory = getContactSubmissionsDir();
   const storageGuard = validateContactSubmissionsDirectory(directory);
-  if (!storageGuard.ok) {
-    throw new Error(storageGuard.error.code);
+  if (!storageGuard.ok) throw unsafeStorageError();
+
+  await assertPathDoesNotResolveInsideProtectedStorage(storageGuard.directory);
+
+  const existed = await assertSafeExistingPath(storageGuard.directory, "directory");
+  if (!existed) {
+    await mkdir(storageGuard.directory, { recursive: true, mode: 0o700 });
   }
 
-  await mkdir(directory, { recursive: true });
-  await appendFile(path.join(directory, "submissions.jsonl"), `${JSON.stringify(submission)}\n`, "utf8");
+  await assertSafeExistingPath(storageGuard.directory, "directory");
+  const resolvedDirectory = await realpath(storageGuard.directory);
+  await assertPathDoesNotResolveInsideProtectedStorage(resolvedDirectory);
+  await setPrivateMode(resolvedDirectory, 0o700);
+  return resolvedDirectory;
+}
+
+function getNoFollowFlag() {
+  if (process.platform === "win32") return 0;
+  return typeof fsConstants.O_NOFOLLOW === "number" ? fsConstants.O_NOFOLLOW : 0;
+}
+
+async function writePrivateContactFile(
+  filePath: string,
+  source: string,
+  mode: "append" | "replace"
+) {
+  if (mode === "replace") {
+    await replacePrivateContactFile(filePath, source);
+    return;
+  }
+
+  await assertSafeExistingPath(filePath, "file");
+  const flags =
+    fsConstants.O_CREAT |
+    fsConstants.O_WRONLY |
+    getNoFollowFlag() |
+    fsConstants.O_APPEND;
+  const fileHandle = await open(filePath, flags, 0o600);
+
+  try {
+    const status = await fileHandle.stat();
+    if (!status.isFile()) throw unsafeStorageError();
+    if (process.platform !== "win32") await fileHandle.chmod(0o600);
+    await fileHandle.writeFile(source, "utf8");
+    await fileHandle.sync();
+  } finally {
+    await fileHandle.close();
+  }
+}
+
+async function replacePrivateContactFile(filePath: string, source: string) {
+  await assertSafeExistingPath(filePath, "file");
+  const temporaryPath = path.join(
+    path.dirname(filePath),
+    `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`
+  );
+  const flags =
+    fsConstants.O_CREAT |
+    fsConstants.O_EXCL |
+    fsConstants.O_WRONLY |
+    getNoFollowFlag();
+  let temporaryFileCreated = false;
+
+  try {
+    const fileHandle = await open(temporaryPath, flags, 0o600);
+    temporaryFileCreated = true;
+    try {
+      if (process.platform !== "win32") await fileHandle.chmod(0o600);
+      await fileHandle.writeFile(source, "utf8");
+      await fileHandle.sync();
+    } finally {
+      await fileHandle.close();
+    }
+
+    await rename(temporaryPath, filePath);
+    temporaryFileCreated = false;
+  } finally {
+    if (temporaryFileCreated) {
+      await unlink(temporaryPath).catch((error) => {
+        if (!isMissingPathError(error)) throw error;
+      });
+    }
+  }
+}
+
+export async function getContactServiceReadiness(): Promise<ContactServiceReadiness> {
+  const notification = getContactNotificationConfig().status;
+
+  try {
+    const directory = await prepareContactSubmissionsDirectory();
+    const submissionsFile = path.join(directory, CONTACT_SUBMISSIONS_FILENAME);
+    const submissionsFileExists = await assertSafeExistingPath(submissionsFile, "file");
+
+    if (submissionsFileExists) {
+      await setPrivateMode(submissionsFile, 0o600);
+      await access(submissionsFile, fsConstants.W_OK);
+    } else {
+      await access(directory, fsConstants.W_OK);
+    }
+
+    return {
+      ready: true,
+      persistence: "ready",
+      notification
+    };
+  } catch {
+    return {
+      ready: false,
+      persistence: "failed",
+      notification
+    };
+  }
+}
+
+export async function appendContactSubmission(submission: ContactSubmission) {
+  return withContactStorageLock(async () => {
+    const directory = await prepareContactSubmissionsDirectory();
+    await writePrivateContactFile(
+      path.join(directory, CONTACT_SUBMISSIONS_FILENAME),
+      `${JSON.stringify(submission)}\n`,
+      "append"
+    );
+  });
 }
 
 export async function cleanupContactSubmissionsFile({
@@ -365,84 +725,104 @@ export async function cleanupContactSubmissionsFile({
   retentionDays?: number;
   dryRun?: boolean;
 } = {}): Promise<ContactCleanupResult> {
-  const cutoffDate = new Date(now.getTime() - retentionDays * ONE_DAY);
+  return withContactStorageLock(async () => {
+    const cutoffDate = new Date(now.getTime() - retentionDays * ONE_DAY);
 
-  let source = "";
-  try {
-    source = await readFile(filePath, "utf8");
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return {
-        filePath,
-        dryRun,
-        retentionDays,
-        cutoff: cutoffDate.toISOString(),
-        totalLines: 0,
-        keptCount: 0,
-        expiredCount: 0,
-        malformedCount: 0,
-        missingFile: true
-      };
+    let source = "";
+    try {
+      const fileExists = await assertSafeExistingPath(filePath, "file");
+      if (!fileExists) {
+        return {
+          filePath,
+          dryRun,
+          retentionDays,
+          cutoff: cutoffDate.toISOString(),
+          totalLines: 0,
+          keptCount: 0,
+          expiredCount: 0,
+          malformedCount: 0,
+          missingFile: true
+        };
+      }
+
+      source = await readFile(filePath, "utf8");
+    } catch (error) {
+      if (isMissingPathError(error)) {
+        return {
+          filePath,
+          dryRun,
+          retentionDays,
+          cutoff: cutoffDate.toISOString(),
+          totalLines: 0,
+          keptCount: 0,
+          expiredCount: 0,
+          malformedCount: 0,
+          missingFile: true
+        };
+      }
+
+      throw error;
     }
 
-    throw error;
-  }
+    const lines = source.split(/\r?\n/).filter((line) => line.length > 0);
+    const keptLines: string[] = [];
+    let keptCount = 0;
+    let expiredCount = 0;
+    let malformedCount = 0;
 
-  const lines = source.split(/\r?\n/).filter((line) => line.length > 0);
-  const keptLines: string[] = [];
-  let keptCount = 0;
-  let expiredCount = 0;
-  let malformedCount = 0;
+    for (const line of lines) {
+      try {
+        const parsed = JSON.parse(line) as { receivedAt?: unknown };
+        const receivedAt = typeof parsed.receivedAt === "string" ? new Date(parsed.receivedAt) : null;
 
-  for (const line of lines) {
-    try {
-      const parsed = JSON.parse(line) as { receivedAt?: unknown };
-      const receivedAt = typeof parsed.receivedAt === "string" ? new Date(parsed.receivedAt) : null;
+        if (!receivedAt || Number.isNaN(receivedAt.getTime())) {
+          malformedCount += 1;
+          keptLines.push(line);
+          continue;
+        }
 
-      if (!receivedAt || Number.isNaN(receivedAt.getTime())) {
+        if (receivedAt.getTime() < cutoffDate.getTime()) {
+          expiredCount += 1;
+          continue;
+        }
+
+        keptCount += 1;
+        keptLines.push(line);
+      } catch {
         malformedCount += 1;
         keptLines.push(line);
-        continue;
       }
-
-      if (receivedAt.getTime() < cutoffDate.getTime()) {
-        expiredCount += 1;
-        continue;
-      }
-
-      keptCount += 1;
-      keptLines.push(line);
-    } catch {
-      malformedCount += 1;
-      keptLines.push(line);
     }
-  }
 
-  if (!dryRun) {
-    const nextSource = keptLines.length > 0 ? `${keptLines.join("\n")}\n` : "";
-    await writeFile(filePath, nextSource, "utf8");
-  }
+    if (!dryRun) {
+      const nextSource = keptLines.length > 0 ? `${keptLines.join("\n")}\n` : "";
+      await writePrivateContactFile(filePath, nextSource, "replace");
+    }
 
-  return {
-    filePath,
-    dryRun,
-    retentionDays,
-    cutoff: cutoffDate.toISOString(),
-    totalLines: lines.length,
-    keptCount,
-    expiredCount,
-    malformedCount,
-    missingFile: false
-  };
+    return {
+      filePath,
+      dryRun,
+      retentionDays,
+      cutoff: cutoffDate.toISOString(),
+      totalLines: lines.length,
+      keptCount,
+      expiredCount,
+      malformedCount,
+      missingFile: false
+    };
+  });
 }
 
 export async function sendContactNotification(
   submission: ContactSubmission,
   options: { fetcher?: typeof fetch; timeoutMs?: number } = {}
-) {
-  const webhookUrl = process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
-  if (!webhookUrl) {
-    return { ok: true as const, skipped: true as const };
+): Promise<ContactNotificationResult> {
+  const notificationConfig = getContactNotificationConfig();
+  if (notificationConfig.status === "not_configured") {
+    return { ok: true, status: "skipped" };
+  }
+  if (notificationConfig.status === "invalid") {
+    return { ok: false, status: "failed", error: "notification_failure" };
   }
 
   const abortController = new AbortController();
@@ -452,7 +832,7 @@ export async function sendContactNotification(
   );
 
   try {
-    const response = await (options.fetcher ?? fetch)(webhookUrl, {
+    const response = await (options.fetcher ?? fetch)(notificationConfig.url, {
       method: "POST",
       headers: { "content-type": "application/json" },
       signal: abortController.signal,
@@ -470,12 +850,12 @@ export async function sendContactNotification(
     });
 
     if (!response.ok) {
-      return { ok: false as const, error: "notification_failure" as const };
+      return { ok: false, status: "failed", error: "notification_failure" };
     }
 
-    return { ok: true as const, skipped: false as const };
+    return { ok: true, status: "delivered" };
   } catch {
-    return { ok: false as const, error: "notification_failure" as const };
+    return { ok: false, status: "failed", error: "notification_failure" };
   } finally {
     clearTimeout(timeoutId);
   }

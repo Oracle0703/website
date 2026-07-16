@@ -23,6 +23,7 @@ test("D7 contact form module validates required fields, quality, links, and plac
   assert.ok(exists("apps/website/lib/contact-form.ts"), "contact form module should exist");
 
   const {
+    CONTACT_FIELD_MAX_LENGTHS,
     CONTACT_FORM_ERROR_CODES,
     validateContactFormSubmission
   } = await importFresh("apps/website/lib/contact-form.ts");
@@ -84,13 +85,77 @@ test("D7 contact form module validates required fields, quality, links, and plac
     validateContactFormSubmission({ ...base, honeypot: "bot-filled" }).error.code,
     "low_quality_input"
   );
+  assert.equal(
+    validateContactFormSubmission({
+      ...base,
+      project_goal: "x".repeat(CONTACT_FIELD_MAX_LENGTHS.projectGoal + 1)
+    }).error.code,
+    "low_quality_input"
+  );
+  assert.equal(
+    validateContactFormSubmission({
+      ...base,
+      timeline: "x".repeat(CONTACT_FIELD_MAX_LENGTHS.timeline + 1)
+    }).error.code,
+    "low_quality_input"
+  );
+  assert.equal(
+    validateContactFormSubmission({
+      ...base,
+      links: [`https://example.org/${"x".repeat(CONTACT_FIELD_MAX_LENGTHS.link)}`]
+    }).error.code,
+    "invalid_link"
+  );
+});
+
+test("V4 contact request JSON reader enforces the byte limit while streaming", async () => {
+  const {
+    CONTACT_REQUEST_MAX_BYTES,
+    ContactPayloadTooLargeError,
+    readContactRequestJson
+  } = await importFresh("apps/website/lib/contact-form.ts");
+
+  const parsed = await readContactRequestJson(
+    new Request("http://localhost/api/contact", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Ada" })
+    })
+  );
+  assert.deepEqual(parsed, { name: "Ada" });
+
+  await assert.rejects(
+    readContactRequestJson(
+      new Request("http://localhost/api/contact", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(CONTACT_REQUEST_MAX_BYTES + 1)
+        },
+        body: "{}"
+      })
+    ),
+    ContactPayloadTooLargeError
+  );
+
+  await assert.rejects(
+    readContactRequestJson(
+      new Request("http://localhost/api/contact", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ project_goal: "x".repeat(CONTACT_REQUEST_MAX_BYTES) })
+      })
+    ),
+    ContactPayloadTooLargeError
+  );
 });
 
 test("D7 contact submission gate catches rate limits and duplicate submissions", async () => {
   const {
     CONTACT_GATE_MAX_ENTRIES,
     checkContactSubmissionGate,
-    createContactSubmissionGate
+    createContactSubmissionGate,
+    rollbackContactSubmissionGate
   } = await importFresh("apps/website/lib/contact-form.ts");
 
   const gate = createContactSubmissionGate();
@@ -101,7 +166,9 @@ test("D7 contact submission gate catches rate limits and duplicate submissions",
     now: 1_000_000
   };
 
-  assert.equal(checkContactSubmissionGate(gate, base).ok, true);
+  const firstReservation = checkContactSubmissionGate(gate, base);
+  assert.equal(firstReservation.ok, true);
+  assert.equal(typeof firstReservation.reservation.reservationId, "string");
   assert.equal(checkContactSubmissionGate(gate, { ...base, now: 1_000_001 }).ok, false);
   assert.equal(
     checkContactSubmissionGate(gate, { ...base, now: 1_000_001 }).error.code,
@@ -132,8 +199,13 @@ test("D7 contact submission gate catches rate limits and duplicate submissions",
 
   const capacityGate = createContactSubmissionGate();
   for (let index = 0; index < CONTACT_GATE_MAX_ENTRIES; index += 1) {
-    capacityGate.attemptsByIdentity.set(`client-${index}`, [3_000_000]);
-    capacityGate.duplicateByContactGoal.set(`duplicate-${index}`, 3_000_000);
+    capacityGate.attemptsByIdentity.set(`client-${index}`, [
+      { reservationId: `reservation-${index}`, timestamp: 3_000_000 }
+    ]);
+    capacityGate.duplicateByContactGoal.set(`duplicate-${index}`, {
+      reservationId: `reservation-${index}`,
+      timestamp: 3_000_000
+    });
   }
   capacityGate.lastCleanupAt = 3_000_000;
 
@@ -151,26 +223,81 @@ test("D7 contact submission gate catches rate limits and duplicate submissions",
   assert.equal(capacityGate.duplicateByContactGoal.size, CONTACT_GATE_MAX_ENTRIES);
   assert.equal(capacityGate.attemptsByIdentity.has("client-0"), false);
   assert.equal(capacityGate.attemptsByIdentity.has("new-client"), true);
+
+  const recoverableGate = createContactSubmissionGate();
+  const recoverableReservation = checkContactSubmissionGate(recoverableGate, base);
+  assert.equal(recoverableReservation.ok, true);
+  rollbackContactSubmissionGate(recoverableGate, recoverableReservation.reservation);
+  assert.equal(
+    checkContactSubmissionGate(recoverableGate, { ...base, now: base.now + 1 }).ok,
+    true,
+    "a persistence failure should not make the retained form look like a duplicate"
+  );
+
+  const concurrentGate = createContactSubmissionGate();
+  const older = checkContactSubmissionGate(concurrentGate, {
+    ...base,
+    projectGoal: `${base.projectGoal} older`,
+    now: 4_000_000
+  });
+  const newer = checkContactSubmissionGate(concurrentGate, {
+    ...base,
+    projectGoal: `${base.projectGoal} newer`,
+    now: 4_000_001
+  });
+  assert.equal(older.ok, true);
+  assert.equal(newer.ok, true);
+
+  rollbackContactSubmissionGate(concurrentGate, older.reservation);
+  assert.deepEqual(
+    concurrentGate.attemptsByIdentity.get(base.identityKey).map((attempt) => attempt.reservationId),
+    [newer.reservation.reservationId],
+    "rollback should remove only the failed persistence reservation"
+  );
+  assert.equal(concurrentGate.duplicateByContactGoal.has(older.reservation.duplicateKey), false);
+  assert.equal(concurrentGate.duplicateByContactGoal.has(newer.reservation.duplicateKey), true);
 });
 
-test("D7 contact webhook delivery has a bounded timeout", async () => {
+test("V4 contact identity rate limit is IP-only", async () => {
+  const { getContactIdentityKey } = await importFresh("apps/website/lib/contact-form.ts");
+
+  assert.equal(getContactIdentityKey("203.0.113.10"), getContactIdentityKey("203.0.113.10"));
+  assert.notEqual(getContactIdentityKey("203.0.113.10"), getContactIdentityKey("203.0.113.11"));
+  assert.equal(getContactIdentityKey.length, 1);
+});
+
+test("V4 contact notification reports delivered, skipped, and failed outcomes", async () => {
   const { sendContactNotification } = await importFresh("apps/website/lib/contact-form.ts");
   const previousWebhook = process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
-  process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "https://hooks.example.test/contact";
+  const submission = {
+    submissionId: "contact_timeout",
+    receivedAt: "2026-07-15T10:00:00.000Z",
+    name: "Ada Lovelace",
+    contact: "ada@lovelace.dev",
+    projectGoal: "Review the product page and improve its conversion path.",
+    timeline: "This month",
+    budgetRange: "Exploratory",
+    links: [],
+    ipHash: "test-hash",
+    userAgent: "node-test"
+  };
 
   try {
-    const result = await sendContactNotification({
-      submissionId: "contact_timeout",
-      receivedAt: "2026-07-15T10:00:00.000Z",
-      name: "Ada Lovelace",
-      contact: "ada@lovelace.dev",
-      projectGoal: "Review the product page and improve its conversion path.",
-      timeline: "This month",
-      budgetRange: "Exploratory",
-      links: [],
-      ipHash: "test-hash",
-      userAgent: "node-test"
-    }, {
+    delete process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+    assert.deepEqual(await sendContactNotification(submission), {
+      ok: true,
+      status: "skipped"
+    });
+
+    process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "https://hooks.example.test/contact";
+    assert.deepEqual(await sendContactNotification(submission, {
+      fetcher: async () => new Response(null, { status: 204 })
+    }), {
+      ok: true,
+      status: "delivered"
+    });
+
+    const result = await sendContactNotification(submission, {
       timeoutMs: 5,
       fetcher: async (_url, init) => new Promise((_resolve, reject) => {
         const rejectAsAborted = () => {
@@ -189,6 +316,14 @@ test("D7 contact webhook delivery has a bounded timeout", async () => {
 
     assert.deepEqual(result, {
       ok: false,
+      status: "failed",
+      error: "notification_failure"
+    });
+
+    process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "not-a-valid-url";
+    assert.deepEqual(await sendContactNotification(submission), {
+      ok: false,
+      status: "failed",
       error: "notification_failure"
     });
   } finally {
@@ -197,6 +332,128 @@ test("D7 contact webhook delivery has a bounded timeout", async () => {
     } else {
       process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = previousWebhook;
     }
+  }
+});
+
+test("V4 contact readiness checks persistence without exposing paths or webhook secrets", async () => {
+  const { getContactServiceReadiness } = await importFresh("apps/website/lib/contact-form.ts");
+  const previousDirectory = process.env.CONTACT_SUBMISSIONS_DIR;
+  const previousWebhook = process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+  const directory = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "website-contact-ready-"));
+
+  try {
+    process.env.CONTACT_SUBMISSIONS_DIR = directory;
+    delete process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+    assert.deepEqual(await getContactServiceReadiness(), {
+      ready: true,
+      persistence: "ready",
+      notification: "not_configured"
+    });
+
+    process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "https://secret.example.test/contact-token";
+    const configured = await getContactServiceReadiness();
+    assert.equal(configured.notification, "configured");
+    assert.doesNotMatch(JSON.stringify(configured), /secret|contact-token|website-contact-ready/);
+
+    process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "not-a-url";
+    assert.equal((await getContactServiceReadiness()).notification, "invalid");
+  } finally {
+    if (previousDirectory === undefined) delete process.env.CONTACT_SUBMISSIONS_DIR;
+    else process.env.CONTACT_SUBMISSIONS_DIR = previousDirectory;
+    if (previousWebhook === undefined) delete process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+    else process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = previousWebhook;
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("V4 contact storage rejects symlinks and persists private durable JSONL", async (t) => {
+  const {
+    appendContactSubmission,
+    cleanupContactSubmissionsFile,
+    getContactServiceReadiness
+  } = await importFresh("apps/website/lib/contact-form.ts");
+  const previousDirectory = process.env.CONTACT_SUBMISSIONS_DIR;
+  const previousWebhook = process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+  const temporaryRoot = fs.mkdtempSync(
+    path.join(require("node:os").tmpdir(), "website-contact-storage-")
+  );
+  const directory = path.join(temporaryRoot, "contact");
+  const submissionsFile = path.join(directory, "submissions.jsonl");
+  const makeSubmission = (submissionId, receivedAt) => ({
+    submissionId,
+    receivedAt,
+    name: "Ada Lovelace",
+    contact: "ada@lovelace.dev",
+    projectGoal: "Review the product page and improve its conversion path.",
+    timeline: "This month",
+    budgetRange: "Exploratory",
+    links: [],
+    ipHash: "test-hash",
+    userAgent: "node-test"
+  });
+
+  try {
+    process.env.CONTACT_SUBMISSIONS_DIR = directory;
+    delete process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+    await appendContactSubmission(makeSubmission("contact_initial", "2026-07-15T10:00:00.000Z"));
+
+    const firstLines = fs.readFileSync(submissionsFile, "utf8").trim().split("\n");
+    assert.equal(firstLines.length, 1);
+    assert.equal(JSON.parse(firstLines[0]).submissionId, "contact_initial");
+    if (process.platform !== "win32") {
+      assert.equal(fs.statSync(directory).mode & 0o777, 0o700);
+      assert.equal(fs.statSync(submissionsFile).mode & 0o777, 0o600);
+    }
+
+    fs.writeFileSync(
+      submissionsFile,
+      `${JSON.stringify(makeSubmission("contact_expired", "2025-01-01T00:00:00.000Z"))}\n`,
+      "utf8"
+    );
+    await Promise.all([
+      appendContactSubmission(makeSubmission("contact_concurrent", "2026-07-15T10:01:00.000Z")),
+      cleanupContactSubmissionsFile({
+        filePath: submissionsFile,
+        now: new Date("2026-07-15T12:00:00.000Z"),
+        retentionDays: 90,
+        dryRun: false
+      })
+    ]);
+
+    const afterCleanup = fs.readFileSync(submissionsFile, "utf8");
+    assert.doesNotMatch(afterCleanup, /contact_expired/);
+    assert.match(afterCleanup, /contact_concurrent/);
+    assert.deepEqual(
+      fs.readdirSync(directory).filter((entry) => entry.endsWith(".tmp")),
+      [],
+      "atomic cleanup should not leave temporary files behind"
+    );
+    assert.deepEqual(await getContactServiceReadiness(), {
+      ready: true,
+      persistence: "ready",
+      notification: "not_configured"
+    });
+
+    if (process.platform === "win32") {
+      t.diagnostic("symlink checks require elevated Windows privileges and are covered on POSIX CI");
+    } else {
+      const symlinkTarget = path.join(temporaryRoot, "symlink-target.jsonl");
+      fs.writeFileSync(symlinkTarget, "private", "utf8");
+      fs.rmSync(submissionsFile);
+      fs.symlinkSync(symlinkTarget, submissionsFile, "file");
+      assert.equal((await getContactServiceReadiness()).ready, false);
+
+      const linkedDirectory = path.join(temporaryRoot, "linked-contact");
+      fs.symlinkSync(directory, linkedDirectory, "dir");
+      process.env.CONTACT_SUBMISSIONS_DIR = linkedDirectory;
+      assert.equal((await getContactServiceReadiness()).ready, false);
+    }
+  } finally {
+    if (previousDirectory === undefined) delete process.env.CONTACT_SUBMISSIONS_DIR;
+    else process.env.CONTACT_SUBMISSIONS_DIR = previousDirectory;
+    if (previousWebhook === undefined) delete process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
+    else process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = previousWebhook;
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
   }
 });
 
@@ -211,19 +468,36 @@ test("D7 contact API route exposes healthz and post handlers without leaking pri
   assert.match(routeSource, /export async function GET/);
   assert.match(routeSource, /export async function POST/);
   assert.match(routeSource, /service:\s*"website-contact"/);
-  assert.match(routeSource, /version:\s*"d7"/);
+  assert.match(routeSource, /version:\s*"v4"/);
   assert.match(healthzSource, /export async function GET/);
   assert.match(healthzSource, /service:\s*"website-contact"/);
-  assert.match(healthzSource, /version:\s*"d7"/);
+  assert.match(healthzSource, /version:\s*"v4"/);
   assert.match(routeSource, /validateContactFormSubmission/);
   assert.match(routeSource, /checkContactSubmissionGate/);
   assert.match(routeSource, /appendContactSubmission/);
+  assert.match(routeSource, /rollbackContactSubmissionGate/);
   assert.match(routeSource, /sendContactNotification/);
+  assert.match(routeSource, /readContactRequestJson/);
+  assert.doesNotMatch(routeSource, /request\.json\(\)/);
+  assert.match(routeSource, /getContactIdentityKey\(ipAddress\)/);
+  assert.match(routeSource, /x-real-ip[\s\S]*x-forwarded-for/);
+  assert.match(routeSource, /split\(","\)\.at\(-1\)/);
+  assert.match(routeSource, /gateResult\.reservation/);
+  assert.match(routeSource, /notification_status:\s*"delivered"/);
+  assert.match(routeSource, /notification_status:\s*"skipped"/);
+  assert.match(routeSource, /notification_status:\s*"failed"/);
+  assert.match(routeSource, /persistence_status:\s*"saved"/);
+  assert.match(healthzSource, /getContactServiceReadiness/);
+  assert.match(healthzSource, /readiness\.ready \? 200 : 503/);
   assert.doesNotMatch(routeSource, /submissionCount|count:/);
 
   assert.match(moduleSource, /CONTACT_SUBMISSIONS_DIR/);
   assert.match(moduleSource, /CONTACT_NOTIFICATION_WEBHOOK_URL/);
   assert.match(moduleSource, /ipHash/);
+  assert.match(moduleSource, /CONTACT_REQUEST_MAX_BYTES = 32 \* 1024/);
+  assert.match(moduleSource, /fileHandle\.sync\(\)/);
+  assert.match(moduleSource, /fsConstants\.O_EXCL/);
+  assert.match(moduleSource, /await rename\(temporaryPath, filePath\)/);
 });
 
 test("D7 contact form UI posts to the contact API and keeps failure states recoverable", () => {
@@ -237,6 +511,14 @@ test("D7 contact form UI posts to the contact API and keeps failure states recov
   assert.match(clientSource, /copy\.contactForm/);
   assert.match(clientSource, /setSubmitState/);
   assert.match(clientSource, /response\.ok/);
+  assert.match(clientSource, /payload\.persistence_status === "saved"/);
+  assert.match(clientSource, /aria-busy=\{isSubmitting\}/);
+  assert.match(clientSource, /aria-describedby="contact-form-description contact-form-status"/);
+  assert.match(clientSource, /aria-live="polite"/);
+  assert.match(clientSource, /statusRef\.current\?\.focus/);
+  assert.match(clientSource, /submissionInFlightRef/);
+  assert.match(clientSource, /handleStartAnotherSubmission/);
+  assert.match(clientSource, /githubFallbackAction/);
 
   for (const key of [
     "contactForm",
@@ -244,7 +526,13 @@ test("D7 contact form UI posts to the contact API and keeps failure states recov
     "retentionNotice",
     "deletionNotice",
     "errors",
-    "received_with_notification_failure"
+    "received_with_notification_failure",
+    "notificationDelivered",
+    "notificationSkipped",
+    "notificationFailed",
+    "savedGuidance",
+    "githubFallbackAction",
+    "submitAnotherAction"
   ]) {
     assert.match(i18nSource, new RegExp(`${key}:`));
   }
