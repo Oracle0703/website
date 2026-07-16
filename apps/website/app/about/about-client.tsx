@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { getLocalePath } from "../../lib/locale-routing";
 import type { Locale, Messages } from "../../lib/i18n";

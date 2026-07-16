@@ -327,8 +327,14 @@ export const messages = {
           deletionNotice: "Deletion: 你可以通过已确认的回复渠道请求删除对应提交记录。",
           submitIdle: "发送请求",
           submitBusy: "发送中...",
-          successTitle: "请求已收到。",
+          successTitle: "请求已保存。",
           submissionIdLabel: "提交编号",
+          notificationDelivered: "配置的通知通道已确认接收自动通知。",
+          notificationSkipped: "自动通知通道尚未配置；这不会影响已经保存的提交。",
+          notificationFailed: "自动通知发送失败；这不会影响已经保存的提交。",
+          savedGuidance: "请保留提交编号。如需补充信息或改用公开渠道，可以前往 GitHub。",
+          githubFallbackAction: "打开 GitHub 备用路径",
+          submitAnotherAction: "提交另一条需求",
           errors: {
             missing_required_field: "请补全姓名、回复渠道和项目目标。",
             invalid_contact: "请填写真实可回复的联系方式，不要使用占位地址。",
@@ -338,8 +344,8 @@ export const messages = {
             duplicate_submit: "已经收到相似请求，请不要重复提交。",
             submit_failure: "提交失败，请稍后重试。你的输入会保留在表单中。",
             storage_failure: "请求暂时无法保存，请稍后重试。你的输入会保留在表单中。",
-            notification_failure: "请求已保存，但通知发送失败，回复可能延迟。",
-            received_with_notification_failure: "请求已收到，但通知发送失败，回复可能延迟。"
+            notification_failure: "请求已保存，但自动通知发送失败。",
+            received_with_notification_failure: "请求已保存，但自动通知发送失败。"
           }
         },
         primaryAction: "先看作品",
@@ -742,8 +748,14 @@ export const messages = {
           deletionNotice: "Deletion: you can request deletion through the confirmed reply channel for that submission.",
           submitIdle: "Send request",
           submitBusy: "Sending...",
-          successTitle: "Request received.",
+          successTitle: "Request saved.",
           submissionIdLabel: "Submission ID",
+          notificationDelivered: "The configured notification channel accepted the automatic notification.",
+          notificationSkipped: "Automatic notification is not configured; your saved submission is not affected.",
+          notificationFailed: "Automatic notification failed; your saved submission is not affected.",
+          savedGuidance: "Keep the submission ID. To add context or use a public channel instead, open GitHub.",
+          githubFallbackAction: "Open the GitHub fallback",
+          submitAnotherAction: "Submit another inquiry",
           errors: {
             missing_required_field: "Add your name, reply channel, and project goal.",
             invalid_contact: "Use a real reply channel instead of a placeholder address.",
@@ -753,8 +765,8 @@ export const messages = {
             duplicate_submit: "A similar request has already been received.",
             submit_failure: "Submission failed. Your input is still here so you can retry.",
             storage_failure: "The request could not be saved. Your input is still here so you can retry.",
-            notification_failure: "The request was saved, but notification delivery failed. Follow-up may take longer.",
-            received_with_notification_failure: "The request was received, but notification delivery failed. Follow-up may take longer."
+            notification_failure: "The request was saved, but automatic notification delivery failed.",
+            received_with_notification_failure: "The request was saved, but automatic notification delivery failed."
           }
         },
         primaryAction: "View projects",

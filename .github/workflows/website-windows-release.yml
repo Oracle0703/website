@@ -1,0 +1,84 @@
+name: website-windows-release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - ".github/workflows/website-windows-release.yml"
+      - "apps/website/**"
+      - "content/blog/**"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/package-website-standalone.ps1"
+      - "scripts/start-website.cmd"
+      - "scripts/verify-website-standalone.ps1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-windows-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_SITE_URL: https://www.meaningful.ink
+      NEXT_PUBLIC_RELEASE_SHA: ${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release tests
+        run: npm test
+
+      - name: Validate website content
+        run: npm run validate:website-content
+
+      - name: Build Windows standalone website
+        run: npm run build:website
+
+      - name: Verify static entrypoints and metadata
+        run: npm run verify:website-static
+
+      - name: Package Windows x64 release
+        id: package
+        shell: pwsh
+        run: >-
+          ./scripts/package-website-standalone.ps1
+          -CommitSha "${{ github.sha }}"
+          -SiteUrl "https://www.meaningful.ink"
+
+      - name: Start and health-check packaged release
+        shell: pwsh
+        run: >-
+          ./scripts/verify-website-standalone.ps1
+          -ReleaseDirectory "dist/website-release/${{ steps.package.outputs.release_name }}"
+
+      - name: Upload prebuilt release
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.release_name }}
+          path: |
+            ${{ steps.package.outputs.zip_path }}
+            ${{ steps.package.outputs.checksum_path }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

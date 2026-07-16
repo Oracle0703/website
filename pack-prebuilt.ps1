@@ -1,21 +1,43 @@
-﻿$ErrorActionPreference = "Stop"
+<#
+  Optional local Windows fallback for the GitHub website-windows-release job.
+  Run this on a Windows x64 development machine, never on the small server.
+#>
 
-Set-Location -Path "E:\website"
+[CmdletBinding()]
+param(
+  [string]$SiteUrl = "https://www.meaningful.ink",
+  [string]$OutputDirectory
+)
 
-npm install
-npm -w apps/website run build
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
 
-$stamp = Get-Date -Format "yyyyMMdd-HHmm"
-$stage = "dist\prebuilt-$stamp"
-$out   = "dist\prebuilt-$stamp.zip"
+$root = $PSScriptRoot
+Set-Location -LiteralPath $root
 
-if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
-New-Item -ItemType Directory -Force -Path $stage | Out-Null
+$commitSha = (& git rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $commitSha -notmatch "^[0-9a-fA-F]{40}$") {
+  throw "Unable to resolve a full Git commit SHA."
+}
 
-# Copy runtime files. IMPORTANT: include content/ (blog posts).
-robocopy . $stage /E /XD .git node_modules .next\cache /XF *.log | Out-Null
+$env:NEXT_PUBLIC_SITE_URL = $SiteUrl
+$env:NEXT_PUBLIC_RELEASE_SHA = $commitSha
+$env:NEXT_TELEMETRY_DISABLED = "1"
 
-if (Test-Path $out) { Remove-Item $out -Force }
-Compress-Archive -Path "$stage\*" -DestinationPath $out -Force
+& npm ci
+if ($LASTEXITCODE -ne 0) { throw "npm ci failed." }
 
-Write-Host "Wrote: $out"
+& npm run build:website
+if ($LASTEXITCODE -ne 0) { throw "Website build failed." }
+
+$arguments = @(
+  "-RepositoryRoot", $root,
+  "-CommitSha", $commitSha,
+  "-SiteUrl", $SiteUrl
+)
+if (-not [string]::IsNullOrWhiteSpace($OutputDirectory)) {
+  $arguments += @("-OutputDirectory", $OutputDirectory)
+}
+
+& (Join-Path $root "scripts\package-website-standalone.ps1") @arguments
+if ($LASTEXITCODE -ne 0) { throw "Standalone packaging failed." }

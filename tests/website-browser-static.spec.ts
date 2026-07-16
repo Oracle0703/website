@@ -12,6 +12,7 @@ const primaryRoutes = [
   {
     path: "/",
     name: "home",
+    navHref: null,
     heading: /把复杂想法，做成清晰、可用的产品/,
     content: /AI 页面分析|Next\.js/,
     evidence: (page: Page) =>
@@ -20,6 +21,7 @@ const primaryRoutes = [
   {
     path: "/projects",
     name: "projects",
+    navHref: "/projects",
     heading: /^作品$/,
     content: /AI 页面分析|Tracker|Dashboard/,
     evidence: (page: Page) => page.locator("main article a[href^='/projects/']").first()
@@ -27,6 +29,7 @@ const primaryRoutes = [
   {
     path: "/blog",
     name: "blog",
+    navHref: "/blog",
     heading: /^博客$/,
     content: /CI Agent|Next\.js|打卡/,
     evidence: (page: Page) => page.locator("main article a[href^='/blog/']").first()
@@ -34,6 +37,7 @@ const primaryRoutes = [
   {
     path: "/about",
     name: "about",
+    navHref: "/about",
     heading: /^关于我$/,
     content: /工作原则|Next\.js|全栈开发/,
     evidence: (page: Page) => page.getByRole("heading", { name: "工作原则" })
@@ -41,6 +45,7 @@ const primaryRoutes = [
   {
     path: "/contact",
     name: "contact",
+    navHref: "/contact",
     heading: /^联系我$/,
     content: /提交合作需求|GitHub 主页/,
     evidence: (page: Page) => page.locator("main form")
@@ -175,7 +180,7 @@ async function clickThemeToggle(page: Page, name: RegExp) {
   await button?.click();
 }
 
-async function expectPrimaryNavigation(page: Page, isMobile: boolean) {
+async function expectPrimaryNavigation(page: Page, isMobile: boolean, currentHref: string | null) {
   if (isMobile) await openMobileMenu(page);
 
   const nav = page.locator("header nav:visible").first();
@@ -191,6 +196,10 @@ async function expectPrimaryNavigation(page: Page, isMobile: boolean) {
       "href",
       item.href
     );
+  }
+
+  if (currentHref) {
+    await expect(nav.locator(`a[href='${currentHref}']`)).toHaveAttribute("aria-current", "page");
   }
 }
 
@@ -268,7 +277,7 @@ test.describe("primary route visual and behavior acceptance", () => {
       await expect(route.evidence(page)).toBeVisible();
       await expect(main).not.toContainText(/Lorem ipsum|hello@example\.com|mailto:hello|example\.com/);
 
-      await expectPrimaryNavigation(page, isMobile);
+      await expectPrimaryNavigation(page, isMobile, route.navHref);
       if (isMobile) await closeMobileMenu(page);
       await expectNoHorizontalOverflow(page);
 
@@ -317,9 +326,30 @@ test("language toggle moves between Chinese and English canonical URLs", async (
   await page.goto("/blog");
   await clickLanguageToggle(page, /切换到英文|Switch to English/);
   await expect(page).toHaveURL(/\/en\/blog$/);
+  await expect(page.locator("#site-mobile-menu")).toHaveCount(0);
 
   await clickLanguageToggle(page, /切换到中文|Switch to Chinese/);
   await expect(page).toHaveURL(/\/blog$/);
+  await expect(page.locator("#site-mobile-menu")).toHaveCount(0);
+});
+
+test("detail routes mark their parent navigation section as current", async ({ page }) => {
+  const isMobile = test.info().project.name.includes("mobile");
+
+  for (const route of [
+    { path: "/projects/ai-page-analysis", href: "/projects", label: "作品" },
+    { path: "/en/blog/ci-agent-guardrails", href: "/en/blog", label: "Writing" }
+  ]) {
+    await page.goto(route.path);
+    if (isMobile) await openMobileMenu(page);
+
+    const nav = page.locator("header nav:visible").first();
+    const currentLink = nav.getByRole("link", { name: route.label, exact: true });
+    await expect(currentLink).toHaveAttribute("href", route.href);
+    await expect(currentLink).toHaveAttribute("aria-current", "page");
+
+    if (isMobile) await closeMobileMenu(page);
+  }
 });
 
 test("keyboard skip link reveals and focuses the main content target", async ({ page }) => {

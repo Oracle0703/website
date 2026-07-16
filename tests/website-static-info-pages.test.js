@@ -22,7 +22,12 @@ test('about and contact pages avoid page-level server cookie reads', () => {
     assert.match(pageSource, new RegExp(`copy=\\{pages\\.${route}\\}`));
     assert.match(pageSource, /common=\{pages\.common\}/);
 
-    assert.match(clientSource, /"use client"/);
+    if (route === 'about') {
+      assert.doesNotMatch(clientSource, /["']use client["']/);
+      assert.doesNotMatch(clientSource, /\buse(?:State|Effect|Memo|Callback|Ref)\b|\bwindow\b|\bdocument\b/);
+    } else {
+      assert.match(clientSource, /"use client"/);
+    }
     assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
     assert.match(clientSource, new RegExp(`copy: Messages\\["pages"\\]\\["${route}"\\]`));
     assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);

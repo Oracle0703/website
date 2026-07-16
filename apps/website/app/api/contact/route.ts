@@ -2,9 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   appendContactSubmission,
   checkContactSubmissionGate,
+  ContactPayloadTooLargeError,
   contactSubmissionGate,
   createContactSubmission,
   getContactIdentityKey,
+  getContactServiceReadiness,
+  readContactRequestJson,
+  rollbackContactSubmissionGate,
   sendContactNotification,
   validateContactFormSubmission
 } from "../../../lib/contact-form";
@@ -13,8 +17,8 @@ export const dynamic = "force-dynamic";
 
 function getClientIp(request: NextRequest) {
   return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
+    request.headers.get("x-real-ip")?.split(",")[0]?.trim() ||
+    request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ||
     "unknown"
   );
 }
@@ -26,28 +30,41 @@ function getErrorStatus(code: string) {
 }
 
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    service: "website-contact",
-    version: "d7"
-  });
+  const readiness = await getContactServiceReadiness();
+
+  return NextResponse.json(
+    {
+      ok: readiness.ready,
+      ready: readiness.ready,
+      service: "website-contact",
+      version: "v4",
+      checks: {
+        persistence: readiness.persistence,
+        notification: readiness.notification
+      }
+    },
+    { status: readiness.ready ? 200 : 503 }
+  );
 }
 
 export async function POST(request: NextRequest) {
   let payload: unknown;
 
   try {
-    payload = await request.json();
-  } catch {
+    payload = await readContactRequestJson(request);
+  } catch (error) {
+    const payloadTooLarge = error instanceof ContactPayloadTooLargeError;
     return NextResponse.json(
       {
         status: "failed",
         error: {
           code: "submit_failure",
-          message: "Request body must be valid JSON."
+          message: payloadTooLarge
+            ? "Request body is too large."
+            : "Request body must be valid JSON."
         }
       },
-      { status: 400 }
+      { status: payloadTooLarge ? 413 : 400 }
     );
   }
 
@@ -63,7 +80,7 @@ export async function POST(request: NextRequest) {
   }
 
   const ipAddress = getClientIp(request);
-  const identityKey = getContactIdentityKey(ipAddress, validation.value.contact);
+  const identityKey = getContactIdentityKey(ipAddress);
   const gateResult = checkContactSubmissionGate(contactSubmissionGate, {
     contact: validation.value.contact,
     projectGoal: validation.value.projectGoal,
@@ -88,6 +105,7 @@ export async function POST(request: NextRequest) {
   try {
     await appendContactSubmission(submission);
   } catch {
+    rollbackContactSubmissionGate(contactSubmissionGate, gateResult.reservation);
     return NextResponse.json(
       {
         status: "failed",
@@ -101,15 +119,30 @@ export async function POST(request: NextRequest) {
   }
 
   const notification = await sendContactNotification(submission);
-  if (!notification.ok) {
+  if (notification.status === "failed") {
     return NextResponse.json(
       {
         status: "received_with_notification_failure",
         submission_id: submission.submissionId,
+        persistence_status: "saved",
+        notification_status: "failed",
         error: {
           code: "notification_failure",
-          message: "The request was saved, but notification delivery failed."
+          message: "The request was saved, but automatic notification delivery failed."
         }
+      },
+      { status: 202 }
+    );
+  }
+
+  if (notification.status === "skipped") {
+    return NextResponse.json(
+      {
+        status: "received_without_notification",
+        submission_id: submission.submissionId,
+        persistence_status: "saved",
+        notification_status: "skipped",
+        message: "The request was saved. Automatic notification is not configured."
       },
       { status: 202 }
     );
@@ -118,6 +151,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     status: "received",
     submission_id: submission.submissionId,
-    message: "Your request was received."
+    persistence_status: "saved",
+    notification_status: "delivered",
+    message: "The request was saved and its automatic notification was delivered."
   });
 }
