@@ -24,8 +24,11 @@
 - **目录约定**（建议一次性定死，减少脚本分歧）：
   - Incoming：`C:\incoming`（scp 上传 zip 的落点；Secrets 里建议写 `C:/incoming`）
   - Releases：`C:\services\website\releases\<BuildId>`
+  - Contact data：`C:\services\website\data\contact`（必须独立于 Releases，避免版本轮换丢失提交）
   - Logs：`C:\logs\website`
   - Deploy script：`C:\deploy\website-deploy.ps1`
+- **联系表单持久化**：生产环境必须设置 `CONTACT_SUBMISSIONS_DIR=C:\services\website\data\contact`，并确认 NSSM 服务账号可写。
+- **联系表单通知**：配置 `CONTACT_NOTIFICATION_WEBHOOK_URL`；如果暂不配置，必须明确由谁、以什么频率检查 JSONL 提交文件。
 
 ---
 
@@ -52,12 +55,13 @@
 # 目录约定（按需调整，但建议固定）
 mkdir C:\incoming
 mkdir C:\services\website\releases
+mkdir C:\services\website\data\contact
 mkdir C:\logs\website
 mkdir C:\deploy
 ```
 
 依赖：
-- Node.js（建议 20+）
+- Node.js 22.22.0（与仓库 `engines.node`、GitHub/Gitee CI 保持一致）
 - OpenSSH Server（sshd）
 - Nginx for Windows（例如 `C:\nginx\nginx.exe`）
 - NSSM（例如 `C:\tools\nssm\nssm.exe`）
@@ -110,6 +114,11 @@ GUI 参数建议：
 I/O（建议）：
 - stdout：`C:\logs\website\stdout.log`
 - stderr：`C:\logs\website\stderr.log`
+
+环境变量（必须在服务端或 NSSM 服务环境中配置，不要写入仓库）：
+- `NEXT_PUBLIC_SITE_URL=https://www.meaningful.ink`
+- `CONTACT_SUBMISSIONS_DIR=C:\services\website\data\contact`
+- `CONTACT_NOTIFICATION_WEBHOOK_URL=<private webhook URL>`（若启用通知）
 
 启动/重启：
 ```powershell
@@ -173,6 +182,7 @@ server {
 本机验证（Windows）：
 ```powershell
 curl http://127.0.0.1:3000/
+curl http://127.0.0.1:3000/api/contact/healthz
 ```
 
 公网验证：
@@ -183,8 +193,10 @@ curl -I https://www.meaningful.ink/
 
 人工检查：
 - 首页 `/`、入口 `/enter`、`/blog`、`/labs`、`/tracker` 是否可访问
+- `/rss.xml` 返回 `application/rss+xml`，并包含最新公开文章
 - `/_next/static/` 返回 200（静态资源）
 - 跳转策略符合预期（www ↔ apex）
+- 联系页完成一次端到端测试提交，并确认持久目录收到 JSONL 记录；启用 webhook 时同时确认通知送达
 
 ---
 

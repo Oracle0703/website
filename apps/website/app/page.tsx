@@ -76,7 +76,8 @@ export default function HomePage() {
         "@type": "Person",
         name: seo.siteName,
         jobTitle: seo.jsonLd.jobTitle,
-        url: toAbsoluteUrl("/")
+        url: toAbsoluteUrl("/"),
+        sameAs: ["https://github.com/Oracle0703"]
       }
     ]
   };

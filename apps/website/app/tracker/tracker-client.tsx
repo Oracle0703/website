@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnnouncementTicker } from "../../components/announcement-ticker";
 import { useI18n } from "../../components/language-provider";
 import type { Locale } from "../../lib/i18n";
+import { getLocalePath } from "../../lib/locale-routing";
 import {
   EYEBROW_ACCENT,
   TEXT_SM_MUTED,
@@ -19,6 +20,18 @@ type RewardItem = { label: string; reward: string };
 type TrackerTableRow = { level: string; range: string; note: string };
 
 type TrackerContent = {
+  prototypeNotice: {
+    label: string;
+    description: string;
+    buttonNote: string;
+  };
+  ticker: {
+    label: string;
+    kicker: string;
+    emptyMessage: string;
+    pauseLabel: string;
+    resumeLabel: string;
+  };
   panel: {
     eyebrow: string;
     title: string;
@@ -63,6 +76,18 @@ type TrackerContent = {
 
 const trackerContent: Record<Locale, TrackerContent> = {
   zh: {
+    prototypeNotice: {
+      label: "概念原型 · 示例数据",
+      description: "页面中的人物、积分、连续天数与公告均为演示内容，不代表真实用户或线上数据。",
+      buttonNote: "演示状态，尚未接入账户与持久化。"
+    },
+    ticker: {
+      label: "修行公告",
+      kicker: "天机",
+      emptyMessage: "暂无最新动态",
+      pauseLabel: "暂停滚动",
+      resumeLabel: "继续滚动"
+    },
     panel: {
       eyebrow: "今日修行",
       title: "签到面板",
@@ -192,6 +217,18 @@ const trackerContent: Record<Locale, TrackerContent> = {
     ]
   },
   en: {
+    prototypeNotice: {
+      label: "Concept prototype · Mock data",
+      description: "Names, points, streaks, and announcements on this page are demonstrations, not real users or live data.",
+      buttonNote: "Demo only; accounts and persistence are not connected."
+    },
+    ticker: {
+      label: "Practice announcements",
+      kicker: "Updates",
+      emptyMessage: "No recent updates",
+      pauseLabel: "Pause",
+      resumeLabel: "Resume"
+    },
     panel: {
       eyebrow: "Daily Practice",
       title: "Check-in Console",
@@ -378,10 +415,21 @@ export function TrackerClient() {
         <p className={TEXT_SM_MUTED}>{copy.eyebrow}</p>
         <h1 className={TITLE_2XL}>{copy.title}</h1>
         <p className={TEXT_SM_MUTED}>{copy.description}</p>
+        <div className="max-w-3xl rounded-xl border border-accent/35 bg-accent/10 px-4 py-3">
+          <p className="text-sm font-semibold text-accent">{content.prototypeNotice.label}</p>
+          <p className={`mt-1 ${TEXT_SM_MUTED}`}>{content.prototypeNotice.description}</p>
+        </div>
       </header>
 
       <section className="mt-4">
-        <AnnouncementTicker items={content.announcements} />
+        <AnnouncementTicker
+          items={content.announcements}
+          label={content.ticker.label}
+          kicker={content.ticker.kicker}
+          emptyMessage={content.ticker.emptyMessage}
+          pauseLabel={content.ticker.pauseLabel}
+          resumeLabel={content.ticker.resumeLabel}
+        />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -392,13 +440,16 @@ export function TrackerClient() {
               <h2 className={TITLE_XL}>{content.panel.title}</h2>
               <p className={TEXT_SM_MUTED}>{content.panel.description}</p>
             </div>
-            <button
-              type="button"
-              disabled
-              className="w-full rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white opacity-70 sm:w-auto"
-            >
-              {content.panel.button}
-            </button>
+            <div className="w-full text-left sm:w-auto sm:text-right">
+              <button
+                type="button"
+                disabled
+                className="w-full rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white opacity-70 sm:w-auto"
+              >
+                {content.panel.button}
+              </button>
+              <p className={`mt-2 max-w-64 ${TEXT_XS_MUTED}`}>{content.prototypeNotice.buttonNote}</p>
+            </div>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {content.stats.map((stat) => (
@@ -532,10 +583,10 @@ export function TrackerClient() {
         <div className="rounded-2xl border border-edge bg-base/60 p-6 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-blue-500/10 motion-reduce:transform-none">
           <p className={TEXT_SM_MUTED}>{content.footerNote}</p>
           <div className={`mt-4 flex gap-4 ${TEXT_SM_MUTED}`}>
-            <Link href="/enter" className="text-accent hover:text-accent-strong">
+            <Link href={getLocalePath("/enter", locale)} className="text-accent hover:text-accent-strong">
               {common.backToEnter}
             </Link>
-            <Link href="/" className="text-muted hover:text-primary">
+            <Link href={getLocalePath("/", locale)} className="text-muted hover:text-primary">
               {common.backToHome}
             </Link>
           </div>

@@ -52,7 +52,7 @@ const englishContentChecks = [
   {
     path: "/en/contact",
     heading: /Contact/,
-    text: /Contact form|Project goal|Privacy/
+    text: /Send a project inquiry|Project goal|Privacy/
   },
   {
     path: "/en/blog/ci-agent-guardrails",
@@ -141,6 +141,21 @@ test("language toggle moves between Chinese and English canonical URLs", async (
   await expect(page).toHaveURL(/\/blog$/);
 });
 
+test("keyboard skip link reveals and focuses the main content target", async ({ page }) => {
+  await page.goto("/");
+
+  await page.keyboard.press("Tab");
+
+  const skipLink = page.getByRole("link", { name: "跳到主要内容" });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeVisible();
+
+  await page.keyboard.press("Enter");
+
+  await expect(page).toHaveURL(/#main-content$/);
+  await expect(page.locator("#main-content")).toBeFocused();
+});
+
 test.describe("English content quality", () => {
   for (const check of englishContentChecks) {
     test(`${check.path} exposes English primary content`, async ({ page }) => {
@@ -153,12 +168,16 @@ test.describe("English content quality", () => {
   }
 });
 
-test("D5 contact page avoids placeholder contact channels", async ({ page }) => {
+test("contact page exposes the live form and GitHub fallback without rollout jargon", async ({ page }) => {
   await page.goto("/contact");
 
   await expect(page.locator("main")).not.toContainText(/hello@example\.com|mailto:hello|example\.com/);
-  await expect(page.locator("main")).toContainText(/联系路径|Contact path|下一步|Next step/);
-  await expect(page.locator("main")).toContainText(/联系闭环决策|Contact-loop decision|D7 表单规格|D7 form spec/);
+  await expect(page.locator("main")).toContainText(/填写下方表单/);
+  await expect(page.getByRole("link", { name: /GitHub 主页/ })).toHaveAttribute(
+    "href",
+    "https://github.com/Oracle0703"
+  );
+  await expect(page.locator("main")).not.toContainText(/D6|D7|联系闭环决策|表单规格/);
 });
 
 test("D7 contact form keeps input after validation failure", async ({ page }) => {

@@ -8,6 +8,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
 const STATUSES = new Set(["draft", "published", "archived", "scheduled"]);
 const LOCALES = new Set(["zh", "en"]);
+const BLOG_TOPICS = new Set(["engineering", "product", "security", "seo", "labs"]);
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -188,7 +189,14 @@ function validateSinglePost(post) {
   validateStringField(issues, filePath, frontmatter, status, "summary", "summary is required");
   validateCover(issues, filePath, frontmatter, status);
   validateArrayField(issues, filePath, frontmatter, status, "tags", "tags must contain at least one item");
-  validateStringField(issues, filePath, frontmatter, status, "category", "category is required");
+  if (!BLOG_TOPICS.has(frontmatter.category)) {
+    addIssue(
+      issues,
+      severityFor(status, "category"),
+      filePath,
+      `category must be one of: ${[...BLOG_TOPICS].join(", ")}`
+    );
+  }
   validateSeo(issues, filePath, frontmatter, status);
   validateSeries(issues, filePath, frontmatter, status);
   validateLocaleAvailability(issues, filePath, frontmatter, status);

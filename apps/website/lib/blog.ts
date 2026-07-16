@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { defaultLocale, isLocale, type Locale } from "./i18n";
+import { isBlogTopicId, type BlogTopicId } from "./blog-topics";
 
 export type PostStatus = "draft" | "published" | "archived" | "scheduled";
 
@@ -36,7 +37,7 @@ export interface BlogPostFrontmatter {
   cover: string | CoverImage;
   author: string;
   tags?: string[];
-  category?: string;
+  category?: BlogTopicId;
   status?: PostStatus;
   publishDate?: string;
   draft?: boolean;
@@ -293,6 +294,7 @@ function validateFrontmatter(frontmatter: BlogPostFrontmatter): ValidationResult
   if (!frontmatter.summary) errors.push("missing summary");
   if (!frontmatter.cover) errors.push("missing cover");
   if (!frontmatter.author) errors.push("missing author");
+  if (!isBlogTopicId(frontmatter.category)) errors.push("invalid category");
 
   const status = normalizeStatus(frontmatter);
   if (!STATUS_VALUES.includes(status)) errors.push("invalid status");

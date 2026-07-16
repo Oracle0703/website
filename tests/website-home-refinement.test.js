@@ -39,6 +39,7 @@ test('home i18n copy supports the refined information architecture', () => {
 
   for (const key of [
     'ctaProjects',
+    'ctaContact',
     'heroEvidenceTitle',
     'heroEvidenceItems',
     'currentFocusTitle',
@@ -104,36 +105,22 @@ test('contact copy avoids placeholder contact channels and exposes a clear conta
   assert.doesNotMatch(i18nSource, /hello@example\.com|mailto:hello|example\.com/);
   assert.match(i18nSource, /contactPathDescription/);
   assert.match(i18nSource, /responseExpectation/);
+  assert.match(i18nSource, /https:\/\/github\.com\/Oracle0703/);
   assert.match(contactClient, /href=\{channel\.href\.startsWith\("http"\)/);
+  assert.match(contactClient, /noopener noreferrer/);
 });
 
-test('D6 contact copy exposes the contact-loop decision and D7 form specification path', () => {
+test('contact page presents the live form and visitor-facing fallback without rollout jargon', () => {
   const i18nSource = read('apps/website/lib/i18n.ts');
   const contactClient = read('apps/website/app/contact/contact-client.tsx');
-  const formSpec = read('docs/website/D7_CONTACT_FORM_SPEC.md');
 
-  for (const key of [
-    'contactDecisionTitle',
-    'contactDecisionStatus',
-    'contactDecisionDescription',
-    'formSpecTitle',
-    'formSpecAction'
-  ]) {
-    assert.match(i18nSource, new RegExp(`${key}:`));
-    assert.match(contactClient, new RegExp(`copy\\.${key}`));
-  }
-
-  assert.doesNotMatch(i18nSource, /hello@example\.com|mailto:hello|example\.com/);
-  assert.match(formSpec, /honeypot/);
-  assert.match(formSpec, /rate limit/i);
-  assert.match(formSpec, /minimum input quality/i);
-  assert.match(formSpec, /privacy/i);
-  assert.match(formSpec, /retention/i);
-  assert.match(formSpec, /deletion/i);
-  assert.match(formSpec, /submit failure/i);
-  assert.match(formSpec, /duplicate submit/i);
-  assert.match(formSpec, /notification failure/i);
-  assert.match(formSpec, /D6 不实现|D6 does not implement/i);
+  assert.match(i18nSource, /contactPathEyebrow/);
+  assert.match(i18nSource, /填写下方表单/);
+  assert.match(i18nSource, /Use the form below/);
+  assert.match(contactClient, /copy\.contactPathEyebrow/);
+  assert.doesNotMatch(i18nSource, /contactDecisionTitle|contactDecisionStatus|contactDecisionDescription|formSpecTitle|formSpecAction/);
+  assert.doesNotMatch(i18nSource, /D6|D7|联系闭环决策|表单规格|Contact-loop decision|form spec/);
+  assert.doesNotMatch(contactClient, /contactDecision|formSpec/);
 });
 
 test('D7 contact client renders a real intake form without placeholder channels', () => {

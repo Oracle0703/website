@@ -17,6 +17,11 @@ export const generateMetadata = (): Metadata => {
       template: `%s | ${seo.siteName}`
     },
     description: seo.defaultDescription,
+    alternates: {
+      types: {
+        "application/rss+xml": `${baseUrl}/rss.xml`
+      }
+    },
     openGraph: {
       title: seo.defaultTitle,
       description: seo.defaultDescription,

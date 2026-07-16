@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { RevealSection } from "../reveal-section";
 import { useI18n } from "../language-provider";
 import { getLocalePath } from "../../lib/locale-routing";
@@ -55,7 +54,6 @@ export function HomePageClient({
   const common = messages.pages.common;
   const projectStatusLabels = messages.pages.projects.status;
   const getHref = (href: string) => getLocalePath(href, locale);
-  const [isMounted, setIsMounted] = useState(false);
   const latestBlogSectionItems =
     latestBlogItems.length > 0
       ? latestBlogItems
@@ -67,34 +65,22 @@ export function HomePageClient({
         }));
   const featuredSeriesSectionItems = featuredSeries;
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const heroMotion = (delayClass: string) =>
-    [
-      "transition-all duration-500 ease-out",
-      delayClass,
-      isMounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
-      "motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100"
-    ].join(" ");
-
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 md:py-20">
       <section className="grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-center md:gap-12">
         <div className="space-y-7">
           <div className="space-y-4">
-            <h1 className={`${heroMotion("delay-0")} text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl`}>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
               {copy.heroTitle}
             </h1>
-            <p className={`${heroMotion("delay-100")} max-w-2xl ${TEXT_BASE_SECONDARY} leading-relaxed sm:text-lg`}>
+            <p className={`max-w-2xl ${TEXT_BASE_SECONDARY} leading-relaxed sm:text-lg`}>
               {copy.heroSubtitle}
             </p>
-            <p className={`${heroMotion("delay-200")} max-w-2xl ${TEXT_SM_MUTED} leading-relaxed sm:text-base`}>
+            <p className={`max-w-2xl ${TEXT_SM_MUTED} leading-relaxed sm:text-base`}>
               {copy.heroIntro}
             </p>
           </div>
-          <div className={`flex flex-wrap gap-3 sm:gap-4 ${heroMotion("delay-300")}`}>
+          <div className="flex flex-wrap gap-3 sm:gap-4">
             <Link
               href={getHref("/projects")}
               className="btn-primary px-5 py-3 sm:px-6 sm:text-base"
@@ -107,13 +93,15 @@ export function HomePageClient({
             >
               {copy.ctaBlog}
             </Link>
+            <Link
+              href={getHref("/contact")}
+              className="btn-secondary px-5 py-3 sm:px-6 sm:text-base"
+            >
+              {copy.ctaContact}
+            </Link>
           </div>
         </div>
-        <div
-          className={`${heroMotion(
-            "delay-200"
-          )} min-w-0 space-y-4`}
-        >
+        <div className="min-w-0 space-y-4">
           <div className="evidence-card bg-surface/70 backdrop-blur-sm">
             <ParticleTime />
             <p className="section-kicker mt-4">

@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { BlogCoverImage } from "../../components/blog-cover-image";
 import type { CoverImage } from "../../lib/blog";
+import {
+  BLOG_TOPICS,
+  getBlogTopicLabel,
+  isBlogTopicId,
+  type BlogTopicId
+} from "../../lib/blog-topics";
 import type { Locale, getMessages } from "../../lib/i18n";
 import { getLocalePath } from "../../lib/locale-routing";
 import { TITLE_3XL } from "../../lib/typography";
@@ -16,7 +22,7 @@ export type BlogListPost = {
   updatedAt: string;
   summary: string;
   cover: CoverImage;
-  tags?: string[];
+  category?: BlogTopicId;
   readingTime: number;
 };
 
@@ -35,7 +41,7 @@ type BlogListViewProps = {
   locale: Locale;
   copy: BlogCopy;
   common: CommonCopy;
-  selectedTag?: string;
+  selectedTopic?: string;
 };
 
 function formatDate(date: string, locale: Locale) {
@@ -52,23 +58,19 @@ export function BlogListView({
   locale,
   copy,
   common,
-  selectedTag = ""
+  selectedTopic = ""
 }: BlogListViewProps) {
-  const tagCounts = new Map<string, number>();
+  const topicCounts = new Map<BlogTopicId, number>();
   for (const post of posts) {
-    for (const tag of post.tags ?? []) {
-      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-    }
+    if (!post.category) continue;
+    topicCounts.set(post.category, (topicCounts.get(post.category) ?? 0) + 1);
   }
 
-  const sortedTags = [...tagCounts.entries()].sort((a, b) => {
-    if (b[1] !== a[1]) return b[1] - a[1];
-    return a[0].localeCompare(b[0]);
-  });
+  const availableTopics = BLOG_TOPICS.filter((topic) => topicCounts.has(topic.id));
 
-  const hasSelectedTag = selectedTag.length > 0 && tagCounts.has(selectedTag);
-  const filteredPosts = hasSelectedTag
-    ? posts.filter((post) => (post.tags ?? []).includes(selectedTag))
+  const hasSelectedTopic = isBlogTopicId(selectedTopic) && topicCounts.has(selectedTopic);
+  const filteredPosts = hasSelectedTopic
+    ? posts.filter((post) => post.category === selectedTopic)
     : posts;
   const getHref = (href: string) => getLocalePath(href, locale);
 
@@ -134,41 +136,44 @@ export function BlogListView({
           </section>
         )}
 
-        {sortedTags.length > 0 && (
+        {availableTopics.length > 0 && (
           <div className="mt-5 space-y-3 rounded-xl border border-edge/70 bg-base/30 p-3.5">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-              <span>{copy.tagFilterLabel}</span>
+              <span>{copy.topicFilterLabel}</span>
               <Link
                 href={getHref("/blog")}
                 className={
-                  hasSelectedTag
+                  hasSelectedTopic
                     ? "rounded-full border border-edge px-2.5 py-1 text-xs text-secondary hover:bg-primary hover-text-base"
                     : "rounded-full border border-accent/70 bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent"
                 }
               >
-                {copy.allTags}
+                {copy.allTopics}
               </Link>
-              {sortedTags.map(([tag, count]) => {
-                const isActive = hasSelectedTag && tag === selectedTag;
+              {availableTopics.map((topic) => {
+                const count = topicCounts.get(topic.id) ?? 0;
+                const isActive = hasSelectedTopic && topic.id === selectedTopic;
                 return (
                   <Link
-                    key={tag}
-                    href={`${getHref("/blog")}?tag=${encodeURIComponent(tag)}`}
+                    key={topic.id}
+                    href={`${getHref("/blog")}?topic=${encodeURIComponent(topic.id)}`}
                     className={
                       isActive
                         ? "rounded-full border border-accent/70 bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent"
                         : "rounded-full border border-edge px-2.5 py-1 text-xs text-secondary hover:bg-primary hover-text-base"
                     }
                   >
-                    {tag} ({count})
+                    {getBlogTopicLabel(topic.id, locale)} ({count})
                   </Link>
                 );
               })}
             </div>
-            {hasSelectedTag && (
+            {hasSelectedTopic && (
               <p className="text-xs text-muted">
                 {copy.filterActive}:{" "}
-                <span className="text-secondary">{selectedTag}</span>
+                <span className="text-secondary">
+                  {getBlogTopicLabel(selectedTopic, locale)}
+                </span>
               </p>
             )}
           </div>
@@ -227,19 +232,14 @@ export function BlogListView({
                           </span>
                         </div>
 
-                        {post.tags && post.tags.length > 0 && (
+                        {post.category && (
                           <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-secondary">
                             <span className="inline-flex items-center text-muted">
-                              {copy.tagsLabel}:
+                              {copy.topicLabel}:
                             </span>
-                            {post.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="inline-flex items-center rounded-full border border-edge-strong px-2.5 py-0.5"
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                            <span className="inline-flex items-center rounded-full border border-edge-strong px-2.5 py-0.5">
+                              {getBlogTopicLabel(post.category, locale)}
+                            </span>
                           </div>
                         )}
 

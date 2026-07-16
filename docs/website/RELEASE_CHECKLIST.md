@@ -26,7 +26,7 @@
 | 2 | `npm run validate:website-content` | published 内容无 error | 检查 frontmatter、cover alt、正文图片 alt、series order、draft 引用 |
 | 3 | `npm run audit:website-english-content` | D4 英文 route surface、ProjectView、BlogView 无中文主体泄漏，localized-source 不超过登记基线 | 检查 Projects view、Blog locale availability、AI 页面分析 copy 和 D4 localized-source 阈值 |
 | 4 | `npm run build:website` | Next.js production build exit 0 | 类型错误先修代码；路由输出变化要确认是否符合预期 |
-| 5 | `npm run verify:website-static` | 中英文公开静态入口 HTML 和 Next 静态脚本验收通过 | 如果某入口 404，检查 `PUBLIC_WEBSITE_LOCALE_ROUTES` 与实际路由；如果 hydration warning 命中，检查 provider、boot script 或 client 文案 |
+| 5 | `npm run verify:website-static` | 中英文公开静态入口、RSS、SEO 资源、安全响应头和 Next 静态脚本验收通过 | 如果某入口或资源 404，检查路由与构建产物；如果响应头缺失，检查 `next.config.js` 与反向代理配置；如果 hydration warning 命中，检查 provider、boot script 或 client 文案 |
 | 6 | `git diff --check` | 无 whitespace error | 修正行尾空格、文件尾空行或 patch 格式问题 |
 
 ## 3. 条件必跑
@@ -45,6 +45,7 @@
 | 改动 AI 页面分析 V1 后端规格或计划接入真实模型 | `npm test` + `npm run audit:website-english-content` | `AI_PAGE_ANALYSIS_V1_TECH_SPEC.md` 覆盖 SSRF、内网、cloud metadata、input schema、output schema、错误码和 D6 非实现边界 |
 | 改动截图预期或视觉设计被确认接受 | `npm run verify:website-browser -- --update-snapshots` | 新截图基线符合预期，并在 review 中说明原因 |
 | 改动静态入口清单、sitemap、公开页面新增/删除 | `npm test` + `npm run verify:website-static` + `npm run verify:website-browser` | `PUBLIC_WEBSITE_ROUTES` 保持中文根路径，`PUBLIC_WEBSITE_LOCALE_ROUTES`、sitemap、HTML 验收和浏览器验收保持一致 |
+| 改动 RSS、`next.config.js` 安全头或反向代理响应头 | `npm test` + `npm run build:website` + `npm run verify:website-static` | `/rss.xml` 为合法 RSS 2.0；HSTS、nosniff、Referrer-Policy、Permissions-Policy 与 frame protection 在实际响应中存在 |
 | 验证部署预览地址 | `NEXT_STATIC_VERIFY_BASE_URL=https://example.com npm run verify:website-static` | 远端公开入口返回 200，HTML 和静态脚本信号通过 |
 | 触及 dashboard-api | `npm test -w apps/dashboard-api` | API 工作区测试通过 |
 | 触及 knock | `npm run build:knock` | 只跑构建；完整 knock 测试可能受 `better-sqlite3` ABI 影响 |

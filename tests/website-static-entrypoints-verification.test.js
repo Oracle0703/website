@@ -73,6 +73,19 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
   assert.match(source, /data-theme/);
   assert.match(source, /<html lang=/);
   assert.match(source, /Hydration failed|Text content does not match|Minified React error/);
+  assert.match(source, /canonical/);
+  assert.match(source, /og:url/);
+  assert.match(source, /og:image/);
+  assert.match(source, /twitter:image/);
+  assert.match(source, /robots\.txt/);
+  assert.match(source, /sitemap\.xml/);
+  assert.match(source, /favicon\.ico/);
+  assert.match(source, /og\.png/);
+  assert.match(source, /rss\.xml/);
+  assert.match(source, /application\\\/rss\\\+xml/);
+  assert.match(source, /verifySecurityHeaders/);
+  assert.match(source, /strict-transport-security/);
+  assert.match(source, /permissions-policy/);
 });
 
 test("static entrypoint verifier falls forward from the default port when it is occupied", async () => {

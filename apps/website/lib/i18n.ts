@@ -7,7 +7,7 @@ export const LOCALE_COOKIE = "locale";
 export const messages = {
   zh: {
     nav: {
-      brand: "开发者工作室",
+      brand: "Meaningful · Ink",
       items: [
         { href: "/", label: "首页" },
         { href: "/blog", label: "博客" },
@@ -30,17 +30,18 @@ export const messages = {
       switchToDark: "切换到暗色"
     },
     footer: {
-      copyright: "© 2026 开发者工作室",
+      copyright: "© 2026 Meaningful · Ink",
       tagline: "开发者作品集 · 博客 · 实验室 · 打卡"
     },
     home: {
-      heroTitle: "全栈开发者",
-      heroSubtitle: "构建内容与体验的数字空间",
+      heroTitle: "专注 AI 工程与产品体验的全栈开发者",
+      heroSubtitle: "把 AI 与产品想法做成可运行、可验证的原型",
       heroIntro:
-        "我把 AI 工具、内容系统、后台控制台和产品原型打磨成可展示、可维护、可继续产品化的个人网站系统。",
+        "我使用 Next.js、TypeScript 与 Node.js，构建 AI 工具、内容系统、后台控制台和可以持续演进的小产品。",
       ctaEnter: "查看作品",
       ctaBlog: "阅读博客",
       ctaProjects: "查看作品",
+      ctaContact: "联系我",
       heroEvidenceTitle: "当前证据链",
       heroEvidenceItems: [
         {
@@ -197,12 +198,12 @@ export const messages = {
         emptyTitle: "暂无文章",
         emptyDescription: "已发布的文章会在这里展示。",
         readMore: "阅读全文",
-        tagsLabel: "标签",
+        topicLabel: "主题",
         postNavigationTitle: "继续阅读",
         previousPost: "上一篇",
         nextPost: "下一篇",
-        tagFilterLabel: "按标签浏览",
-        allTags: "全部",
+        topicFilterLabel: "按主题浏览",
+        allTopics: "全部主题",
         filterActive: "当前筛选",
         relatedPostsTitle: "相关阅读",
         seriesTitle: "专题系列",
@@ -283,16 +284,10 @@ export const messages = {
           "不把自动生成内容直接当成最终表达，关键内容需要人工校准。",
           "不在范围不清时直接开工，先收敛问题和验收标准。"
         ],
-        contactPathTitle: "联系路径",
+        contactPathEyebrow: "开始沟通",
+        contactPathTitle: "选择适合你的联系路径",
         contactPathDescription:
-          "目前不公开邮箱和表单。建议先从公开作品或 AI 页面分析 Demo 判断合作方向，再带着目标、约束和期望交付物发起沟通。",
-        contactDecisionTitle: "联系闭环决策",
-        contactDecisionStatus: "D6 保持站内联系策略，不公开邮箱，不上线后端表单。",
-        contactDecisionDescription:
-          "当前没有经过确认的公开联系方式。为了避免假邮箱、占位表单和垃圾信息入口，D6 只把沟通前置路径说清楚；真实表单进入 D7 前置规格。",
-        formSpecTitle: "D7 表单规格",
-        formSpecAction:
-          "上线表单前必须先确认反垃圾、隐私字段、数据留存、删除方式、提交失败、重复提交和通知失败处理。",
+          "你可以填写下方表单，说明项目目标、当前链接、约束和期望交付物。提交前也可以先查看作品、体验 Demo 或阅读文章；如果表单暂时不可用，可通过 GitHub 查看公开项目与可用联系信息。",
         contactChannels: [
           {
             label: "查看作品证据",
@@ -308,15 +303,20 @@ export const messages = {
             label: "阅读文章背景",
             description: "适合了解工程流程、内容系统和长期维护方式。",
             href: "/blog"
+          },
+          {
+            label: "GitHub 主页",
+            description: "表单暂时不可用时，可查看公开仓库与个人资料中的可用联系信息。",
+            href: "https://github.com/Oracle0703"
           }
         ],
         responseExpectation:
           "发起沟通时请尽量带上项目目标、当前页面或产品链接、时间线、预算范围和你希望我负责的部分。",
         contactForm: {
-          eyebrow: "项目 Intake",
-          title: "Contact form",
+          eyebrow: "项目需求",
+          title: "提交合作需求",
           description:
-            "用这份表单提交一个具体、可判断边界的项目请求。提交内容只用于判断是否进入后续沟通，不会公开展示。",
+            "请提供足够的项目上下文，便于了解范围、适配度和下一步。提交内容仅用于项目沟通，不会公开展示。",
           fields: {
             name: {
               label: "姓名"
@@ -418,11 +418,11 @@ export const messages = {
       }
     },
     seo: {
-      siteName: "开发者工作室",
-      defaultTitle: "开发者主页",
-      defaultDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
-      homeTitle: "开发者主页",
-      homeDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
+      siteName: "Meaningful · Ink",
+      defaultTitle: "AI 工程与产品体验",
+      defaultDescription: "专注 AI 工程与产品体验，用 Next.js、TypeScript 与 Node.js 构建可运行、可验证的产品原型。",
+      homeTitle: "AI 工程与产品体验",
+      homeDescription: "专注 AI 工程与产品体验，用 Next.js、TypeScript 与 Node.js 构建可运行、可验证的产品原型。",
       enterTitle: "进入站点",
       enterDescription: "选择进入博客、实验室或打卡平台。",
       blogTitle: "博客",
@@ -445,7 +445,7 @@ export const messages = {
   },
   en: {
     nav: {
-      brand: "Developer Studio",
+      brand: "Meaningful · Ink",
       items: [
         { href: "/", label: "Home" },
         { href: "/blog", label: "Blog" },
@@ -468,17 +468,18 @@ export const messages = {
       switchToDark: "Switch to dark mode"
     },
     footer: {
-      copyright: "© 2026 Developer Studio",
+      copyright: "© 2026 Meaningful · Ink",
       tagline: "Developer Portfolio · Blog · Labs · Tracker"
     },
     home: {
-      heroTitle: "Full-Stack Developer",
-      heroSubtitle: "Building content-driven experiences",
+      heroTitle: "Full-Stack Developer for AI Products",
+      heroSubtitle: "Turning AI and product ideas into working, testable prototypes",
       heroIntro:
-        "I turn AI tools, content systems, dashboards, and product prototypes into a maintainable personal product system.",
+        "I use Next.js, TypeScript, and Node.js to build AI tools, content systems, dashboards, and small products that can keep evolving.",
       ctaEnter: "View projects",
       ctaBlog: "Read the Blog",
       ctaProjects: "View projects",
+      ctaContact: "Contact me",
       heroEvidenceTitle: "Current proof chain",
       heroEvidenceItems: [
         {
@@ -636,12 +637,12 @@ export const messages = {
         emptyTitle: "No posts yet",
         emptyDescription: "Published posts will appear here.",
         readMore: "Read more",
-        tagsLabel: "Tags",
+        topicLabel: "Topic",
         postNavigationTitle: "Continue reading",
         previousPost: "Previous post",
         nextPost: "Next post",
-        tagFilterLabel: "Browse by tag",
-        allTags: "All",
+        topicFilterLabel: "Browse by topic",
+        allTopics: "All topics",
         filterActive: "Active filter",
         relatedPostsTitle: "Related posts",
         seriesTitle: "Series",
@@ -722,16 +723,10 @@ export const messages = {
           "I do not treat generated content as final copy without human review.",
           "I do not start from vague scope; we narrow the problem and acceptance criteria first."
         ],
-        contactPathTitle: "Contact path",
+        contactPathEyebrow: "Start here",
+        contactPathTitle: "Choose the right contact path",
         contactPathDescription:
-          "No public inbox or backend form is exposed yet. Start from the public projects or the AI page analysis demo, then bring the goal, constraints, and expected deliverables into the conversation.",
-        contactDecisionTitle: "Contact-loop decision",
-        contactDecisionStatus: "D6 keeps the on-site contact path, with no public inbox and no backend form.",
-        contactDecisionDescription:
-          "There is no confirmed public contact channel yet. To avoid fake inboxes, placeholder forms, and spam entry points, D6 only clarifies the pre-contact path; a real form moves into the D7 specification first.",
-        formSpecTitle: "D7 form spec",
-        formSpecAction:
-          "Before a form ships, it must define anti-spam controls, privacy fields, retention, deletion, submit failure, duplicate submit, and notification failure behavior.",
+          "Use the form below to share the project goal, current link, constraints, and expected deliverables. You can also review the projects, try the demo, or read the writing first. If the form is temporarily unavailable, use GitHub to find public work and any available contact details.",
         contactChannels: [
           {
             label: "Review project evidence",
@@ -747,15 +742,20 @@ export const messages = {
             label: "Read the writing",
             description: "Best for understanding process, content systems, and long-term maintenance.",
             href: "/blog"
+          },
+          {
+            label: "GitHub profile",
+            description: "If the form is temporarily unavailable, review public repositories and any contact details listed on the profile.",
+            href: "https://github.com/Oracle0703"
           }
         ],
         responseExpectation:
           "When reaching out, include the project goal, current page or product link, timeline, budget range, and the part you want me to own.",
         contactForm: {
-          eyebrow: "Project intake",
-          title: "Contact form",
+          eyebrow: "Project inquiry",
+          title: "Send a project inquiry",
           description:
-            "Send a focused project request with enough context to judge scope, fit, and next steps. The submission is only used for follow-up decisions and is not published.",
+            "Share enough context to understand the scope, fit, and possible next step. Your submission is used only for project communication and is not published.",
           fields: {
             name: {
               label: "Name"
@@ -857,11 +857,11 @@ export const messages = {
       }
     },
     seo: {
-      siteName: "Developer Studio",
-      defaultTitle: "Developer Portfolio",
-      defaultDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
-      homeTitle: "Developer Portfolio",
-      homeDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
+      siteName: "Meaningful · Ink",
+      defaultTitle: "AI Engineering and Product Experience",
+      defaultDescription: "A full-stack developer building working, testable AI products with Next.js, TypeScript, and Node.js.",
+      homeTitle: "AI Engineering and Product Experience",
+      homeDescription: "A full-stack developer building working, testable AI products with Next.js, TypeScript, and Node.js.",
       enterTitle: "Enter",
       enterDescription: "Choose to enter the blog, labs, or tracker.",
       blogTitle: "Blog",
