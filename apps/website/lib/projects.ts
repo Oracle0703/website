@@ -321,9 +321,11 @@ export const projects: Project[] = [
       { label: "运营价值", value: "可作为 Dashboard Console 的运行摘要来源" }
     ],
     asset: {
-      kind: "none",
-      reason: "访问日志可能包含 IP、请求路径和运行时间线，当前不公开原始监控截图。",
-      nextAssetStep: "先生成脱敏运行摘要或架构图，再作为公开资产补充到项目详情。"
+      kind: "diagram",
+      src: "/projects/knock-architecture.svg",
+      alt: "Knock 当前架构：Nginx 日志经增量读取和解析后写入 SQLite WAL，再由 Express API 提供给受保护界面",
+      caption:
+        "仅展示当前已实现的单机数据流与 Basic Auth，不含真实日志；Dashboard 摘要和告警标为 roadmap。"
     },
     gallery: [
       {
@@ -402,9 +404,11 @@ export const projects: Project[] = [
       { label: "扩展方向", value: "后续可承接内容运营、部署记录和 Knock 摘要" }
     ],
     asset: {
-      kind: "none",
-      reason: "内部控制台可能包含任务、日志、OSS 对象和部署状态，不适合直接公开截图。",
-      nextAssetStep: "先裁剪敏感字段或制作公开架构图，再进入项目资产展示。"
+      kind: "diagram",
+      src: "/projects/dashboard-console-architecture.svg",
+      alt: "Dashboard Console 当前架构：管理员 JWT 与自动 ingest 分路进入 API，再读写带 ETag 边界的 OSS JSON",
+      caption:
+        "仅展示当前已实现的双鉴权、存储与一致性边界，不含真实标识或运营数据；内容编辑、部署记录和 Knock 摘要标为 roadmap。"
     },
     gallery: [
       {
@@ -475,28 +479,30 @@ export const projects: Project[] = [
     solution:
       "把常用转换、复制反馈和边界提示放在一个轻量页面中，作为实验室中可持续扩展的工具模板。",
     role: ["前端实现", "输入校验", "交互反馈", "Labs 工具整合"],
-    stack: ["React", "TypeScript", "Tailwind CSS", "Intl API"],
+    stack: ["React", "TypeScript", "Tailwind CSS", "JavaScript Date API"],
     highlights: ["直接可用", "交互反馈完整", "适合作为后续工具模板"],
     evidence: [
       { label: "已上线入口", value: "工具已作为 Labs 页面的一部分可直接访问" },
-      { label: "浏览器能力", value: "使用 Intl API 处理日期、时区和本地格式展示" },
+      { label: "浏览器能力", value: "使用 JavaScript Date API 处理日期与本地 / UTC 格式展示" },
       { label: "模板价值", value: "输入、校验、结果和复制反馈可复用于后续小工具" }
     ],
     asset: {
-      kind: "none",
-      reason: "工具可以公开访问，但仓库目前没有与当前版本一致、经人工检查的公开截图。",
-      nextAssetStep: "在浏览器验收后截取当前工具界面，再替换 none 状态。"
+      kind: "screenshot",
+      src: "/projects/timestamp-tool-screenshot.png",
+      alt: "Timestamp Tool 当前公开界面，展示固定时间输入、秒与毫秒结果，以及 UTC 时间戳转换",
+      caption:
+        "真实界面截图：由浏览器验收使用固定输入生成；隐藏动态当前时间区域，不包含账户或私人数据。"
     },
     gallery: [
       {
         kind: "doc",
-        label: "查看实现复盘草稿",
+        label: "查看实现复盘文章",
         href: "https://github.com/Oracle0703/website/blob/main/content/blog/2026-02-11-timestamp-tool-retrospective-timezone-precision-ux.mdx",
-        description: "仓库草稿记录时区、秒/毫秒精度、复制反馈和输入边界的设计考虑。"
+        description: "公开文章记录时区、秒/毫秒精度、复制反馈和输入边界的设计考虑。"
       }
     ],
     architecture:
-      "工具以客户端组件承载输入、转换、校验和反馈状态，依赖浏览器 Intl API 完成日期和时区格式化，不需要后端服务。",
+      "工具以客户端组件承载输入、转换、校验和反馈状态，依赖 JavaScript Date API 完成日期与本地 / UTC 格式化，不需要后端服务。",
     architectureSteps: [
       { title: "浏览器输入", description: "接收日期时间或数字时间戳，并显式选择秒或毫秒单位。" },
       { title: "Date 转换", description: "在时间与 Unix timestamp 之间转换，并拒绝无效日期或非有限数值。" },
@@ -723,9 +729,11 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       { label: "Operations value", value: "It can become a runtime summary source for Dashboard Console" }
     ],
     asset: {
-      kind: "none",
-      reason: "Access logs can expose IPs, request paths, and runtime timelines, so raw monitoring screenshots are not public.",
-      nextAssetStep: "Publish a redacted runtime summary or architecture diagram before adding a visual asset."
+      kind: "diagram",
+      src: "/projects/knock-architecture.svg",
+      alt: "Current Knock architecture: an Nginx log flows through incremental ingest, parsing, SQLite WAL storage, and an Express API into a protected monitoring interface",
+      caption:
+        "Architecture diagram: only the implemented single-machine data flow and Basic Auth boundary are shown, with no real IPs, request paths, or logs. Dashboard summaries and alert signals are explicitly marked as roadmap work."
     },
     gallery: [
       {
@@ -799,9 +807,11 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       { label: "Expansion path", value: "The console can host content operations, deployment records, and Knock summaries" }
     ],
     asset: {
-      kind: "none",
-      reason: "The internal console can include tasks, logs, object storage state, and deployment signals that should not be exposed directly.",
-      nextAssetStep: "Redact sensitive fields or publish an architecture diagram before showing it as a public asset."
+      kind: "diagram",
+      src: "/projects/dashboard-console-architecture.svg",
+      alt: "Current Dashboard Console architecture: separate administrator JWT and automated ingest paths reach dashboard-api, which reads and writes OSS JSON objects with ETag boundaries",
+      caption:
+        "Architecture diagram: the implemented dual-authentication paths, API, OSS JSON storage, and consistency boundaries are shown without real buckets, domains, credentials, or operations data. Content editing, deployment records, and Knock summaries are explicitly marked as roadmap work."
     },
     gallery: [
       {
@@ -871,24 +881,26 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
     highlights: ["Immediately usable", "Complete interaction feedback", "Reusable as a future tool template"],
     evidence: [
       { label: "Live entry", value: "The tool is accessible as part of the Labs page" },
-      { label: "Browser capability", value: "Intl API handles date, timezone, and local format display" },
+      { label: "Browser capability", value: "The JavaScript Date API handles date and local / UTC display" },
       { label: "Template value", value: "Input, validation, result, and copy feedback can be reused by future small tools" }
     ],
     asset: {
-      kind: "none",
-      reason: "The tool is public, but the repository does not currently contain a reviewed screenshot that matches the current release.",
-      nextAssetStep: "Capture the current tool after browser verification, then replace the none state."
+      kind: "screenshot",
+      src: "/projects/timestamp-tool-screenshot.png",
+      alt: "Current public Timestamp Tool interface showing a fixed date input, second and millisecond results, and a UTC timestamp conversion",
+      caption:
+        "Real interface capture generated by browser acceptance with fixed inputs; the dynamic current-time panel is hidden and no account or private data is included."
     },
     gallery: [
       {
         kind: "doc",
-        label: "Read the implementation retrospective draft",
+        label: "Read the implementation retrospective",
         href: "https://github.com/Oracle0703/website/blob/main/content/blog/2026-02-11-timestamp-tool-retrospective-timezone-precision-ux.mdx",
-        description: "This repository draft records decisions around timezone display, seconds and milliseconds, copy feedback, and input boundaries."
+        description: "This published article records decisions around timezone display, seconds and milliseconds, copy feedback, and input boundaries."
       }
     ],
     architecture:
-      "The tool uses a client component for input, conversion, validation, and feedback state. It relies on the browser Intl API for date and timezone formatting, with no backend service required.",
+      "The tool uses a client component for input, conversion, validation, and feedback state. It relies on the JavaScript Date API for date and local / UTC formatting, with no backend service required.",
     architectureSteps: [
       { title: "Browser input", description: "Accept a date-time or numeric timestamp with an explicit seconds or milliseconds unit." },
       { title: "Date conversion", description: "Convert between time and Unix timestamps while rejecting invalid dates and non-finite numeric input." },

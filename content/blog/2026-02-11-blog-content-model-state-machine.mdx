@@ -1,85 +1,142 @@
 ---
-title: "Blog Content Model: From Frontmatter to State Machine"
+title: "Blog Content Model: From Frontmatter to a Publishing State Machine"
 slug: "blog-content-model-state-machine"
-date: "2026-02-11"
-updatedAt: "2026-02-11"
-summary: "A practical model for evolving an MDX blog from simple metadata to a maintainable publishing workflow."
+date: "2026-07-16"
+updatedAt: "2026-07-16"
+summary: "A repository-backed walkthrough of the MDX contract, publication states, locale availability, validation, and derived discovery used by this site."
 cover:
-  src: "/og.png"
-  alt: "Blog content model diagram"
+  src: "/blog/blog-content-state-machine.svg"
+  alt: "Diagram of an MDX post moving through validation, locale filtering, publication states, and public discovery"
   width: 1200
   height: 630
 author: "Yuri"
 tags: ["mdx", "frontmatter", "content-system", "nextjs"]
 category: "engineering"
-status: "draft"
+status: "published"
 type: "tutorial"
+locale: "en"
+availableLocales: ["en"]
 relatedPosts:
-  - "tracker-rule-modeling-reward-penalty-anti-abuse"
   - "timestamp-tool-retrospective-timezone-precision-ux"
 seo:
-  description: "Designing a robust blog content model with frontmatter fields, state transitions, and validation rules."
-  keywords: ["frontmatter", "mdx", "blog", "state-machine"]
+  description: "How this Next.js site turns MDX frontmatter into validated publication states, locale-aware routes, metadata, search entries, and related reading."
+  keywords: ["frontmatter", "MDX", "Next.js", "content model", "publishing workflow"]
 comments:
   enabled: false
 ---
 
-## Why this matters
+## The problem is not parsing Markdown
 
-A lightweight blog usually starts with `title`, `date`, and content body. As the volume grows, you'll hit real-world problems:
+A small blog can begin with a directory of Markdown files and a loop that renders every file it finds. That stops being sufficient as soon as the same content must answer operational questions:
 
-- drafts mixed with public posts
-- no support for scheduled publishing
-- weak SEO metadata consistency
-- no way to build related-content discovery
+- Is this post ready for public readers?
+- Should it appear today or at a later time?
+- Which language routes are allowed to expose it?
+- What metadata should search engines and social previews receive?
+- Can a related-post link point to content that is still a draft?
 
-This article shows how to transition to a durable model without introducing a full CMS.
+This site still uses files rather than a database or CMS. The important change is that each MDX file is treated as a typed publishing record, not just a block of prose. The implementation lives in [`apps/website/lib/blog.ts`](https://github.com/Oracle0703/website/blob/main/apps/website/lib/blog.ts), while release-time checks live in [`scripts/validate-website-content.mjs`](https://github.com/Oracle0703/website/blob/main/scripts/validate-website-content.mjs).
 
-## Current foundation in this repo
+<Image
+  src="/blog/blog-content-state-machine.svg"
+  alt="MDX content flows through schema validation, publication state checks, locale filtering, and public discovery surfaces"
+  width={1200}
+  height={630}
+/>
 
-The current model already includes strong primitives:
+## Frontmatter is the publishing contract
 
-- `status`: draft, published, archived, scheduled
-- taxonomy: tags + category
-- `type`: article/tutorial/note/announcement
-- `seo`: description, keywords, noindex, canonical, ogImage
-- `relatedPosts` for explicit post linking
+The runtime model defines fields for identity, lifecycle, presentation, discovery, and localization. The required core includes `title`, `slug`, `date`, `updatedAt`, `summary`, `cover`, `author`, and `category`. Optional fields add tags, SEO controls, series membership, explicit related posts, and locale availability.
 
-That means the repo is ready for content scale-up.
+The contract intentionally keeps editorial facts beside the article. A reviewer can inspect the post and its publication settings in one diff. Git history becomes the audit trail, and a content change follows the same review path as a code change.
 
-## Suggested state transitions
+The model also avoids pretending that every field is equally important. A draft can produce warnings for incomplete presentation metadata, while a published or scheduled post turns those gaps into validation errors. That lets an unfinished idea remain in the repository without weakening the public content baseline.
 
-```text
-Draft -> Published
-Draft -> Scheduled -> Published
-Published -> Archived
+## Four states, one public predicate
+
+The current lifecycle has four states:
+
+| State | Public behavior |
+| --- | --- |
+| `draft` | Excluded from public lists and detail generation |
+| `scheduled` | Public only after a valid `publishDate` has passed |
+| `published` | Eligible for public locale routes and discovery |
+| `archived` | Retained in the repository but excluded from public output |
+
+`isPublished` is the single runtime predicate for that decision. It rejects drafts and archived posts, compares scheduled posts with the current time, and accepts published posts. The list page, detail route, sitemap, search index, and series helpers then build on that result instead of each inventing a different definition of “live.”
+
+There is still an important boundary: changing `status` is an editorial decision. The code can validate whether the value is legal, but it cannot decide whether an article is accurate or ready. Review remains part of the workflow.
+
+## Locale availability is explicit
+
+Route language and article availability are separate concerns. English pages live below `/en`, while Chinese pages use root paths. An article therefore declares both its source locale and the locales it can serve:
+
+```yaml
+locale: "en"
+availableLocales: ["en"]
 ```
 
-Operational rule suggestions:
+`getPublishedPostsForLocale` first applies the publication predicate, then filters by `availableLocales`. `getPostBySlugForLocale` applies the same rules to detail pages. This prevents an English URL from silently rendering a Chinese article merely because the slug exists.
 
-- `scheduled` requires a valid `publishDate`
-- `archived` is excluded from public list and sitemap
+The site also supports a small number of reviewed locale overrides in TypeScript. That is useful for one translated article, but it splits prose between MDX and application code. New English-original articles, including this one, stay native to MDX so their language, lifecycle, and body remain visible together.
 
-## Minimal implementation checklist
+## Runtime parsing and release validation do different jobs
 
-1. Backfill metadata for existing posts (`type`, `category`, `relatedPosts`)
-2. Standardize author template for all new articles
-3. Add a publish checklist before switching `status` to `published`
+At runtime, `gray-matter` separates frontmatter from the MDX body. Invalid records are skipped, and development builds emit a warning. That behavior protects the page from one malformed article, but silently dropping content would be a poor release policy.
 
-## Common failure patterns
+The repository validator is stricter. It checks, among other things:
 
-- changed slug but stale `relatedPosts`
-- missing `updatedAt` maintenance
-- tag-only strategy without category boundaries
-- generic cover image without meaningful alt text
+- dates and scheduled publication timestamps
+- allowed status and category values
+- cover source and alternative text
+- locale and locale-availability values
+- image alternative text inside MDX
+- duplicate slugs and duplicate series order
+- related-post references to missing or non-published articles
 
-## Next step
+The validator runs in both website CI and the Windows release workflow. A bad public record therefore fails before packaging rather than disappearing after deployment.
 
-In the next article, we can extend this model to discovery pages (tags/categories/search/pagination).
+This English release adds another guard: the English content audit scans native English MDX for CJK leakage and enforces a minimum published-English baseline. The audit does not judge prose quality, but it catches the common mistake of marking untranslated source content as English-ready.
 
----
+## Discovery is derived rather than duplicated
 
-Read next:
+Once a post passes state and locale filters, the same record feeds several public surfaces:
 
-- `/blog/tracker-rule-modeling-reward-penalty-anti-abuse`
-- `/blog/timestamp-tool-retrospective-timezone-precision-ux`
+- the localized blog list and static detail parameters
+- canonical metadata and language alternates
+- `BlogPosting` structured data
+- the sitemap and site search index
+- topic, series, previous/next, and related-reading navigation
+
+Related reading combines explicit `relatedPosts` with shared tags and category matches. Candidates are drawn from the already localized published set, so a draft does not appear simply because another article names its slug.
+
+The advantage is consistency: the title shown in a list, metadata, search result, and article header comes from one content record. The tradeoff is that a malformed record can affect several surfaces, which is why validation belongs at the boundary.
+
+## What this model deliberately does not solve
+
+The system is optimized for a small, Git-reviewed publication, not a multi-author newsroom.
+
+- There is no browser editor, approval queue, or role model.
+- Scheduled timestamps do not include an explicit timezone suffix in the current schema, so operators must use a consistent server-time convention.
+- Locale overrides are maintained in code rather than separate translation files.
+- Validation can confirm references and metadata, but it cannot verify factual accuracy.
+- Related-post validation checks publication state, while locale-specific relevance is finalized at render time.
+
+Those constraints are acceptable while the repository remains the source of truth. A CMS would become useful only when editing access, concurrent workflows, or translation volume outweigh the clarity of file-based review.
+
+## A practical release checklist
+
+Before changing a post to `published`, this repository now has a short, repeatable path:
+
+1. Confirm that the title, summary, body, cover text, and SEO description match the declared locale.
+2. Link only to source material or public behavior that exists today.
+3. Keep `relatedPosts` limited to published content with the intended locale.
+4. Run `npm run validate:website-content`.
+5. Run `npm run audit:website-english-content` for English-facing changes.
+6. Build the website so static routes, metadata, and MDX compilation are exercised together.
+
+The result is still a modest file-based blog, but it has a clear state machine, an explicit language boundary, and release evidence that can be reviewed in the same pull request as the writing.
+
+## Continue reading
+
+The companion article applies the same evidence-first approach to a small browser utility: [Timestamp Tool Retrospective: Timezone, Precision, and UX](/en/blog/timestamp-tool-retrospective-timezone-precision-ux).

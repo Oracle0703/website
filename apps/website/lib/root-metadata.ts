@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getMessages, type Locale } from "./i18n";
+import { getLocalePath } from "./locale-routing";
 import { getSiteBaseUrl } from "./site-url";
 
 export function getRootMetadata(locale: Locale): Metadata {
@@ -16,7 +17,7 @@ export function getRootMetadata(locale: Locale): Metadata {
     manifest: locale === "en" ? "/en/manifest.webmanifest" : "/manifest.webmanifest",
     alternates: {
       types: {
-        "application/rss+xml": `${baseUrl}/rss.xml`
+        "application/rss+xml": `${baseUrl}${getLocalePath("/rss.xml", locale)}`
       }
     },
     openGraph: {

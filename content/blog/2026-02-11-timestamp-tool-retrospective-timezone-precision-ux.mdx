@@ -1,79 +1,131 @@
 ---
 title: "Timestamp Tool Retrospective: Timezone, Precision, and UX"
 slug: "timestamp-tool-retrospective-timezone-precision-ux"
-date: "2026-02-11"
-updatedAt: "2026-02-11"
-summary: "A practical retrospective on building a timestamp converter with timezone clarity, precision controls, and low-friction UX."
+date: "2026-07-16"
+updatedAt: "2026-07-16"
+summary: "A code-backed retrospective on explicit timestamp units, local and UTC display, input boundaries, and copy feedback in a browser-only utility."
 cover:
-  src: "/og.png"
-  alt: "Timestamp converter interface"
+  src: "/blog/timestamp-tool-evidence-cover.png"
+  alt: "Timestamp Tool interface with a fixed date input and UTC timestamp conversion result"
   width: 1200
-  height: 630
+  height: 675
 author: "Yuri"
 tags: ["timestamp", "utc", "frontend-tools", "ux"]
 category: "labs"
-status: "draft"
+status: "published"
 type: "tutorial"
+locale: "en"
+availableLocales: ["en"]
 relatedPosts:
   - "blog-content-model-state-machine"
-  - "tracker-rule-modeling-reward-penalty-anti-abuse"
 seo:
-  description: "Lessons learned from implementing a timestamp conversion tool with robust timezone and precision handling."
-  keywords: ["timestamp", "utc", "javascript-date", "tooling"]
+  description: "A source-backed review of a client-side timestamp converter, including explicit seconds and milliseconds, local and UTC views, validation, and clipboard fallback."
+  keywords: ["timestamp", "UTC", "JavaScript Date", "frontend utility", "UX"]
 comments:
   enabled: false
 ---
 
-## Problem context
+## A small tool exposes large time assumptions
 
-During development, we often move between human-readable datetime and machine-readable timestamps. External tools are useful, but an in-project tool improves speed and consistency.
+Timestamp conversion looks like a formatting task: accept a number, construct a `Date`, and print a readable value. The difficult part is not the arithmetic. It is making unit, timezone, input meaning, and failure behavior visible enough that a plausible-looking result does not hide a mistake.
 
-## Feature scope
+The [Timestamp Converter](/en/labs#timestamp-tool) in this site is intentionally small. It runs entirely in the browser and covers two directions:
 
-Current capabilities:
+- a `datetime-local` value to seconds and milliseconds
+- a numeric timestamp to a readable local or UTC time
 
-- datetime -> seconds/milliseconds timestamp
-- timestamp -> local and UTC datetime
-- copy-to-clipboard with immediate feedback
+The implementation is public in [`apps/website/app/labs/timestamp-tool.tsx`](https://github.com/Oracle0703/website/blob/main/apps/website/app/labs/timestamp-tool.tsx). This retrospective describes that current code. It does not claim batch processing, named timezone conversion, persistence, or server-side validation that the tool does not have.
 
-## Three design decisions
+## Scope: one component and no backend
 
-### 1) Separate calculation from display
+The component owns its inputs, conversion results, timezone display mode, current-time ticker, and temporary copy state. No value is submitted to an API or written to storage. That keeps the privacy and deployment boundary easy to explain: input remains in the active browser tab.
 
-- calculation logic remains stable
-- display layer allows local/UTC switch
-- avoids confusion caused by implicit timezone assumptions
+On mount, the component initializes the date input and current timestamp from the browser clock. A one-second interval refreshes the current-time panel, and the cleanup function removes that interval when the component unmounts. This is enough for a live reference without introducing a shared clock service.
 
-### 2) Make precision explicit
+The UI uses locale-specific copy from the site's client language context. Route locale still decides whether the surrounding Labs page is Chinese or English; the tool uses the same locale to select labels and feedback.
 
-10-digit and 13-digit confusion is common. The unit should always be explicit, and both outputs should be visible for verification.
+## Decision 1: make precision a user choice
 
-### 3) Keep interaction close to intent
+A ten-digit Unix value usually represents seconds, while a thirteen-digit value usually represents milliseconds. Guessing from length is convenient until an unusual value, pasted whitespace, or future date crosses the heuristic boundary.
 
-- results near inputs
-- copy action adjacent to each result
-- clear success state for copied values
+The tool does not guess. Timestamp-to-time conversion has an explicit unit state:
 
-## Input edge cases to handle
+```ts
+type TimestampUnit = "seconds" | "milliseconds";
 
-- empty input
-- non-numeric input
-- out-of-range values
-- second/millisecond mismatch
+const milliseconds =
+  timestampUnit === "seconds" ? numeric * 1000 : numeric;
+```
 
-## Possible next iteration
+Time-to-timestamp conversion displays both outputs from the same `Date`: `Math.floor(milliseconds / 1000)` for seconds and the original millisecond value beside it. Users can compare the two representations instead of relying on a hidden convention.
 
-1. custom format templates
-2. batch conversion mode
-3. URL-state sharing for reproducibility
+The tradeoff is one additional control. For a debugging utility, that small interaction cost is preferable to silently returning a date roughly fifty thousand years away from the intended result.
 
-## Next step
+## Decision 2: separate the instant from its display
 
-This tool can be extracted into a reusable utility block for dashboard pages later.
+A Unix timestamp represents an instant. Local time and UTC are two displays of that instant, not two different timestamps.
 
----
+The component keeps that distinction visible. `timeZoneMode` selects local or UTC as the primary formatted line. A secondary-line toggle can show the other representation at the same time. Formatting reads either local date fields or their `getUTC*` equivalents from one `Date` object.
 
-Read next:
+This solves a common inspection task: confirm that a backend UTC value maps to the expected local wall time without opening a second converter.
 
-- `/blog/blog-content-model-state-machine`
-- `/blog/tracker-rule-modeling-reward-penalty-anti-abuse`
+There is an important input boundary. The browser's `datetime-local` control does not carry a timezone. `new Date(dateInput)` interprets that value using browser-local semantics. Switching the result display to UTC changes how the resulting instant is shown; it does not reinterpret the original input as UTC. The interface is useful for local debugging, but it is not a replacement for an IANA timezone-aware scheduling form.
+
+## Decision 3: keep validation close to conversion
+
+The timestamp input is trimmed and converted with `Number`. Non-finite values are rejected before constructing a `Date`, and `Number.isNaN(date.getTime())` rejects invalid dates. Empty or invalid input produces no conversion result.
+
+That boundary prevents `NaN`, `Infinity`, and invalid `Date` objects from reaching the formatter. It does not yet explain *why* a value failed. The current interface shows an em dash for an unavailable result instead of distinguishing an empty field, a non-numeric value, or an out-of-range date.
+
+That is a deliberate first-release tradeoff rather than a finished validation experience. A stronger next pass should add inline error copy and connect it to the corresponding input with accessible description attributes.
+
+## Decision 4: copy where the value appears
+
+Each generated value has an adjacent copy action. The component first attempts `navigator.clipboard.writeText`. If that API is unavailable or rejects the request, it falls back to a temporary read-only textarea and `document.execCommand("copy")`.
+
+Successful copying changes the button label for 1.5 seconds. The timer is cleared before a new one is created and during unmount, which avoids stale updates after the component leaves the page.
+
+The fallback checks the boolean returned by `document.execCommand("copy")` instead of treating every call as success. If both clipboard paths fail, the adjacent action reports “Copy failed”; a polite live region mirrors the result for assistive technology. The feedback remains intentionally short-lived and does not store the copied value.
+
+## What the implementation gets right
+
+Several choices make the current tool reliable enough for its stated scope:
+
+- Seconds and milliseconds remain explicit at input and output boundaries.
+- Local and UTC labels are visible instead of implied.
+- The same instant can be inspected in both displays.
+- Empty, non-finite, and invalid date results do not reach formatting code.
+- Conversion and copying remain client-side, with no API cost or stored input.
+- English and Chinese labels share one typed copy shape.
+- The layout moves from two columns to a single column on narrower screens.
+
+These are implementation facts visible in the repository. They are not usage or performance claims; the site does not publish conversion volume, completion rate, or latency telemetry for this tool.
+
+## Boundaries worth keeping visible
+
+The current version is not a general time platform. Specifically:
+
+- It accepts one value at a time.
+- It supports local and UTC display, not arbitrary named timezones.
+- It does not parse custom date formats.
+- It does not persist history or encode values in the URL.
+- It relies on the browser clock and JavaScript `Date` behavior.
+- It does not present detailed validation messages beyond the copy success/failure state.
+- The live current-time panel makes a screenshot time-sensitive unless test data is fixed first.
+
+Naming these limits matters because timestamp tools often look more capable than they are. A narrow, explicit contract is safer than adding heuristics that make ambiguous input appear valid.
+
+## The next useful iteration
+
+The highest-value improvement is not another output format. It is clearer input feedback. Invalid numeric input and an invalid date should produce distinct, accessible messages instead of the same unavailable-result marker.
+
+After that, two additions would extend the workflow without changing its local-first boundary:
+
+1. optional URL state for a reproducible single conversion, with a warning that the value becomes part of browser history
+2. batch input with per-row unit, validation, and copy status
+
+Named timezone conversion should be treated as a separate feature because it requires a different input model and explicit daylight-saving-time behavior.
+
+## Continue reading
+
+For the publication rules behind this article, read [Blog Content Model: From Frontmatter to a Publishing State Machine](/en/blog/blog-content-model-state-machine).

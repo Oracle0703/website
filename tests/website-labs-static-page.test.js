@@ -39,6 +39,14 @@ test('timestamp tool reads locale from client i18n context', () => {
   assert.match(source, /scroll-mt-24/);
   assert.doesNotMatch(source, /export function TimestampTool\(\{\s*locale\s*\}/);
   assert.doesNotMatch(source, /import type \{ Locale \}/);
+  assert.match(source, /const copied = document\.execCommand\("copy"\)/);
+  assert.match(source, /copied \? "copied" : "failed"/);
+  assert.match(source, /role="status"/);
+  assert.match(source, /aria-live="polite"/);
+  assert.match(source, /copyFailedLabel/);
+  assert.match(source, /htmlFor="timestamp-date-input"/);
+  assert.match(source, /htmlFor="timestamp-value-input"/);
+  assert.match(source, /htmlFor="timestamp-unit-select"/);
 });
 
 test('static rendering document records labs as a migrated page', () => {

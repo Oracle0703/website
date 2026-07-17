@@ -257,6 +257,55 @@ function verifyManifestLink(route, html) {
   }
 }
 
+function verifyRssDiscoveryLink(route, html) {
+  const rssTags = findTags(html, "link", "rel", "alternate").filter(
+    (tag) => getTagAttribute(tag, "type") === "application/rss+xml"
+  );
+  if (rssTags.length !== 1) {
+    fail(`${route.path} has ${rssTags.length} RSS discovery links; expected exactly one`);
+  }
+
+  const actual = getTagAttribute(rssTags[0], "href");
+  const expectedPath = route.locale === "en" ? "/en/rss.xml" : "/rss.xml";
+  const expected = getExpectedPublicUrl(expectedPath);
+  if (actual !== expected) {
+    fail(`${route.path} RSS discovery URL is ${actual ?? "<missing>"}; expected ${expected}`);
+  }
+}
+
+async function verifyRssFeed({ pathname, language, itemPathPrefix, requiredSlugs = [], forbiddenSlugs = [] }) {
+  const response = await fetchPublicAsset(pathname, /^application\/rss\+xml/i);
+  const xml = await response.text();
+
+  if (!xml.includes("<rss version=\"2.0\"") || !xml.includes("<atom:link")) {
+    fail(`${pathname} is missing the RSS 2.0 root or Atom self-discovery link`);
+  }
+  if (!xml.includes(`<language>${language}</language>`)) {
+    fail(`${pathname} does not declare ${language}`);
+  }
+  if (!xml.includes(`href=\"${siteBaseUrl}${pathname}\" rel=\"self\"`)) {
+    fail(`${pathname} has the wrong Atom self-discovery URL`);
+  }
+
+  const itemLinks = Array.from(
+    xml.matchAll(/<item>[\s\S]*?<link>([^<]+)<\/link>[\s\S]*?<\/item>/g),
+    (match) => match[1]
+  );
+  if (itemLinks.length === 0) {
+    fail(`${pathname} has no published items`);
+  }
+  const expectedPrefix = `${siteBaseUrl}${itemPathPrefix}`;
+  if (itemLinks.some((link) => !link.startsWith(expectedPrefix))) {
+    fail(`${pathname} contains an item outside ${itemPathPrefix}`);
+  }
+  for (const slug of requiredSlugs) {
+    if (!xml.includes(slug)) fail(`${pathname} is missing ${slug}`);
+  }
+  for (const slug of forbiddenSlugs) {
+    if (xml.includes(slug)) fail(`${pathname} must not include ${slug}`);
+  }
+}
+
 function verifyPwaManifest(manifest, expected) {
   if (
     manifest?.id !== expected.id ||
@@ -314,6 +363,7 @@ async function main() {
     verifyHtml(route, html);
     verifyMetadata(route, html);
     verifyManifestLink(route, html);
+    verifyRssDiscoveryLink(route, html);
     scriptSources.push(...collectScriptSources(html));
   }
 
@@ -339,11 +389,22 @@ async function main() {
     fail("og.png is unexpectedly small; verify that the branded image replaced the flat placeholder");
   }
 
-  const rss = await fetchPublicAsset("/rss.xml", /^application\/rss\+xml/i);
-  const rssText = await rss.text();
-  if (!rssText.includes("<rss version=\"2.0\"") || !rssText.includes("<atom:link")) {
-    fail("rss.xml is missing the RSS 2.0 root or Atom self-discovery link");
-  }
+  const englishOnlySlugs = [
+    "blog-content-model-state-machine",
+    "timestamp-tool-retrospective-timezone-precision-ux"
+  ];
+  await verifyRssFeed({
+    pathname: "/rss.xml",
+    language: "zh-CN",
+    itemPathPrefix: "/blog/",
+    forbiddenSlugs: englishOnlySlugs
+  });
+  await verifyRssFeed({
+    pathname: "/en/rss.xml",
+    language: "en",
+    itemPathPrefix: "/en/blog/",
+    requiredSlugs: englishOnlySlugs
+  });
 
   const searchIndex = await fetchPublicAsset("/search-index.json", /^application\/json/i);
   if (searchIndex.headers.get("x-robots-tag") !== "noindex, nofollow") {
@@ -410,7 +471,7 @@ async function main() {
   for (const route of offlineRoutes) {
     if (!serviceWorker.includes(route)) fail(`sw.js is missing offline route ${route}`);
   }
-  for (const signal of ["/api/", "/contact", "/ai-page-analysis", "/labs/query", "/search-index.json", "/rss.xml", "Next-Router-State-Tree"]) {
+  for (const signal of ["/api/", "/contact", "/ai-page-analysis", "/labs/query", "/search-index.json", "/rss.xml", "/en/rss.xml", "Next-Router-State-Tree"]) {
     if (!serviceWorker.includes(signal)) fail(`sw.js is missing network-only guard ${signal}`);
   }
 

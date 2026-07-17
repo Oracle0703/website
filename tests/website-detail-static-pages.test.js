@@ -93,6 +93,16 @@ test("project detail renders an evidence gallery with safe asset variants", () =
   assert.match(clientSource, /copy\.assetKindLabel/);
   assert.match(clientSource, /copy\.assetUnavailableLabel/);
   assert.match(clientSource, /copy\.nextAssetStepLabel/);
+  assert.match(clientSource, /isDiagram \? "lg:col-span-2" : ""/);
+  assert.match(clientSource, /data-project-asset-kind=\{asset\.kind\}/);
+  assert.match(clientSource, /data-testid="project-asset-gallery-grid"/);
+  assert.match(clientSource, /data-testid="project-diagram-full-size-link"/);
+  assert.match(clientSource, /copy\.openFullSizeDiagram/);
+  assert.match(clientSource, /mt-6 grid gap-5 lg:grid-cols-2/);
+  assert.match(clientSource, /href=\{asset\.src\}/);
+  assert.match(clientSource, /target="_blank"/);
+  assert.match(clientSource, /rel="noreferrer"/);
+  assert.match(clientSource, /isDiagram\s+\? "\(max-width: 1024px\) 100vw, 72rem"/);
   assert.match(clientSource, /aspect-\[16\/9\]/);
   assert.match(clientSource, /from "next\/image"/);
   assert.match(clientSource, /<Image/);
@@ -106,6 +116,7 @@ test("project detail renders an evidence gallery with safe asset variants", () =
     "assetKindLabel",
     "assetUnavailableLabel",
     "nextAssetStepLabel",
+    "openFullSizeDiagram",
     "assetKind"
   ]) {
     assert.match(i18nSource, new RegExp(`${key}:`));

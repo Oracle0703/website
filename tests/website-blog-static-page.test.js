@@ -18,8 +18,8 @@ test('blog list page avoids page-level request reads', () => {
   assert.doesNotMatch(pageSource, /searchParams/);
   assert.match(pageSource, /defaultLocale/);
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
-  assert.match(pageSource, /getPublishedPosts\(\)/);
-  assert.match(pageSource, /getPublishedSeries\(\)/);
+  assert.match(pageSource, /getPublishedPostsForLocale\(defaultLocale\)/);
+  assert.match(pageSource, /getPublishedSeriesForLocale\(defaultLocale\)/);
   assert.match(pageSource, /<Suspense/);
   assert.match(pageSource, /fallback=\{\s*<BlogListView/);
   assert.doesNotMatch(pageSource, /fallback=\{null\}/);

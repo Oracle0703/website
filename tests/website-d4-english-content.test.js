@@ -4,11 +4,25 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { pathToFileURL } = require("node:url");
+const matter = require("gray-matter");
 
 const root = process.cwd();
 
 function read(relPath) {
   return fs.readFileSync(path.join(root, relPath), "utf8");
+}
+
+function readBlogPosts() {
+  const contentRoot = path.join(root, "content", "blog");
+
+  return fs
+    .readdirSync(contentRoot)
+    .filter((file) => file.endsWith(".mdx"))
+    .map((file) => {
+      const raw = fs.readFileSync(path.join(contentRoot, file), "utf8");
+      const parsed = matter(raw);
+      return { file, frontmatter: parsed.data, content: parsed.content };
+    });
 }
 
 async function importFresh(relPath) {
@@ -77,6 +91,10 @@ test("English content audit covers critical D4 route surfaces and exception poli
   assert.match(source, /localized-source/);
   assert.match(source, /project-view/);
   assert.match(source, /blog-view/);
+  assert.match(source, /native-blog/);
+  assert.match(source, /blogContentRoot/);
+  assert.match(source, /readBlogPosts/);
+  assert.match(source, /minimumPublishedEnglishPosts\s*=\s*3/);
   assert.match(source, /route-surface/);
 });
 
@@ -96,6 +114,71 @@ test("English content audit runs against the current D4 baseline", () => {
   assert.match(result.stdout, /localized-source/);
   assert.match(result.stdout, /project-view \/en\/projects .*0\/0 CJK/);
   assert.match(result.stdout, /blog-view \/en\/blog .*0\/0 CJK/);
+  assert.match(result.stdout, /blog-count \/en\/blog content\/blog: 3\/3 published English posts/);
+  assert.match(
+    result.stdout,
+    /native-blog \/en\/blog\/blog-content-model-state-machine .*0\/0 CJK/
+  );
+  assert.match(
+    result.stdout,
+    /native-blog \/en\/blog\/timestamp-tool-retrospective-timezone-precision-ux .*0\/0 CJK/
+  );
+});
+
+test("native English MDX publishes a three-post baseline without language leakage", () => {
+  const posts = readBlogPosts();
+  const publishedEnglishPosts = posts.filter((post) => {
+    const locales = Array.isArray(post.frontmatter.availableLocales)
+      ? post.frontmatter.availableLocales
+      : [post.frontmatter.locale ?? "zh"];
+
+    return post.frontmatter.status === "published" && locales.includes("en");
+  });
+  const postsBySlug = new Map(posts.map((post) => [post.frontmatter.slug, post]));
+  const expectedNativeEnglishSlugs = [
+    "blog-content-model-state-machine",
+    "timestamp-tool-retrospective-timezone-precision-ux"
+  ];
+
+  assert.ok(
+    publishedEnglishPosts.length >= 3,
+    "the English blog should expose at least three published articles"
+  );
+
+  for (const slug of expectedNativeEnglishSlugs) {
+    const post = postsBySlug.get(slug);
+    assert.ok(post, `${slug} should exist`);
+    assert.equal(post.frontmatter.status, "published", `${slug} should be published`);
+    assert.equal(post.frontmatter.locale, "en", `${slug} should declare English as its source locale`);
+    assert.deepEqual(
+      post.frontmatter.availableLocales,
+      ["en"],
+      `${slug} should only claim the reviewed English locale`
+    );
+    assert.ok(
+      post.content.match(/[A-Za-z0-9]+/g)?.length >= 700,
+      `${slug} should be a complete article`
+    );
+    assertNoCjk(
+      `${JSON.stringify(post.frontmatter)}\n${post.content}`,
+      `${slug} native English content`
+    );
+  }
+
+  assert.deepEqual(
+    postsBySlug.get("blog-content-model-state-machine").frontmatter.relatedPosts,
+    ["timestamp-tool-retrospective-timezone-precision-ux"]
+  );
+  assert.deepEqual(
+    postsBySlug.get("timestamp-tool-retrospective-timezone-precision-ux").frontmatter.relatedPosts,
+    ["blog-content-model-state-machine"]
+  );
+  assert.ok(
+    fs.existsSync(
+      path.join(root, "apps", "website", "public", "blog", "blog-content-state-machine.svg")
+    ),
+    "the content-model article should have a distinct public cover"
+  );
 });
 
 test("Projects expose locale-aware English view data without CJK body fields", async () => {
@@ -232,6 +315,9 @@ test("English project pages and home consume localized project views", () => {
 
 test("Blog posts define locale availability helpers and English route filters", () => {
   const blogSource = read("apps/website/lib/blog.ts");
+  const zhHome = read("apps/website/app/(zh)/page.tsx");
+  const zhBlogList = read("apps/website/app/(zh)/blog/page.tsx");
+  const zhBlogDetail = read("apps/website/app/(zh)/blog/[slug]/page.tsx");
   const enBlogList = read("apps/website/app/en/blog/page.tsx");
   const enBlogDetail = read("apps/website/app/en/blog/[slug]/page.tsx");
   const sitemapSource = read("apps/website/app/sitemap.ts");
@@ -241,6 +327,15 @@ test("Blog posts define locale availability helpers and English route filters", 
   assert.match(blogSource, /getPublishedPostsForLocale/);
   assert.match(blogSource, /getPostBySlugForLocale/);
   assert.match(blogSource, /hasPostLocale/);
+  assert.match(zhHome, /getPublishedPostsForLocale\(defaultLocale\)/);
+  assert.match(zhBlogList, /getPublishedPostsForLocale\(defaultLocale\)/);
+  assert.match(zhBlogList, /getPublishedSeriesForLocale\(defaultLocale\)/);
+  assert.match(zhBlogDetail, /getPostBySlugForLocale\(params\.slug,\s*defaultLocale\)/);
+  assert.match(zhBlogDetail, /getPublishedPostsForLocale\(defaultLocale\)/);
+  assert.match(zhBlogDetail, /getSeriesByPostSlugForLocale\(post\.slug,\s*defaultLocale\)/);
+  assert.doesNotMatch(zhHome, /getPublishedPosts\(\)/);
+  assert.doesNotMatch(zhBlogList, /getPublishedPosts\(\)/);
+  assert.doesNotMatch(zhBlogDetail, /getPublishedPosts\(\)/);
   assert.match(enBlogList, /getPublishedPostsForLocale\(locale\)/);
   assert.match(enBlogDetail, /getPostBySlugForLocale\(params\.slug,\s*locale\)/);
   assert.match(enBlogDetail, /getPublishedPostsForLocale\(locale\)/);

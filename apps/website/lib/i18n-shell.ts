@@ -114,7 +114,7 @@ export const shellMessages = {
         { href: "/resume", label: "Resume", localized: true },
         { href: "/now", label: "Now", localized: true },
         { href: "/changelog", label: "Changelog", localized: true },
-        { href: "/rss.xml", label: "RSS", localized: false }
+        { href: "/en/rss.xml", label: "RSS", localized: false }
       ]
     }
   }

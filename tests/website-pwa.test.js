@@ -115,6 +115,7 @@ test("generated service worker is release-scoped and network-only outside the ex
   assert.match(source, /\/labs\/query/);
   assert.match(source, /\/search-index\.json/);
   assert.match(source, /\/rss\.xml/);
+  assert.match(source, /\/en\/rss\.xml/);
   assert.match(source, /matchReleaseCache\(url\.pathname\)/);
   assert.match(source, /url\.pathname\.startsWith\(NEXT_STATIC_PREFIX\)/);
   assert.match(source, /slice\(-RETAINED_PREVIOUS_CACHES\)/);

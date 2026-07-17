@@ -60,6 +60,7 @@ test("locale routing helpers define path conversion contracts", () => {
 
   assert.match(source, /getLocalePath/);
   assert.match(source, /getAlternateLocalePath/);
+  assert.match(source, /getLocaleSwitchFallbackPath/);
   assert.match(source, /isNavigationPathActive/);
   assert.match(source, /stripLocalePrefix/);
   assert.match(source, /getRouteLocale/);
@@ -141,8 +142,26 @@ test("language provider switches locale by pushing locale URLs instead of refres
   assert.match(source, /getAlternateLocalePath/);
   assert.match(source, /getLocalePath/);
   assert.match(source, /getRouteLocale/);
+  assert.match(source, /getDocumentLocaleAlternatePath/);
+  assert.match(source, /link\[rel="alternate"\]\[hreflang=/);
+  assert.match(source, /getLocaleSwitchFallbackPath/);
+  assert.match(source, /resolveLocaleTargetPath/);
   assert.match(source, /router\.push/);
   assert.doesNotMatch(source, /router\.refresh\(\)/);
+});
+
+test("locale toggle fallback is limited to detail posts without a translated alternate", () => {
+  const routingSource = read("apps/website/lib/locale-routing.ts");
+  const providerSource = read("apps/website/components/language-provider.tsx");
+
+  assert.match(routingSource, /segments\.length === 2 && segments\[0\] === "blog"/);
+  assert.match(routingSource, /getLocalePath\("\/blog", targetLocale\)/);
+  assert.match(routingSource, /:\s*directPath/);
+  assert.match(providerSource, /getDocumentLocaleAlternatePath\(targetLocale\) \?\?/);
+  assert.match(
+    providerSource,
+    /getLocaleSwitchFallbackPath\(pathname, targetLocale, directPath\)/
+  );
 });
 
 test("English detail pages generate static params and localized canonical metadata", () => {

@@ -171,8 +171,25 @@ test("browser verification covers D3 routes, console errors, preferences, and sc
   assert.match(source, /document\.documentElement\.lang/);
   assert.match(source, /toHaveAttribute\("lang", "en"\)/);
   assert.match(source, /toHaveAttribute\("lang", "zh-CN"\)/);
+  assert.match(source, /language toggle falls back only when a blog translation is unavailable/);
+  assert.match(source, /blog-content-model-state-machine/);
   assert.match(source, /document\.documentElement\.dataset\.theme/);
   assert.match(source, /toHaveScreenshot/);
+});
+
+test("browser verification captures and uploads deterministic project evidence", () => {
+  const spec = read("tests/website-browser-static.spec.ts");
+  const workflow = read(".github/workflows/website-ci.yml");
+
+  assert.match(spec, /captures a deterministic Timestamp Tool evidence image/);
+  assert.match(spec, /2026-02-11T12:34/);
+  assert.match(spec, /1700000000/);
+  assert.match(spec, /test-results\/evidence\/timestamp-tool\.png/);
+  assert.match(spec, /reports a failed clipboard fallback truthfully/);
+  assert.match(read("playwright.website.config.ts"), /timezoneId:\s*"UTC"/);
+  assert.match(workflow, /Upload browser evidence/);
+  assert.match(workflow, /website-browser-evidence-\$\{\{ github\.run_attempt \}\}/);
+  assert.match(workflow, /test-results\/evidence\/\*\.png/);
 });
 
 test("static rendering document records the browser verifier", () => {

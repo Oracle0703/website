@@ -1,24 +1,26 @@
-import { getPublishedPostsForLocale } from "../../lib/blog";
-import { defaultLocale, getMessages } from "../../lib/i18n";
-import { renderRssFeed } from "../../lib/rss.mjs";
-import { toAbsoluteUrl } from "../../lib/site-url";
+import { getPublishedPostsForLocale } from "../../../lib/blog";
+import { getMessages, type Locale } from "../../../lib/i18n";
+import { renderRssFeed } from "../../../lib/rss.mjs";
+import { toAbsoluteUrl } from "../../../lib/site-url";
+
+const locale: Locale = "en";
 
 export const dynamic = "force-static";
 
 export function GET() {
-  const { seo } = getMessages(defaultLocale);
-  const posts = getPublishedPostsForLocale(defaultLocale).filter(
+  const { seo } = getMessages(locale);
+  const posts = getPublishedPostsForLocale(locale).filter(
     (post) => !post.seo?.noindex
   );
   const xml = renderRssFeed({
-    title: `${seo.siteName} RSS`,
+    title: `${seo.siteName} English RSS`,
     description: seo.defaultDescription,
-    siteUrl: toAbsoluteUrl("/"),
-    feedUrl: toAbsoluteUrl("/rss.xml"),
-    language: "zh-CN",
+    siteUrl: toAbsoluteUrl("/en"),
+    feedUrl: toAbsoluteUrl("/en/rss.xml"),
+    language: "en",
     items: posts.map((post) => ({
       title: post.title,
-      url: toAbsoluteUrl(`/blog/${encodeURIComponent(post.slug)}`),
+      url: toAbsoluteUrl(`/en/blog/${encodeURIComponent(post.slug)}`),
       summary: post.summary,
       publishedAt: post.date,
       updatedAt: post.updatedAt,
