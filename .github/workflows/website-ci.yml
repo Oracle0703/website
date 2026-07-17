@@ -33,14 +33,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit production dependencies
+        run: npm run audit:production
+
       - name: Run tests
         run: npm test
+
+      - name: Lint Next workspaces
+        run: |
+          npm run lint -w apps/website
+          npm run lint -w apps/ai-page-analysis
+          npm run lint -w apps/dashboard-web
 
       - name: Validate website content
         run: npm run validate:website-content
 
       - name: Build website
         run: npm run build:website
+
+      - name: Build supporting Next workspaces
+        run: |
+          npm run build -w apps/ai-page-analysis
+          npm run build:dashboard-web
 
       - name: Verify static entrypoints and metadata
         run: npm run verify:website-static

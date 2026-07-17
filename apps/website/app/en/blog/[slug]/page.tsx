@@ -18,7 +18,7 @@ import { BlogDetailClient } from "../../../blog/[slug]/blog-detail-client";
 import { getAuthorStructuredData, siteIdentity } from "../../../../lib/site-identity";
 
 type PageProps = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 const locale: Locale = "en";
@@ -70,9 +70,10 @@ function getRelatedPosts(currentPost: BlogPost, allPosts: BlogPost[], limit = 3)
   return candidates.slice(0, limit).map((item) => item.candidate);
 }
 
-export const generateMetadata = ({ params }: PageProps): Metadata => {
+export const generateMetadata = async ({ params }: PageProps): Promise<Metadata> => {
+  const { slug } = await params;
   const { seo } = getMessages(locale);
-  const post = getPostBySlugForLocale(params.slug, locale);
+  const post = getPostBySlugForLocale(slug, locale);
 
   if (!post) {
     return {
@@ -83,8 +84,8 @@ export const generateMetadata = ({ params }: PageProps): Metadata => {
 
   const description = post.seo?.description ?? post.summary;
   const cover = post.seo?.ogImage ?? getCoverSrc(post.cover);
-  const slug = encodeURIComponent(post.slug);
-  const canonicalPath = `/en/blog/${slug}`;
+  const encodedSlug = encodeURIComponent(post.slug);
+  const canonicalPath = `/en/blog/${encodedSlug}`;
 
   return {
     title: post.title,
@@ -110,8 +111,9 @@ export const generateMetadata = ({ params }: PageProps): Metadata => {
 };
 
 export default async function Page({ params }: PageProps) {
+  const { slug } = await params;
   const publishedPosts = getPublishedPostsForLocale(locale);
-  const post = getPostBySlugForLocale(params.slug, locale);
+  const post = getPostBySlugForLocale(slug, locale);
 
   if (!post) {
     notFound();

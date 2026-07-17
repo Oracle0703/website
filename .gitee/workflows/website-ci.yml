@@ -22,8 +22,17 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Lint
-        run: npm -w apps/website run lint
+      - name: Audit production dependencies
+        run: npm run audit:production
 
-      - name: Build
-        run: npm -w apps/website run build
+      - name: Lint Next workspaces
+        run: |
+          npm run lint -w apps/website
+          npm run lint -w apps/ai-page-analysis
+          npm run lint -w apps/dashboard-web
+
+      - name: Build Next workspaces
+        run: |
+          npm run build:website
+          npm run build -w apps/ai-page-analysis
+          npm run build:dashboard-web

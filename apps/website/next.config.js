@@ -33,12 +33,15 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // The Windows release workflow builds this output on Windows so native
-  // dependencies such as sharp match the production host. Keep the trace root
-  // at the monorepo root because the website reads content from /content.
+  // The Windows release workflow builds this output on the target OS. Keep the
+  // trace root at the monorepo root because the website reads /content.
   output: "standalone",
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, "../..")
+  outputFileTracingRoot: path.join(__dirname, "../.."),
+  poweredByHeader: false,
+  images: {
+    // All site imagery is local and already optimized. Serving it directly
+    // avoids running the image transformer on the small production host.
+    unoptimized: true
   },
   reactStrictMode: true,
   async headers() {
@@ -46,6 +49,19 @@ const nextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders
+      },
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store"
+          },
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow"
+          }
+        ]
       },
       {
         source: "/sw.js",

@@ -13,7 +13,8 @@ test("website config emits a traceable monorepo standalone build", () => {
   const source = read("apps/website/next.config.js");
 
   assert.match(source, /output:\s*["']standalone["']/);
-  assert.match(source, /experimental:\s*\{[\s\S]*outputFileTracingRoot:\s*path\.join\(__dirname,\s*["']\.\.\/\.\.["']\)/);
+  assert.match(source, /outputFileTracingRoot:\s*path\.join\(__dirname,\s*["']\.\.\/\.\.["']\)/);
+  assert.doesNotMatch(source, /experimental:\s*\{[\s\S]*outputFileTracingRoot/);
   assert.match(source, /NEXT_PUBLIC_RELEASE_SHA/);
   assert.match(source, /key:\s*["']X-Release-Sha["']/);
 });
@@ -32,9 +33,12 @@ test("GitHub builds and verifies the release on Windows x64", () => {
   assert.match(source, /actions\/upload-artifact@v4/);
   assert.match(read("scripts/verify-website-standalone.ps1"), /search-index\.json/);
   assert.match(read("scripts/verify-website-standalone.ps1"), /X-Robots-Tag/);
+  assert.match(read("scripts/verify-website-standalone.ps1"), /CONTACT_SUBMISSIONS_DIR/);
+  assert.match(read("scripts/verify-website-standalone.ps1"), /\/icon-192\.png/);
+  assert.doesNotMatch(read("scripts/verify-website-standalone.ps1"), /\/_next\/image\?/);
 });
 
-test("packager assembles static, public, content and Windows-native runtime files", () => {
+test("packager assembles static, public, content and the traced runtime", () => {
   const source = read("scripts/package-website-standalone.ps1");
 
   assert.match(source, /process\.platform \+ '-' \+ process\.arch/);
@@ -42,7 +46,7 @@ test("packager assembles static, public, content and Windows-native runtime file
   assert.match(source, /\.next\\standalone/);
   assert.match(source, /\.next\\static/);
   assert.match(source, /content\\blog/);
-  assert.match(source, /sharp-win32-x64\.node/);
+  assert.doesNotMatch(source, /sharp-win32-x64\.node/);
   assert.match(source, /release-manifest\.json/);
   assert.match(source, /Get-FileHash[\s\S]*SHA256/);
   assert.match(source, /Refusing to package environment files/);
@@ -75,7 +79,7 @@ test("Baota runbook documents artifact integrity, health and rollback", () => {
   const source = read("docs/website/DEPLOY_WINDOWS_BAOTA.md");
 
   assert.match(source, /服务器不再执行 `npm ci`、`npm install` 或 `next build`/);
-  assert.match(source, /sharp/);
+  assert.match(source, /直接提供预优化后的本地图片/);
   assert.match(source, /\.sha256/);
   assert.match(source, /X-Release-Sha/);
   assert.match(source, /CONTACT_SUBMISSIONS_DIR/);

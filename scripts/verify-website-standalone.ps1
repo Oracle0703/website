@@ -49,9 +49,13 @@ $stderrPath = Join-Path $tempRoot "website-standalone-$logId.stderr.log"
 $oldHostname = $env:HOSTNAME
 $oldPort = $env:PORT
 $oldNodeEnv = $env:NODE_ENV
+$oldContactSubmissionsDir = $env:CONTACT_SUBMISSIONS_DIR
+$releaseParentDirectory = Split-Path -Parent $ReleaseDirectory
+$verificationContactDirectory = Join-Path $releaseParentDirectory "website-contact-$logId"
 $env:HOSTNAME = "127.0.0.1"
 $env:PORT = $Port.ToString()
 $env:NODE_ENV = "production"
+$env:CONTACT_SUBMISSIONS_DIR = $verificationContactDirectory
 
 $process = $null
 try {
@@ -89,7 +93,7 @@ try {
     throw "X-Release-Sha mismatch. Expected $($manifest.commitSha), got $releaseHeader."
   }
 
-  foreach ($path in @("/api/contact/healthz", "/rss.xml", "/_next/image?url=%2Ficon-192.png&w=64&q=75")) {
+  foreach ($path in @("/api/contact/healthz", "/rss.xml", "/icon-192.png")) {
     $response = Invoke-WebRequest -Uri "$baseUrl$path" -UseBasicParsing -TimeoutSec 15
     if ($response.StatusCode -ne 200) {
       throw "Health request failed for $path with status $($response.StatusCode)."
@@ -155,4 +159,9 @@ finally {
   $env:HOSTNAME = $oldHostname
   $env:PORT = $oldPort
   $env:NODE_ENV = $oldNodeEnv
+  $env:CONTACT_SUBMISSIONS_DIR = $oldContactSubmissionsDir
+
+  if (Test-Path -LiteralPath $verificationContactDirectory) {
+    Remove-Item -LiteralPath $verificationContactDirectory -Recurse -Force
+  }
 }

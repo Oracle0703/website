@@ -242,6 +242,13 @@ test("D9 AI page analysis API routes, frontend, and docs are wired", () => {
   assert.match(healthz, /service:\s*"ai-page-analysis"/);
   assert.match(client, /fetch\("\/api\/analyze"/);
   assert.match(client, /Safe Mock API|safe mock API/i);
+  assert.match(client, /<label htmlFor="analysis-input"/);
+  assert.match(client, /id="analysis-input"/);
+  assert.match(client, /role="alert"/);
+  assert.match(client, /role="progressbar"/);
+  assert.match(client, /aria-valuenow=\{progressValue\}/);
+  assert.match(client, /aria-pressed=\{active\}/);
+  assert.doesNotMatch(client, /text-red-200|text-emerald-300/);
   assert.match(checklist, /D9 AI Page Analysis API/);
   assert.match(report, /# Website D9 AI Page Analysis API Acceptance Report/);
   assert.doesNotMatch(plan, /TBD|TODO|implement later|fill in details/);

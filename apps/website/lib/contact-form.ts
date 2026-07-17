@@ -470,8 +470,47 @@ export function createContactSubmission(
   };
 }
 
+export function getContactReleaseRoot(currentWorkingDirectory = process.cwd()) {
+  const resolvedWorkingDirectory = path.resolve(currentWorkingDirectory);
+  const parentDirectory = path.dirname(resolvedWorkingDirectory);
+
+  // Next standalone changes cwd to <release>/apps/website before loading the app.
+  // Recover the full release root so sibling paths such as <release>/data are
+  // rejected too; they would otherwise disappear during release rotation.
+  if (
+    path.basename(resolvedWorkingDirectory).toLowerCase() === "website" &&
+    path.basename(parentDirectory).toLowerCase() === "apps"
+  ) {
+    return path.dirname(parentDirectory);
+  }
+
+  return resolvedWorkingDirectory;
+}
+
 export function getContactSubmissionsDir() {
-  return process.env.CONTACT_SUBMISSIONS_DIR ?? path.join(process.cwd(), ".data", "website-contact");
+  const configuredDirectory = process.env.CONTACT_SUBMISSIONS_DIR?.trim();
+
+  if (!configuredDirectory) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("contact_storage_not_configured");
+    }
+
+    return path.join(process.cwd(), ".data", "website-contact");
+  }
+
+  if (!path.isAbsolute(configuredDirectory)) {
+    throw new Error("contact_storage_must_be_absolute");
+  }
+
+  const resolvedDirectory = path.resolve(configuredDirectory);
+  if (
+    process.env.NODE_ENV === "production" &&
+    isPathInside(getContactReleaseRoot(), resolvedDirectory)
+  ) {
+    throw new Error("contact_storage_inside_release");
+  }
+
+  return resolvedDirectory;
 }
 
 function getContactNotificationConfig():
@@ -483,7 +522,7 @@ function getContactNotificationConfig():
 
   try {
     const url = new URL(configuredValue);
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
+    if (url.protocol !== "https:") {
       return { status: "invalid" };
     }
     return { status: "configured", url: configuredValue };
@@ -557,6 +596,15 @@ async function assertPathDoesNotResolveInsideProtectedStorage(
   const resolvedRoot = path.resolve(root);
   const resolvedCandidate = await resolvePathThroughExistingAncestor(directory);
 
+  if (process.env.NODE_ENV === "production") {
+    const resolvedReleaseRoot = await resolvePathThroughExistingAncestor(
+      getContactReleaseRoot(resolvedRoot)
+    );
+    if (isPathInside(resolvedReleaseRoot, resolvedCandidate)) {
+      throw unsafeStorageError();
+    }
+  }
+
   for (const segment of UNSAFE_CONTACT_STORAGE_SEGMENTS) {
     const protectedDirectory = await resolvePathThroughExistingAncestor(
       path.join(resolvedRoot, ...segment)
@@ -564,6 +612,36 @@ async function assertPathDoesNotResolveInsideProtectedStorage(
     if (isPathInside(protectedDirectory, resolvedCandidate)) {
       throw unsafeStorageError();
     }
+  }
+
+  return resolvedCandidate;
+}
+
+export async function validateResolvedContactSubmissionsDirectory(
+  directory = getContactSubmissionsDir(),
+  root = process.cwd()
+): Promise<ContactStorageGuardResult> {
+  const storageGuard = validateContactSubmissionsDirectory(directory, root);
+  if (!storageGuard.ok) return storageGuard;
+
+  try {
+    await assertSafeExistingPath(storageGuard.directory, "directory");
+    const resolvedDirectory = await assertPathDoesNotResolveInsideProtectedStorage(
+      storageGuard.directory,
+      root
+    );
+    return { ok: true, directory: resolvedDirectory };
+  } catch (error) {
+    if (error instanceof Error && error.message === "unsafe_storage_directory") {
+      return {
+        ok: false,
+        error: {
+          code: "unsafe_storage_directory",
+          message: "Contact submissions directory must not resolve inside protected storage."
+        }
+      };
+    }
+    throw error;
   }
 }
 
@@ -588,10 +666,8 @@ async function assertSafeExistingPath(targetPath: string, expectedType: "directo
 
 async function prepareContactSubmissionsDirectory() {
   const directory = getContactSubmissionsDir();
-  const storageGuard = validateContactSubmissionsDirectory(directory);
+  const storageGuard = await validateResolvedContactSubmissionsDirectory(directory);
   if (!storageGuard.ok) throw unsafeStorageError();
-
-  await assertPathDoesNotResolveInsideProtectedStorage(storageGuard.directory);
 
   const existed = await assertSafeExistingPath(storageGuard.directory, "directory");
   if (!existed) {
@@ -600,9 +676,10 @@ async function prepareContactSubmissionsDirectory() {
 
   await assertSafeExistingPath(storageGuard.directory, "directory");
   const resolvedDirectory = await realpath(storageGuard.directory);
-  await assertPathDoesNotResolveInsideProtectedStorage(resolvedDirectory);
-  await setPrivateMode(resolvedDirectory, 0o700);
-  return resolvedDirectory;
+  const finalStorageGuard = await validateResolvedContactSubmissionsDirectory(resolvedDirectory);
+  if (!finalStorageGuard.ok) throw unsafeStorageError();
+  await setPrivateMode(finalStorageGuard.directory, 0o700);
+  return finalStorageGuard.directory;
 }
 
 function getNoFollowFlag() {
@@ -690,7 +767,7 @@ export async function getContactServiceReadiness(): Promise<ContactServiceReadin
     }
 
     return {
-      ready: true,
+      ready: notification !== "invalid",
       persistence: "ready",
       notification
     };
@@ -726,14 +803,17 @@ export async function cleanupContactSubmissionsFile({
   dryRun?: boolean;
 } = {}): Promise<ContactCleanupResult> {
   return withContactStorageLock(async () => {
+    const storageGuard = await validateResolvedContactSubmissionsDirectory(path.dirname(filePath));
+    if (!storageGuard.ok) throw unsafeStorageError();
+    const safeFilePath = path.join(storageGuard.directory, path.basename(filePath));
     const cutoffDate = new Date(now.getTime() - retentionDays * ONE_DAY);
 
     let source = "";
     try {
-      const fileExists = await assertSafeExistingPath(filePath, "file");
+      const fileExists = await assertSafeExistingPath(safeFilePath, "file");
       if (!fileExists) {
         return {
-          filePath,
+          filePath: safeFilePath,
           dryRun,
           retentionDays,
           cutoff: cutoffDate.toISOString(),
@@ -745,11 +825,11 @@ export async function cleanupContactSubmissionsFile({
         };
       }
 
-      source = await readFile(filePath, "utf8");
+      source = await readFile(safeFilePath, "utf8");
     } catch (error) {
       if (isMissingPathError(error)) {
         return {
-          filePath,
+          filePath: safeFilePath,
           dryRun,
           retentionDays,
           cutoff: cutoffDate.toISOString(),
@@ -796,11 +876,11 @@ export async function cleanupContactSubmissionsFile({
 
     if (!dryRun) {
       const nextSource = keptLines.length > 0 ? `${keptLines.join("\n")}\n` : "";
-      await writePrivateContactFile(filePath, nextSource, "replace");
+      await writePrivateContactFile(safeFilePath, nextSource, "replace");
     }
 
     return {
-      filePath,
+      filePath: safeFilePath,
       dryRun,
       retentionDays,
       cutoff: cutoffDate.toISOString(),
@@ -836,6 +916,7 @@ export async function sendContactNotification(
       method: "POST",
       headers: { "content-type": "application/json" },
       signal: abortController.signal,
+      redirect: "error",
       body: JSON.stringify({
         type: "website.contact.received",
         submissionId: submission.submissionId,
@@ -849,11 +930,21 @@ export async function sendContactNotification(
       })
     });
 
-    if (!response.ok) {
-      return { ok: false, status: "failed", error: "notification_failure" };
-    }
+    try {
+      if (!response.ok) {
+        return { ok: false, status: "failed", error: "notification_failure" };
+      }
 
-    return { ok: true, status: "delivered" };
+      return { ok: true, status: "delivered" };
+    } finally {
+      if (response.body) {
+        try {
+          await response.body.cancel();
+        } catch {
+          // Ignore cleanup failures after the delivery outcome is known.
+        }
+      }
+    }
   } catch {
     return { ok: false, status: "failed", error: "notification_failure" };
   } finally {

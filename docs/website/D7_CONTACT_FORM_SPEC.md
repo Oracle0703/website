@@ -9,8 +9,8 @@
 | 页面入口 | `/contact` 和 `/en/contact` 渲染真实 Contact form |
 | 提交接口 | `POST /api/contact` 接收 JSON payload |
 | 探活接口 | `GET /api/contact/healthz` 返回 `{ ok, service, version }`，不暴露提交数量 |
-| 保存方式 | 默认 `.data/website-contact/submissions.jsonl`，可用 `CONTACT_SUBMISSIONS_DIR` 覆盖 |
-| 通知方式 | `CONTACT_NOTIFICATION_WEBHOOK_URL` 存在时发送 webhook；未配置时只落盘 |
+| 保存方式 | 开发默认 `.data/website-contact/submissions.jsonl`；生产必须设置发布目录外的绝对 `CONTACT_SUBMISSIONS_DIR` |
+| 通知方式 | HTTPS `CONTACT_NOTIFICATION_WEBHOOK_URL` 存在时发送且不跟随重定向；未配置时只落盘 |
 | 通知失败 | 保存成功但 webhook 失败时返回 `received_with_notification_failure` |
 | 隐私边界 | 不保存原始 IP，只保存 `ipHash`；不公开提交内容 |
 | 非目标 | 不新增数据库、CRM、登录、后台查看页、公开邮箱或假联系方式 |

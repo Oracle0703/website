@@ -1078,7 +1078,9 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
 
         <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]" id="sample">
           <div className="panel-surface p-5">
-            <p className={TEXT_SM_MUTED}>{copy.inputTitle}</p>
+            <label htmlFor="analysis-input" className={TEXT_SM_MUTED}>
+              {copy.inputTitle}
+            </label>
             <div className="mt-3 flex flex-wrap gap-2">
               {currentModeOptions.map((option) => {
                 const active = option.id === mode;
@@ -1086,6 +1088,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
                   <button
                     key={option.id}
                     type="button"
+                    aria-pressed={active}
                     onClick={() => handleChangeMode(option.id)}
                     disabled={isGenerating}
                     className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
@@ -1103,6 +1106,7 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
             <p className={`mt-3 ${TEXT_XS_MUTED}`}>{modeLabel?.helper}</p>
 
             <textarea
+              id="analysis-input"
               value={input}
               onChange={(event) => setInput(event.target.value)}
               disabled={isGenerating}
@@ -1114,7 +1118,10 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
             </div>
 
             {errorMessage ? (
-              <div className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+              <div
+                role="alert"
+                className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-primary"
+              >
                 {errorMessage}
               </div>
             ) : null}
@@ -1135,7 +1142,14 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
                 <p className={TEXT_SM_MUTED}>{copy.pipelineTitle}</p>
                 <span className={TEXT_XS_MUTED}>{progressValue}%</span>
               </div>
-              <div className="mt-2 h-2 rounded-full bg-base/70">
+              <div
+                role="progressbar"
+                aria-label={copy.pipelineTitle}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progressValue}
+                className="mt-2 h-2 rounded-full bg-base/70"
+              >
                 <div
                   className="h-full rounded-full bg-accent transition-all duration-500"
                   style={{ width: `${progressValue}%` }}
@@ -1147,9 +1161,9 @@ export function AIPageAnalysisLandingClient({ locale }: { locale: Locale }) {
                   const status = getStatus(index);
                   const statusClass =
                     status === "done"
-                      ? "border-emerald-500/45 bg-emerald-500/10 text-emerald-300"
+                      ? "border-emerald-500/45 bg-emerald-500/10 text-primary"
                       : status === "running"
-                        ? "border-accent/60 bg-accent/10 text-accent"
+                        ? "border-accent/60 bg-accent/10 text-primary"
                         : "border-edge/70 bg-base/35 text-muted";
 
                   return (

@@ -19,6 +19,7 @@
     "start": "npm run start -w apps/website",
     "lint": "npm run lint -w apps/website",
     "lint:website": "npm run lint -w apps/website",
+    "audit:production": "npm audit --omit=dev --audit-level=high",
     "validate:website-content": "node scripts/validate-website-content.mjs",
     "audit:website-english-content": "node scripts/audit-website-english-content.mjs",
     "contact:ops": "node scripts/manage-website-contact-submissions.mjs",

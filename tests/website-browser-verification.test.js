@@ -100,7 +100,7 @@ test("playwright website config uses production build and desktop mobile project
   assert.match(source, /npm run build:website/);
   assert.match(source, /WEBSITE_BROWSER_VERIFY_PORT/);
   assert.match(source, /verifyPort/);
-  assert.match(source, /next start -p \${verifyPort}/);
+  assert.match(source, /next start -H 127\.0\.0\.1 -p \${verifyPort}/);
   assert.match(source, /website-desktop/);
   assert.match(source, /website-mobile/);
   assert.match(source, /screenshots/);
@@ -174,7 +174,9 @@ test("browser verification covers D3 routes, console errors, preferences, and sc
   assert.match(source, /language toggle falls back only when a blog translation is unavailable/);
   assert.match(source, /blog-content-model-state-machine/);
   assert.match(source, /document\.documentElement\.dataset\.theme/);
-  assert.match(source, /toHaveScreenshot/);
+  assert.match(source, /attachViewportScreenshot/);
+  assert.match(source, /page\.screenshot/);
+  assert.doesNotMatch(source, /toHaveScreenshot/);
 });
 
 test("browser verification captures and uploads deterministic project evidence", () => {

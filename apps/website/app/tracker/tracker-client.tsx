@@ -504,7 +504,7 @@ export function TrackerClient({ locale, copy, common }: TrackerClientProps) {
               <button
                 type="submit"
                 disabled={!isHydrated || !canPersist || tracker.habits.length >= TRACKER_MAX_HABITS}
-                className="min-h-11 rounded-xl bg-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+                className="min-h-11 rounded-xl bg-accent px-5 py-2 text-sm font-semibold text-on-accent transition hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
               >
                 {content.add.button}
               </button>
@@ -608,7 +608,7 @@ export function TrackerClient({ locale, copy, common }: TrackerClientProps) {
                   aria-pressed={completedToday}
                   onClick={() => toggleToday(habit.id, completedToday)}
                   disabled={!canPersist}
-                  className={`mt-5 min-h-11 w-full rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${completedToday ? "border border-edge bg-base text-primary hover:border-edge-strong" : "bg-accent text-white hover:bg-accent-strong"}`}
+                  className={`mt-5 min-h-11 w-full rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${completedToday ? "border border-edge bg-base text-primary hover:border-edge-strong" : "bg-accent text-on-accent hover:bg-accent-strong"}`}
                 >
                   {completedToday ? content.habits.undo : content.habits.checkIn}
                 </button>

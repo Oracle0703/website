@@ -330,14 +330,14 @@ test("Blog posts define locale availability helpers and English route filters", 
   assert.match(zhHome, /getPublishedPostsForLocale\(defaultLocale\)/);
   assert.match(zhBlogList, /getPublishedPostsForLocale\(defaultLocale\)/);
   assert.match(zhBlogList, /getPublishedSeriesForLocale\(defaultLocale\)/);
-  assert.match(zhBlogDetail, /getPostBySlugForLocale\(params\.slug,\s*defaultLocale\)/);
+  assert.match(zhBlogDetail, /getPostBySlugForLocale\(slug,\s*defaultLocale\)/);
   assert.match(zhBlogDetail, /getPublishedPostsForLocale\(defaultLocale\)/);
   assert.match(zhBlogDetail, /getSeriesByPostSlugForLocale\(post\.slug,\s*defaultLocale\)/);
   assert.doesNotMatch(zhHome, /getPublishedPosts\(\)/);
   assert.doesNotMatch(zhBlogList, /getPublishedPosts\(\)/);
   assert.doesNotMatch(zhBlogDetail, /getPublishedPosts\(\)/);
   assert.match(enBlogList, /getPublishedPostsForLocale\(locale\)/);
-  assert.match(enBlogDetail, /getPostBySlugForLocale\(params\.slug,\s*locale\)/);
+  assert.match(enBlogDetail, /getPostBySlugForLocale\(slug,\s*locale\)/);
   assert.match(enBlogDetail, /getPublishedPostsForLocale\(locale\)/);
   assert.match(sitemapSource, /hasPostLocale\(post,\s*locale\)/);
   assert.match(validatorSource, /availableLocales/);

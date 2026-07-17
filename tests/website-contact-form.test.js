@@ -290,12 +290,26 @@ test("V4 contact notification reports delivered, skipped, and failed outcomes", 
     });
 
     process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "https://hooks.example.test/contact";
+    let deliveredRequestInit;
+    let responseBodyCancelled = false;
     assert.deepEqual(await sendContactNotification(submission, {
-      fetcher: async () => new Response(null, { status: 204 })
+      fetcher: async (_url, init) => {
+        deliveredRequestInit = init;
+        return new Response(
+          new ReadableStream({
+            cancel() {
+              responseBodyCancelled = true;
+            }
+          }),
+          { status: 200 }
+        );
+      }
     }), {
       ok: true,
       status: "delivered"
     });
+    assert.equal(deliveredRequestInit.redirect, "error");
+    assert.equal(responseBodyCancelled, true);
 
     const result = await sendContactNotification(submission, {
       timeoutMs: 5,
@@ -326,12 +340,89 @@ test("V4 contact notification reports delivered, skipped, and failed outcomes", 
       status: "failed",
       error: "notification_failure"
     });
+
+    process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "http://hooks.example.test/contact";
+    assert.deepEqual(await sendContactNotification(submission), {
+      ok: false,
+      status: "failed",
+      error: "notification_failure"
+    });
   } finally {
     if (previousWebhook === undefined) {
       delete process.env.CONTACT_NOTIFICATION_WEBHOOK_URL;
     } else {
       process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = previousWebhook;
     }
+  }
+});
+
+test("V11 production contact storage requires a durable absolute external path", async () => {
+  const {
+    getContactReleaseRoot,
+    getContactServiceReadiness,
+    getContactSubmissionsDir
+  } = await importFresh("apps/website/lib/contact-form.ts");
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousDirectory = process.env.CONTACT_SUBMISSIONS_DIR;
+  const externalDirectory = fs.mkdtempSync(
+    path.join(require("node:os").tmpdir(), "website-contact-production-")
+  );
+
+  try {
+    process.env.NODE_ENV = "production";
+    delete process.env.CONTACT_SUBMISSIONS_DIR;
+    assert.throws(() => getContactSubmissionsDir(), /contact_storage_not_configured/);
+    assert.equal((await getContactServiceReadiness()).ready, false);
+
+    process.env.CONTACT_SUBMISSIONS_DIR = "relative/contact";
+    assert.throws(() => getContactSubmissionsDir(), /contact_storage_must_be_absolute/);
+
+    process.env.CONTACT_SUBMISSIONS_DIR = path.join(root, ".data", "website-contact");
+    assert.throws(() => getContactSubmissionsDir(), /contact_storage_inside_release/);
+
+    const simulatedReleaseRoot = fs.mkdtempSync(
+      path.join(require("node:os").tmpdir(), "website-standalone-release-")
+    );
+    const standaloneWorkingDirectory = path.join(simulatedReleaseRoot, "apps", "website");
+    fs.mkdirSync(standaloneWorkingDirectory, { recursive: true });
+    assert.equal(getContactReleaseRoot(standaloneWorkingDirectory), simulatedReleaseRoot);
+
+    const originalWorkingDirectory = process.cwd();
+    const outsideAliasRoot = fs.mkdtempSync(
+      path.join(require("node:os").tmpdir(), "website-contact-release-alias-")
+    );
+    try {
+      process.chdir(standaloneWorkingDirectory);
+      process.env.CONTACT_SUBMISSIONS_DIR = path.join(simulatedReleaseRoot, "data", "contact");
+      assert.throws(() => getContactSubmissionsDir(), /contact_storage_inside_release/);
+
+      if (process.platform !== "win32") {
+        const releaseDataDirectory = path.join(simulatedReleaseRoot, "data", "linked-contact");
+        const outsideAlias = path.join(outsideAliasRoot, "contact");
+        fs.mkdirSync(releaseDataDirectory, { recursive: true });
+        fs.symlinkSync(releaseDataDirectory, outsideAlias, "dir");
+        process.env.CONTACT_SUBMISSIONS_DIR = outsideAlias;
+        assert.equal(
+          (await getContactServiceReadiness()).ready,
+          false,
+          "a path outside the release must still fail when it resolves back inside"
+        );
+      }
+    } finally {
+      process.chdir(originalWorkingDirectory);
+      fs.rmSync(outsideAliasRoot, { recursive: true, force: true });
+      fs.rmSync(simulatedReleaseRoot, { recursive: true, force: true });
+    }
+
+    process.env.CONTACT_SUBMISSIONS_DIR = externalDirectory;
+    assert.equal(getContactSubmissionsDir(), path.resolve(externalDirectory));
+    assert.equal((await getContactServiceReadiness()).ready, true);
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+    if (previousDirectory === undefined) delete process.env.CONTACT_SUBMISSIONS_DIR;
+    else process.env.CONTACT_SUBMISSIONS_DIR = previousDirectory;
+    fs.rmSync(externalDirectory, { recursive: true, force: true });
   }
 });
 
@@ -356,7 +447,10 @@ test("V4 contact readiness checks persistence without exposing paths or webhook 
     assert.doesNotMatch(JSON.stringify(configured), /secret|contact-token|website-contact-ready/);
 
     process.env.CONTACT_NOTIFICATION_WEBHOOK_URL = "not-a-url";
-    assert.equal((await getContactServiceReadiness()).notification, "invalid");
+    const invalidNotification = await getContactServiceReadiness();
+    assert.equal(invalidNotification.notification, "invalid");
+    assert.equal(invalidNotification.persistence, "ready");
+    assert.equal(invalidNotification.ready, false);
   } finally {
     if (previousDirectory === undefined) delete process.env.CONTACT_SUBMISSIONS_DIR;
     else process.env.CONTACT_SUBMISSIONS_DIR = previousDirectory;

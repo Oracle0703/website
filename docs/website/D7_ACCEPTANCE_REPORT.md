@@ -6,8 +6,8 @@
 |---|---|
 | Contact 页面 | 已从 D6 前置联系路径升级为真实站内 Contact form |
 | API | 已新增 `POST /api/contact`，并提供 `GET /api/contact` 与 `GET /api/contact/healthz` 探活 |
-| 保存 | 已实现 JSONL 落盘，默认 `.data/website-contact/submissions.jsonl`，可用 `CONTACT_SUBMISSIONS_DIR` 覆盖 |
-| 通知 | 已支持可选 `CONTACT_NOTIFICATION_WEBHOOK_URL` webhook |
+| 保存 | 已实现 JSONL 落盘；开发环境默认 `.data/website-contact/submissions.jsonl`，生产必须设置发布目录外的绝对 `CONTACT_SUBMISSIONS_DIR` |
+| 通知 | 已支持可选 HTTPS `CONTACT_NOTIFICATION_WEBHOOK_URL` webhook，不跟随重定向 |
 | 失败状态 | 已覆盖 validation、rate limit、duplicate submit、storage failure、notification failure |
 | 隐私 | 不保存原始 IP，只保存 `ipHash`；不公开提交内容 |
 | 非目标 | 未新增数据库、登录、后台查看页、公开邮箱或假联系方式 |
