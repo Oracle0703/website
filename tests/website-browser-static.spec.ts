@@ -38,7 +38,7 @@ const primaryRoutes = [
     path: "/about",
     name: "about",
     navHref: "/about",
-    heading: /^关于我$/,
+    heading: /^关于 Yuri$/,
     content: /工作原则|Next\.js|全栈开发/,
     evidence: (page: Page) => page.getByRole("heading", { name: "工作原则" })
   },
@@ -46,7 +46,7 @@ const primaryRoutes = [
     path: "/contact",
     name: "contact",
     navHref: "/contact",
-    heading: /^联系我$/,
+    heading: /^与 Yuri 沟通$/,
     content: /提交合作需求|GitHub 主页/,
     evidence: (page: Page) => page.locator("main form")
   }
@@ -77,7 +77,7 @@ const englishContentChecks = [
   {
     path: "/en",
     heading: /Turning complex ideas into clear, useful products\./,
-    text: /AI applications/
+    text: /AI prototypes/
   },
   {
     path: "/en/projects",
