@@ -195,7 +195,7 @@ type Project = {
 | route-surface | `/en/projects/ai-page-analysis` / `apps/website/app/en/projects/[slug]/page.tsx` | 0/0 | 已作为硬护栏 |
 | route-surface | `/en/ai-page-analysis` / `apps/website/app/en/ai-page-analysis/page.tsx` | 0/0 | 已作为硬护栏 |
 | localized-source | `apps/website/lib/projects.ts` | 1112/1200 | 源码保留中英内容；英文 ProjectView 另设 0 CJK 硬护栏 |
-| localized-source | `apps/website/components/landing/ai-page-analysis-landing-client.tsx` | 1465/1600 | 源码保留中英 copy；英文 route surface 另设 0 CJK 硬护栏 |
+| localized-source | `apps/website/components/landing/ai-page-analysis-landing-client.tsx` | 1744/1800 | 源码保留中英 copy；英文 route surface 另设 0 CJK 硬护栏 |
 | project-view | `/en/projects` / `apps/website/lib/projects.ts` | 0/0 | 英文项目 view 已作为硬护栏 |
 | blog-view | `/en/blog` / `apps/website/lib/blog.ts` | 0/0 | 英文 Blog override 已作为硬护栏 |
 

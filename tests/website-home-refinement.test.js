@@ -43,15 +43,19 @@ function tagBlockContaining(source, marker, tagName) {
 }
 
 test('home pages provide recent posts, releases, and asset-backed featured projects without series data', () => {
-  for (const relPath of ['apps/website/app/page.tsx', 'apps/website/app/en/page.tsx']) {
+  for (const relPath of ['apps/website/app/(zh)/page.tsx', 'apps/website/app/en/page.tsx']) {
     const source = read(relPath);
 
     assert.match(source, /getPublishedPosts(?:ForLocale)?/);
     assert.match(source, /getFeaturedProjectViews\(/);
+    assert.match(source, /getProjectViews\(/);
+    assert.match(source, /projectCount:\s*projectViews\.length/);
+    assert.match(source, /project\.entry\.demo\.status === "available"/);
     assert.match(source, /latestBlogItems=\{latestBlogItems\}/);
     assert.match(source, /latestChangelogItems=\{latestChangelogItems\}/);
     assert.match(source, /getRecentChangelogEntries\([^,]+, 3\)/);
     assert.match(source, /featuredProjects=\{featuredProjects\}/);
+    assert.match(source, /proofMetrics=\{proofMetrics\}/);
     assert.match(source, /project\.asset\.kind === "screenshot"/);
     assert.match(source, /project\.asset\.kind === "mock"/);
     assert.match(source, /project\.asset\.kind === "diagram"/);
@@ -86,10 +90,25 @@ test('home flagship uses the first project and renders its real asset with Next 
   assert.match(clientSource, /type HomeProjectAsset/);
   assert.match(clientSource, /asset\?: HomeProjectAsset/);
   assert.match(clientSource, /const flagshipProject = featuredProjects\[0\]/);
+  assert.match(clientSource, /flagshipProject\?\.href \?\? siteIdentity\.flagshipProjectPath/);
+  assert.match(clientSource, /href=\{getHref\(flagshipProjectHref\)\}/);
   assert.match(clientSource, /const supportingProjects = featuredProjects\.slice\(1, 3\)/);
   assert.match(clientSource, /flagshipProject\.asset \? \(/);
   assert.match(clientSource, /<Image[\s\S]*src=\{flagshipProject\.asset\.src\}/);
   assert.match(clientSource, /<Image[\s\S]*alt=\{flagshipProject\.asset\.alt\}/);
+});
+
+test('home proof band derives project and demo counts instead of hard-coding test totals', () => {
+  const clientSource = read('apps/website/components/home/home-page-client.tsx');
+  const i18nSource = read('apps/website/lib/i18n.ts');
+
+  assert.match(clientSource, /aria-label=\{copy\.heroProof\.title\}/);
+  assert.match(clientSource, /proofMetrics\.projectCount/);
+  assert.match(clientSource, /proofMetrics\.demoCount/);
+  assert.match(clientSource, /copy\.heroProof\.deliveryValue/);
+  assert.match(i18nSource, /双语静态页面 · 内容校验 · 浏览器验收/);
+  assert.match(i18nSource, /Bilingual static pages · content validation · browser checks/);
+  assert.doesNotMatch(i18nSource, /\d+\s*(?:tests?|项自动测试)/i);
 });
 
 test('home latest-writing links disable eager prefetch for the dense article list', () => {
@@ -149,7 +168,7 @@ test('header and footer consume the focused navigation without exposing secondar
   assert.match(headerSource, /messages\.nav\.items\.map/);
   assert.match(footerSource, /messages\.nav\.items\.map/);
   assert.doesNotMatch(headerSource, /getHref\("\/enter"\)|messages\.nav\.enter/);
-  assert.match(footerSource, /https:\/\/github\.com\/Oracle0703/);
+  assert.match(footerSource, /siteIdentity\.githubUrl/);
 });
 
 test('About client retains its narrative sections and principles', () => {
@@ -196,10 +215,12 @@ test('contact uses a two-column intake layout with collapsible boundaries and pr
 
 test('contact exposes one verified GitHub fallback instead of a channel-card matrix', () => {
   const i18nSource = read('apps/website/lib/i18n.ts');
+  const identitySource = read('apps/website/lib/site-identity.ts');
   const contactClient = read('apps/website/app/contact/contact-client.tsx');
 
   assert.doesNotMatch(i18nSource, /hello@example\.com|mailto:hello|example\.com/);
-  assert.match(i18nSource, /https:\/\/github\.com\/Oracle0703/);
+  assert.match(i18nSource, /href: siteIdentity\.githubUrl/);
+  assert.match(identitySource, /githubUrl: "https:\/\/github\.com\/Oracle0703"/);
   assert.match(contactClient, /copy\.contactChannels\.find/);
   assert.match(contactClient, /href=\{githubChannel\.href\}/);
   assert.match(contactClient, /target="_blank"/);

@@ -166,28 +166,27 @@ async function stopServer() {
 }
 
 function verifyHtml(route, html) {
-  if (!html.includes("<html lang=")) {
-    fail(`${route} is missing an html lang attribute`);
+  const expectedLang = route.locale === "en" ? "en" : "zh-CN";
+  const htmlTag = html.match(/<html\b[^>]*>/i)?.[0] ?? "";
+  const actualLang = getTagAttribute(htmlTag, "lang");
+  if (actualLang !== expectedLang) {
+    fail(`${route.path} html lang is ${actualLang || "<missing>"}; expected ${expectedLang}`);
   }
 
   if (!html.includes("data-theme=")) {
-    fail(`${route} is missing a data-theme attribute on html`);
+    fail(`${route.path} is missing a data-theme attribute on html`);
   }
 
   if (!html.includes("localStorage")) {
-    fail(`${route} is missing the preference boot localStorage restore script`);
-  }
-
-  if (!html.includes("document.documentElement.lang")) {
-    fail(`${route} is missing the preference boot language restore script`);
+    fail(`${route.path} is missing the preference boot localStorage restore script`);
   }
 
   if (!html.includes("document.documentElement.dataset.theme")) {
-    fail(`${route} is missing the preference boot theme restore script`);
+    fail(`${route.path} is missing the preference boot theme restore script`);
   }
 
   if (hydrationWarningPattern.test(html)) {
-    fail(`${route} contains a hydration warning signature in HTML`);
+    fail(`${route.path} contains a hydration warning signature in HTML`);
   }
 }
 
@@ -312,7 +311,7 @@ async function main() {
 
   for (const route of PUBLIC_WEBSITE_LOCALE_ROUTES) {
     const html = await fetchText(route.path);
-    verifyHtml(route.path, html);
+    verifyHtml(route, html);
     verifyMetadata(route, html);
     verifyManifestLink(route, html);
     scriptSources.push(...collectScriptSources(html));

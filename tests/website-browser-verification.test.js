@@ -169,6 +169,8 @@ test("browser verification covers D3 routes, console errors, preferences, and sc
   assert.match(source, /localStorage\.setItem\("locale", "en"\)/);
   assert.match(source, /localStorage\.setItem\("theme", "dark"\)/);
   assert.match(source, /document\.documentElement\.lang/);
+  assert.match(source, /toHaveAttribute\("lang", "en"\)/);
+  assert.match(source, /toHaveAttribute\("lang", "zh-CN"\)/);
   assert.match(source, /document\.documentElement\.dataset\.theme/);
   assert.match(source, /toHaveScreenshot/);
 });

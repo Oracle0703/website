@@ -56,7 +56,7 @@ test("changelog exposes paired, newest-first public release records", async () =
 
 test("changelog routes are bilingual static pages with canonical metadata", () => {
   const page = read("apps/website/app/changelog/changelog-page.tsx");
-  const zhRoute = read("apps/website/app/changelog/page.tsx");
+  const zhRoute = read("apps/website/app/(zh)/changelog/page.tsx");
   const enRoute = read("apps/website/app/en/changelog/page.tsx");
 
   assert.match(page, /getChangelogEntries\(locale\)/);
@@ -77,7 +77,7 @@ test("changelog routes are bilingual static pages with canonical metadata", () =
 test("home, Explore, footer, routes, and search expose the changelog", async () => {
   const routesUrl = pathToFileURL(path.join(root, "apps/website/lib/public-routes.mjs"));
   const routes = await import(`${routesUrl.href}?test=${Date.now()}`);
-  const zhHome = read("apps/website/app/page.tsx");
+  const zhHome = read("apps/website/app/(zh)/page.tsx");
   const enHome = read("apps/website/app/en/page.tsx");
   const home = read("apps/website/components/home/home-page-client.tsx");
   const explore = read("apps/website/app/explore/explore-page.tsx");

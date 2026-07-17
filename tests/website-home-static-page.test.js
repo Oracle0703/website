@@ -10,7 +10,7 @@ function read(relPath) {
 }
 
 test('home page avoids page-level locale cookie reads', () => {
-  const pageSource = read('apps/website/app/page.tsx');
+  const pageSource = read('apps/website/app/(zh)/page.tsx');
   const clientSource = read('apps/website/components/home/home-page-client.tsx');
 
   assert.doesNotMatch(pageSource, /i18n-server/);
@@ -30,7 +30,7 @@ test('home page avoids page-level locale cookie reads', () => {
 });
 
 test('home server passes project status keys instead of localized labels', () => {
-  const pageSource = read('apps/website/app/page.tsx');
+  const pageSource = read('apps/website/app/(zh)/page.tsx');
   const clientSource = read('apps/website/components/home/home-page-client.tsx');
 
   assert.match(pageSource, /status:\s*project\.status/);

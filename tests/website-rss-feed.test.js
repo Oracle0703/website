@@ -73,7 +73,7 @@ test("RSS renderer rejects relative item URLs", async () => {
 
 test("RSS route uses published indexable posts and exposes feed discovery metadata", () => {
   const routeSource = read("apps/website/app/rss.xml/route.ts");
-  const layoutSource = read("apps/website/app/layout.tsx");
+  const rootMetadataSource = read("apps/website/lib/root-metadata.ts");
   const seoSource = read("apps/website/lib/seo.ts");
 
   assert.match(routeSource, /getPublishedPosts\(\)\.filter\(\(post\) => !post\.seo\?\.noindex\)/);
@@ -82,6 +82,6 @@ test("RSS route uses published indexable posts and exposes feed discovery metada
   assert.match(routeSource, /categories:\s*post\.category\s*\?\s*\[post\.category\]/);
   assert.match(routeSource, /application\/rss\+xml; charset=utf-8/);
   assert.match(routeSource, /export const dynamic = "force-static"/);
-  assert.match(layoutSource, /"application\/rss\+xml": `\$\{baseUrl\}\/rss\.xml`/);
+  assert.match(rootMetadataSource, /"application\/rss\+xml": `\$\{baseUrl\}\/rss\.xml`/);
   assert.match(seoSource, /"application\/rss\+xml": toAbsoluteUrl\("\/rss\.xml"\)/);
 });

@@ -15,6 +15,7 @@
 | D8 Contact Operations 改动 | 是 | 涉及 Contact JSONL retention cleanup、存储目录护栏或运维脚本时必须跑测试、`contact:ops` dry run、构建和 whitespace 检查 |
 | D9 AI Page Analysis API 改动 | 是 | 涉及 `/api/analyze`、AI 页面分析 schema、SSRF guard 或 Safe Mock API 前端调用时必须跑测试、英文审计、构建和 whitespace 检查 |
 | D10 AI Page Analysis Capture Harness 改动 | 是 | 涉及 DNS resolve、redirect guard、HTML size limit、auth/content capture 或 `/api/analyze` capture pipeline 时必须跑测试、英文审计、构建和 whitespace 检查 |
+| AI 分析安全边界改动 | 是 | 以 `AI_PAGE_ANALYSIS_SECURITY_BOUNDARY.md` 为当前契约；核对 default-off、固定已验证地址、16 KiB 请求体、并发 2、逐跳重验与诚实 Safe Mock 文案 |
 | WeatherAPI 查询代理改动 | 是 | 涉及 `/api/query`、城市/天气/空气质量、缓存、并发、`WEATHERAPI_KEY` 或 attribution 时必须检查 server-only 密钥边界、构建、健康检查与 Nginx 日志 |
 | Local-first 功能改动 | 是 | 涉及搜索、Tracker、Blog engagement、Resume/Now 或 Developer toolbox 时按 `docs/website/LOCAL_FIRST_FEATURES.md` 检查静态/本地边界与可选第三方配置 |
 | 服务器部署操作 | 否 | 服务器上线、Nginx、NSSM、回滚流程见 `docs/website/GO_LIVE_CHECKLIST.md` |
@@ -44,8 +45,8 @@
 | 改动 D6 Contact 真实渠道、联系闭环决策或 D7 表单规格 | `npm test` + `npm run audit:website-english-content` + `npm run verify:website-browser` | 不出现 `example.com`、`mailto:hello` 或占位邮箱；若新增真实渠道，需要确认隐私、反垃圾、失败状态和浏览器可见文案 |
 | 改动 D7 Contact API、Contact form、保存目录或通知 webhook | `npm test` + `npm run audit:website-english-content` + `npm run validate:website-content` + `npm run build:website` + `npm run verify:website-static` + `npm run verify:website-browser` | `POST /api/contact` 校验、rate limit、duplicate submit、JSONL 落盘和 `received_with_notification_failure` 状态正常；`CONTACT_SUBMISSIONS_DIR` 不指向公开目录；`CONTACT_NOTIFICATION_WEBHOOK_URL` 不在前端暴露 |
 | 改动 D8 Contact Operations、retention cleanup 或 storage guard | `npm test` + `npm run contact:ops -- --check-storage` + `npm run contact:ops -- --cleanup --dry-run` + `npm run build:website` + `git diff --check` | `unsafe_storage_directory` 护栏有效；cleanup dry run 不改文件；malformed JSONL 行保留；默认 retention 为 90 天 |
-| 改动 D9 AI Page Analysis API、SSRF guard、mock output schema 或前端 API 调用链 | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | `/api/analyze` 只接受 URL mode；localhost、内网和 cloud metadata 被拒绝；Safe Mock API 不抓取真实网页、不调用模型、不保存历史 |
-| 改动 D10 AI Page Analysis capture、DNS resolver、redirect guard、size limit 或 content extraction | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | DNS 解析后复检 SSRF；redirect 每跳复检；2 MB 上限生效；登录页、内容不足、超时和不可达错误码稳定 |
+| 改动 D9 AI Page Analysis API、SSRF guard、mock output schema 或前端 API 调用链 | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | `/api/analyze` 只接受 URL mode；请求体流式限制 16 KiB；默认 Safe Mock 不解析 DNS、不请求目标网站、不调用模型、不保存历史；频率与并发分别返回明确 `429`/`503` |
+| 改动 D10 AI Page Analysis capture、DNS resolver、redirect guard、size limit 或 content extraction | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | 仅精确服务端开关启用；每跳解析并检查全部地址，只连接固定后的公网 IPv4；IPv6-only、转换、私网与特殊地址不作为出站目标；超限流会取消，3 次重定向、2 MiB、240 字符标题、10 秒和并发 2 上限生效 |
 | 改动 `/api/query`、WeatherAPI client、查询缓存/限流或 attribution | `npm test` + `npm run build:website` + `npm run verify:website-static` + `git diff --check` | 测试使用 mock，不要求真实 key；`WEATHERAPI_KEY` 仅服务端读取且不得进入响应或应用日志；healthz 不请求第三方；current/forecast 缓存不超过 60 分钟/24 小时；Free attribution/免责声明可见；Nginx 专用 access log 与其他日志源分别验收 |
 | 改动 AI 页面分析 V1 后端规格或计划接入真实模型 | `npm test` + `npm run audit:website-english-content` | `AI_PAGE_ANALYSIS_V1_TECH_SPEC.md` 覆盖 SSRF、内网、cloud metadata、input schema、output schema、错误码和 D6 非实现边界 |
 | 改动截图预期或视觉设计被确认接受 | `npm run verify:website-browser -- --update-snapshots` | 新截图基线符合预期，并在 review 中说明原因 |

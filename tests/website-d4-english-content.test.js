@@ -215,7 +215,7 @@ test("English project pages and home consume localized project views", () => {
   const enHome = read("apps/website/app/en/page.tsx");
   const enProjects = read("apps/website/app/en/projects/page.tsx");
   const enProjectDetail = read("apps/website/app/en/projects/[slug]/page.tsx");
-  const zhProjectDetail = read("apps/website/app/projects/[slug]/page.tsx");
+  const zhProjectDetail = read("apps/website/app/(zh)/projects/[slug]/page.tsx");
   const projectClient = read("apps/website/app/projects/projects-client.tsx");
   const detailClient = read("apps/website/app/projects/[slug]/project-detail-client.tsx");
 
@@ -249,7 +249,7 @@ test("Blog posts define locale availability helpers and English route filters", 
 });
 
 test("AI page analysis client receives route locale and English copy", () => {
-  const zhPage = read("apps/website/app/ai-page-analysis/page.tsx");
+  const zhPage = read("apps/website/app/(zh)/ai-page-analysis/page.tsx");
   const enPage = read("apps/website/app/en/ai-page-analysis/page.tsx");
   const client = read("apps/website/components/landing/ai-page-analysis-landing-client.tsx");
 

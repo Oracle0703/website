@@ -152,7 +152,9 @@ test("D9 AI page analysis mock output keeps a stable actionable schema", async (
   assert.match(output.analysis_id, /^ana_20260521_/);
   assert.equal(output.status, "succeeded");
   assert.equal(output.source.url, "https://example.com/pricing");
-  assert.equal(output.source.captured_at, "2026-05-21T10:00:00.000Z");
+  assert.equal(output.source.generated_at, "2026-05-21T10:00:00.000Z");
+  assert.deepEqual(output.source.capture, { performed: false });
+  assert.match(output.source.title, /Safe Mock/);
   assert.equal(output.scores.length, 5);
   assert.ok(output.confidence >= 0.65);
   assert.equal(output.needs_review, false);
@@ -232,6 +234,9 @@ test("D9 AI page analysis API routes, frontend, and docs are wired", () => {
   const plan = read("docs/website/D9_AI_PAGE_ANALYSIS_API_PLAN.md");
 
   assert.match(route, /analyzePageRequest/);
+  assert.match(route, /readLimitedAnalysisJsonBody/);
+  assert.doesNotMatch(route, /request\.json\(/);
+  assert.match(route, /isAnalysisPublicCaptureEnabled/);
   assert.match(route, /service:\s*"ai-page-analysis"/);
   assert.match(route, /version:\s*"d9"/);
   assert.match(healthz, /service:\s*"ai-page-analysis"/);

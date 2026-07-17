@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { HomePageClient } from "../components/home/home-page-client";
-import { defaultLocale, getMessages } from "../lib/i18n";
-import { getPublishedPosts } from "../lib/blog";
-import { getFeaturedProjectViews } from "../lib/projects";
-import { getJsonLdLanguage, getLanguageAlternates } from "../lib/seo";
-import { toAbsoluteUrl } from "../lib/site-url";
-import { getChangelogCopy, getRecentChangelogEntries } from "../lib/changelog";
+import { HomePageClient } from "../../components/home/home-page-client";
+import { defaultLocale, getMessages } from "../../lib/i18n";
+import { getPublishedPosts } from "../../lib/blog";
+import { getFeaturedProjectViews, getProjectViews } from "../../lib/projects";
+import { getJsonLdLanguage, getLanguageAlternates } from "../../lib/seo";
+import { toAbsoluteUrl } from "../../lib/site-url";
+import { getChangelogCopy, getRecentChangelogEntries } from "../../lib/changelog";
+import { getPersonStructuredData, siteIdentity } from "../../lib/site-identity";
 
 export const generateMetadata = (): Metadata => {
   const { seo } = getMessages(defaultLocale);
@@ -32,6 +33,11 @@ export default function HomePage() {
   const { seo, home, pages } = getMessages(defaultLocale);
   const changelogCopy = getChangelogCopy(defaultLocale);
   const latestChangelogItems = getRecentChangelogEntries(defaultLocale, 3);
+  const projectViews = getProjectViews(defaultLocale);
+  const proofMetrics = {
+    projectCount: projectViews.length,
+    demoCount: projectViews.filter((project) => project.entry.demo.status === "available").length
+  };
   const latestBlogItems = getPublishedPosts()
     .slice(0, 3)
     .map((post) => ({
@@ -72,13 +78,7 @@ export default function HomePage() {
         description: seo.jsonLd.siteDescription,
         inLanguage: getJsonLdLanguage(defaultLocale)
       },
-      {
-        "@type": "Person",
-        name: seo.siteName,
-        jobTitle: seo.jsonLd.jobTitle,
-        url: toAbsoluteUrl("/"),
-        sameAs: ["https://github.com/Oracle0703"]
-      }
+      getPersonStructuredData(defaultLocale, toAbsoluteUrl(siteIdentity.profilePath))
     ]
   };
 
@@ -94,6 +94,7 @@ export default function HomePage() {
         changelogCopy={changelogCopy.home}
         changelogKindLabels={changelogCopy.kindLabels}
         featuredProjects={featuredProjects}
+        proofMetrics={proofMetrics}
       />
       <script
         type="application/ld+json"

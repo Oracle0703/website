@@ -17,6 +17,7 @@ import type {
   ChangelogEntryView,
   ChangelogKind
 } from "../../lib/changelog";
+import { siteIdentity } from "../../lib/site-identity";
 
 type HomeLatestBlogItem = {
   title: string;
@@ -52,6 +53,10 @@ type HomePageClientProps = {
   changelogCopy: ChangelogCopy["home"];
   changelogKindLabels: Record<ChangelogKind, string>;
   featuredProjects?: HomeProjectItem[];
+  proofMetrics: {
+    projectCount: number;
+    demoCount: number;
+  };
 };
 
 function formatChangelogDate(releasedAt: string, locale: Locale) {
@@ -72,10 +77,12 @@ export function HomePageClient({
   latestChangelogItems = [],
   changelogCopy,
   changelogKindLabels,
-  featuredProjects = []
+  featuredProjects = [],
+  proofMetrics
 }: HomePageClientProps) {
   const getHref = (href: string) => getLocalePath(href, locale);
   const flagshipProject = featuredProjects[0];
+  const flagshipProjectHref = flagshipProject?.href ?? siteIdentity.flagshipProjectPath;
   const supportingProjects = featuredProjects.slice(1, 3);
   const latestBlogSectionItems =
     latestBlogItems.length > 0
@@ -89,87 +96,115 @@ export function HomePageClient({
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 md:py-20">
-      <section className="grid gap-10 pb-16 md:grid-cols-[0.92fr_1.08fr] md:items-center md:gap-14 md:pb-20">
-        <div className="space-y-7">
-          <div className="space-y-5">
-            <p className={EYEBROW_ACCENT}>{copy.heroEyebrow}</p>
-            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.04em] text-primary sm:text-5xl md:text-6xl lg:text-7xl">
-              {copy.heroTitle}
-            </h1>
-            <p className={`max-w-2xl ${TEXT_BASE_SECONDARY} text-lg leading-relaxed sm:text-xl`}>
-              {copy.heroSubtitle}
-            </p>
-            <p className={`max-w-2xl ${TEXT_SM_MUTED} leading-7 sm:text-base`}>
-              {copy.heroIntro}
-            </p>
+      <section className="pb-16 md:pb-20">
+        <div className="grid gap-10 md:grid-cols-[0.92fr_1.08fr] md:items-center md:gap-14">
+          <div className="space-y-7">
+            <div className="space-y-5">
+              <p className={EYEBROW_ACCENT}>{copy.heroEyebrow}</p>
+              <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.04em] text-primary sm:text-5xl md:text-6xl lg:text-7xl">
+                {copy.heroTitle}
+              </h1>
+              <p className={`max-w-2xl ${TEXT_BASE_SECONDARY} text-lg leading-relaxed sm:text-xl`}>
+                {copy.heroSubtitle}
+              </p>
+              <p className={`max-w-2xl ${TEXT_SM_MUTED} leading-7 sm:text-base`}>
+                {copy.heroIntro}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <Link href={getHref(flagshipProjectHref)} className="btn-primary px-5 py-3 sm:px-6">
+                {copy.ctaProjects}
+              </Link>
+              <Link href={getHref("/contact")} className="btn-secondary px-5 py-3 sm:px-6">
+                {copy.ctaContact}
+              </Link>
+              <Link
+                href={getHref("/blog")}
+                className="link-accent inline-flex items-center gap-2 px-1 py-3 text-sm font-semibold"
+              >
+                {copy.ctaBlog}
+                <span aria-hidden>{common.arrowRight}</span>
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-            <Link href={getHref("/projects")} className="btn-primary px-5 py-3 sm:px-6">
-              {copy.ctaProjects}
-            </Link>
-            <Link href={getHref("/contact")} className="btn-secondary px-5 py-3 sm:px-6">
-              {copy.ctaContact}
-            </Link>
+
+          {flagshipProject ? (
             <Link
-              href={getHref("/blog")}
-              className="link-accent inline-flex items-center gap-2 px-1 py-3 text-sm font-semibold"
+              href={getHref(flagshipProject.href)}
+              className="feature-surface group block overflow-hidden"
             >
-              {copy.ctaBlog}
-              <span aria-hidden>{common.arrowRight}</span>
+              {flagshipProject.asset ? (
+                <div className="relative aspect-[16/10] overflow-hidden border-b border-edge/70 bg-surface">
+                  <Image
+                    src={flagshipProject.asset.src}
+                    alt={flagshipProject.asset.alt}
+                    fill
+                    priority
+                    sizes="(min-width: 768px) 52vw, 100vw"
+                    className="object-contain p-3 transition duration-500 group-hover:scale-[1.015]"
+                  />
+                </div>
+              ) : null}
+              <div className="p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="section-kicker">{copy.currentFocusTitle}</p>
+                  <p className={TEXT_XS_MUTED}>{projectStatusLabels[flagshipProject.status]}</p>
+                </div>
+                <h2 className="mt-3 text-xl font-semibold tracking-tight text-primary sm:text-2xl">
+                  {flagshipProject.title}
+                </h2>
+                <p className={`mt-2 ${TEXT_SM_MUTED} leading-7`}>{flagshipProject.subtitle}</p>
+                {flagshipProject.evidence ? (
+                  <p className="mt-5 border-l-2 border-accent pl-4 text-sm leading-6 text-secondary">
+                    {flagshipProject.evidence}
+                  </p>
+                ) : null}
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-accent">
+                  {copy.currentFocusAction}
+                  <span aria-hidden>{common.arrowRight}</span>
+                </span>
+              </div>
             </Link>
-          </div>
+          ) : (
+            <div className="feature-surface p-6 sm:p-8">
+              <p className="section-kicker">{copy.heroEvidenceTitle}</p>
+              <div className="mt-5 divide-y divide-edge/70">
+                {copy.heroEvidenceItems.map((item) => (
+                  <div key={item.label} className="py-4 first:pt-0 last:pb-0">
+                    <p className="text-sm font-semibold text-primary">{item.label}</p>
+                    <p className={`mt-1 ${TEXT_SM_MUTED} leading-6`}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {flagshipProject ? (
-          <Link
-            href={getHref(flagshipProject.href)}
-            className="feature-surface group block overflow-hidden"
-          >
-            {flagshipProject.asset ? (
-              <div className="relative aspect-[16/10] overflow-hidden border-b border-edge/70 bg-surface">
-                <Image
-                  src={flagshipProject.asset.src}
-                  alt={flagshipProject.asset.alt}
-                  fill
-                  priority
-                  sizes="(min-width: 768px) 52vw, 100vw"
-                  className="object-contain p-3 transition duration-500 group-hover:scale-[1.015]"
-                />
-              </div>
-            ) : null}
-            <div className="p-5 sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="section-kicker">{copy.currentFocusTitle}</p>
-                <p className={TEXT_XS_MUTED}>{projectStatusLabels[flagshipProject.status]}</p>
-              </div>
-              <h2 className="mt-3 text-xl font-semibold tracking-tight text-primary sm:text-2xl">
-                {flagshipProject.title}
-              </h2>
-              <p className={`mt-2 ${TEXT_SM_MUTED} leading-7`}>{flagshipProject.subtitle}</p>
-              {flagshipProject.evidence ? (
-                <p className="mt-5 border-l-2 border-accent pl-4 text-sm leading-6 text-secondary">
-                  {flagshipProject.evidence}
-                </p>
-              ) : null}
-              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-accent">
-                {copy.currentFocusAction}
-                <span aria-hidden>{common.arrowRight}</span>
-              </span>
-            </div>
-          </Link>
-        ) : (
-          <div className="feature-surface p-6 sm:p-8">
-            <p className="section-kicker">{copy.heroEvidenceTitle}</p>
-            <div className="mt-5 divide-y divide-edge/70">
-              {copy.heroEvidenceItems.map((item) => (
-                <div key={item.label} className="py-4 first:pt-0 last:pb-0">
-                  <p className="text-sm font-semibold text-primary">{item.label}</p>
-                  <p className={`mt-1 ${TEXT_SM_MUTED} leading-6`}>{item.value}</p>
-                </div>
-              ))}
-            </div>
+        <dl
+          aria-label={copy.heroProof.title}
+          className="mt-8 grid overflow-hidden border-y border-edge/70 md:grid-cols-3"
+        >
+          <div className="py-5 md:border-r md:border-edge/70 md:px-6 md:first:pl-0">
+            <dt className={TEXT_XS_MUTED}>{copy.heroProof.projectsLabel}</dt>
+            <dd className="mt-2 text-base font-semibold text-primary">
+              <span className="text-2xl tracking-tight text-accent">{proofMetrics.projectCount}</span>{" "}
+              {copy.heroProof.projectsUnit}
+            </dd>
           </div>
-        )}
+          <div className="border-t border-edge/70 py-5 md:border-r md:border-t-0 md:px-6">
+            <dt className={TEXT_XS_MUTED}>{copy.heroProof.demosLabel}</dt>
+            <dd className="mt-2 text-base font-semibold text-primary">
+              <span className="text-2xl tracking-tight text-accent">{proofMetrics.demoCount}</span>{" "}
+              {copy.heroProof.demosUnit}
+            </dd>
+          </div>
+          <div className="border-t border-edge/70 py-5 md:border-t-0 md:pl-6">
+            <dt className={TEXT_XS_MUTED}>{copy.heroProof.deliveryLabel}</dt>
+            <dd className="mt-2 text-sm font-semibold leading-6 text-primary">
+              {copy.heroProof.deliveryValue}
+            </dd>
+          </div>
+        </dl>
       </section>
 
       {supportingProjects.length > 0 ? (

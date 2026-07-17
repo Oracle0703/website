@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { NowPage } from "./now-page";
-import { defaultLocale } from "../../lib/i18n-core";
-import { getLanguageAlternates } from "../../lib/seo";
-import { toAbsoluteUrl } from "../../lib/site-url";
+import { NowPage } from "../../now/now-page";
+import { defaultLocale } from "../../../lib/i18n-core";
+import { getLanguageAlternates } from "../../../lib/seo";
+import { toAbsoluteUrl } from "../../../lib/site-url";
 
 const title = "现在";
 const description =

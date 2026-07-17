@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { analyzePageRequest } from "../../../lib/ai-page-analysis";
+import { readLimitedAnalysisJsonBody } from "../../../lib/ai-analysis-request-body";
+import {
+  analyzePageRequest,
+  isAnalysisPublicCaptureEnabled
+} from "../../../lib/ai-page-analysis";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 function getClientIdentity(request: NextRequest) {
   return (
@@ -15,39 +20,41 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     service: "ai-page-analysis",
-    version: "d9"
+    version: "d9",
+    public_capture_enabled: isAnalysisPublicCaptureEnabled()
   });
 }
 
 export async function POST(request: NextRequest) {
-  let payload: unknown;
-
-  try {
-    payload = await request.json();
-  } catch {
+  const body = await readLimitedAnalysisJsonBody(request);
+  if (!body.ok) {
     return NextResponse.json(
       {
         status: "failed",
-        error: {
-          code: "submit_failure",
-          message: "Request body must be valid JSON."
-        }
+        error: body.error
       },
-      { status: 400 }
+      { status: body.httpStatus }
     );
   }
 
-  const result = await analyzePageRequest(payload, {
-    identityKey: getClientIdentity(request)
+  const result = await analyzePageRequest(body.value, {
+    identityKey: getClientIdentity(request),
+    capture: isAnalysisPublicCaptureEnabled()
   });
 
   if (!result.ok) {
+    const headers = result.error.code === "rate_limited"
+      ? { "retry-after": "60" }
+      : result.error.code === "server_busy"
+        ? { "retry-after": "2" }
+        : undefined;
+
     return NextResponse.json(
       {
         status: "failed",
         error: result.error
       },
-      { status: result.httpStatus }
+      { status: result.httpStatus, headers }
     );
   }
 

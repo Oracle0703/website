@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { AboutClient } from "./about-client";
-import { defaultLocale, getMessages } from "../../lib/i18n";
-import { getLanguageAlternates } from "../../lib/seo";
-import { toAbsoluteUrl } from "../../lib/site-url";
+import { AboutClient } from "../../about/about-client";
+import { defaultLocale, getMessages } from "../../../lib/i18n";
+import { getLanguageAlternates } from "../../../lib/seo";
+import { toAbsoluteUrl } from "../../../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
   const { seo } = getMessages(defaultLocale);

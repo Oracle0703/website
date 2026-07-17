@@ -16,12 +16,15 @@ async function loadGenerator() {
 }
 
 test("locale-specific web app manifests define installable local-first shells", () => {
-  const rootLayout = read("apps/website/app/layout.tsx");
+  const rootMetadata = read("apps/website/lib/root-metadata.ts");
+  const chineseLayout = read("apps/website/app/(zh)/layout.tsx");
   const rootManifest = JSON.parse(read("apps/website/public/manifest.webmanifest"));
   const englishLayout = read("apps/website/app/en/layout.tsx");
   const englishManifest = JSON.parse(read("apps/website/public/en/manifest.webmanifest"));
 
-  assert.match(rootLayout, /manifest:\s*"\/manifest\.webmanifest"/);
+  assert.match(chineseLayout, /getRootMetadata\("zh"\)/);
+  assert.match(englishLayout, /getRootMetadata\("en"\)/);
+  assert.match(rootMetadata, /locale === "en" \? "\/en\/manifest\.webmanifest" : "\/manifest\.webmanifest"/);
   assert.equal(rootManifest.id, "/");
   assert.equal(rootManifest.lang, "zh-CN");
   assert.equal(rootManifest.start_url, "/tracker");
@@ -38,7 +41,6 @@ test("locale-specific web app manifests define installable local-first shells", 
   assert.equal(rootManifest.icons.some(({ src }) => src === "/icon-512.png"), true);
   assert.equal(rootManifest.icons.some(({ purpose }) => purpose === "maskable"), false);
 
-  assert.match(englishLayout, /manifest:\s*"\/en\/manifest\.webmanifest"/);
   assert.equal(englishManifest.id, "/en/");
   assert.equal(englishManifest.lang, "en");
   assert.equal(englishManifest.start_url, "/en/tracker");

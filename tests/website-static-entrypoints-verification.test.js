@@ -68,10 +68,11 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
 
   assert.match(source, /NEXT_STATIC_VERIFY_BASE_URL/);
   assert.match(source, /localStorage/);
-  assert.match(source, /document\.documentElement\.lang/);
   assert.match(source, /document\.documentElement\.dataset\.theme/);
   assert.match(source, /data-theme/);
-  assert.match(source, /<html lang=/);
+  assert.match(source, /const htmlTag = html\.match/);
+  assert.match(source, /getTagAttribute\(htmlTag, "lang"\)/);
+  assert.match(source, /route\.locale === "en" \? "en" : "zh-CN"/);
   assert.match(source, /Hydration failed|Text content does not match|Minified React error/);
   assert.match(source, /canonical/);
   assert.match(source, /og:url/);

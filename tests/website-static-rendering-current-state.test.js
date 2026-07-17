@@ -9,12 +9,14 @@ function read(relPath) {
   return fs.readFileSync(path.join(root, relPath), "utf8");
 }
 
-test("static rendering spike distinguishes initial diagnosis from current D2 state", () => {
+test("static rendering spike distinguishes initial diagnosis from the localized root layout state", () => {
   const source = read("docs/website/STATIC_RENDERING_SPIKE.md");
 
   assert.match(source, /初始诊断/);
-  assert.match(source, /当前 D2 状态/);
-  assert.match(source, /app 代码已无 `i18n-server` \/ `getLocale\(\)`/);
+  assert.match(source, /当前状态/);
+  assert.match(source, /app\/\(zh\)\/layout\.tsx/);
+  assert.match(source, /app\/en\/layout\.tsx/);
+  assert.match(source, /路由直接决定服务端 `<html lang>`/);
   assert.match(source, /公开入口为 `○`/);
   assert.match(source, /详情页保持 `●` SSG/);
 });

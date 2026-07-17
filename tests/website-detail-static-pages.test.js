@@ -10,7 +10,7 @@ function read(relPath) {
 }
 
 test("blog detail page avoids page-level locale cookie reads", () => {
-  const pageSource = read("apps/website/app/blog/[slug]/page.tsx");
+  const pageSource = read("apps/website/app/(zh)/blog/[slug]/page.tsx");
   const clientSource = read("apps/website/app/blog/[slug]/blog-detail-client.tsx");
 
   assert.doesNotMatch(pageSource, /i18n-server/);
@@ -28,7 +28,7 @@ test("blog detail page avoids page-level locale cookie reads", () => {
 });
 
 test("project detail page avoids page-level locale cookie reads", () => {
-  const pageSource = read("apps/website/app/projects/[slug]/page.tsx");
+  const pageSource = read("apps/website/app/(zh)/projects/[slug]/page.tsx");
   const clientSource = read("apps/website/app/projects/[slug]/project-detail-client.tsx");
 
   assert.doesNotMatch(pageSource, /i18n-server/);

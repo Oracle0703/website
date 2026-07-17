@@ -25,5 +25,5 @@
   <rect x="792" y="460" width="250" height="32" rx="10" fill="#bbf7d0"/>
   <rect x="792" y="510" width="285" height="32" rx="10" fill="#dcfce7"/>
   <rect x="110" y="580" width="1060" height="32" rx="16" fill="#e2e8f0"/>
-  <text x="142" y="602" fill="#475569" font-family="Arial, sans-serif" font-size="16">Live URL capture + Safe Mock output; no live model integration.</text>
+  <text x="142" y="602" fill="#475569" font-family="Arial, sans-serif" font-size="16">URL capture is opt-in; Safe Mock output; no live model integration.</text>
 </svg>

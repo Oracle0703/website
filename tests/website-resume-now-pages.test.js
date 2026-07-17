@@ -12,7 +12,7 @@ function read(relPath) {
 const routes = [
   {
     route: '/resume',
-    page: 'apps/website/app/resume/page.tsx',
+    page: 'apps/website/app/(zh)/resume/page.tsx',
     component: 'ResumePage',
     locale: 'defaultLocale'
   },
@@ -24,7 +24,7 @@ const routes = [
   },
   {
     route: '/now',
-    page: 'apps/website/app/now/page.tsx',
+    page: 'apps/website/app/(zh)/now/page.tsx',
     component: 'NowPage',
     locale: 'defaultLocale'
   },
@@ -65,7 +65,7 @@ test('capability resume is evidence-based and offers native browser printing', (
   assert.match(source, /resumeProjectSlugs/);
   assert.match(source, /project\.evidence\[0\]/);
   assert.match(source, /\/projects\/\$\{encodeURIComponent\(project\.slug\)\}/);
-  assert.match(source, /https:\/\/github\.com\/Oracle0703/);
+  assert.match(source, /href=\{siteIdentity\.githubUrl\}/);
   assert.match(source, /@media print/);
   assert.match(source, /dangerouslySetInnerHTML/);
   assert.doesNotMatch(source, /<style>\{/);

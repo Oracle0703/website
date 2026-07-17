@@ -68,7 +68,12 @@ type ApiAnalysisResult = {
   source: {
     url: string;
     title: string;
-    captured_at: string;
+    generated_at: string;
+    capture: {
+      performed: boolean;
+      final_url?: string;
+      captured_at?: string;
+    };
   };
   scores: {
     key: string;
@@ -382,13 +387,13 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     backlogTitle: "可执行 Backlog",
     limitationsTitle: "Mock Pipeline 限制",
     limitationsItems: [
-      "当前演示不调用真实模型，也不抓取真实网页内容。",
+      "当前演示不调用真实模型；公网 URL 抓取在生产环境默认关闭，关闭时不会请求你输入的网站。",
       "示例评分和建议来自固定 mock output，只用于验证页面层级和输出结构。",
       "暂不保存输入、历史记录或生成结果，适合展示流程，不适合作为生产分析结论。"
     ],
     roadmapTitle: "V1 roadmap",
     roadmapItems: [
-      "实现 URL 抓取服务，并加入 SSRF、超时和登录页边界。",
+      "公网 URL 抓取仅在服务端显式开启；连接固定到逐跳验证的公网 IP，并受超时、大小和并发边界保护。",
       "加入业务 Brief 输入校验，让受众、目标和当前问题参与分析。",
       "接入真实模型分析，稳定输出评分、问题、建议和 backlog schema。"
     ],
@@ -453,13 +458,13 @@ export const aiPageAnalysisCopy: Record<Locale, AiPageAnalysisCopy> = {
     backlogTitle: "Actionable backlog",
     limitationsTitle: "Mock Pipeline limitation",
     limitationsItems: [
-      "No live model integration is connected on this page.",
+      "No live model integration is enabled. Public URL capture is off by default in production; while off, the submitted site is not requested.",
       "Scores and recommendations come from fixed mock output, used to validate page hierarchy and result structure.",
       "Inputs, history, and generated results are not stored, so this is a demo workflow rather than production analysis."
     ],
     roadmapTitle: "V1 roadmap",
     roadmapItems: [
-      "Build URL capture with SSRF protection, timeout handling, and authenticated-page boundaries.",
+      "Keep public URL capture behind an explicit server flag, with each connection pinned to a validated public IP and bounded by time, size, and concurrency limits.",
       "Add product brief validation so audience, goal, and current problem shape the analysis.",
       "Integrate model analysis with a stable schema for scores, issues, recommendations, and backlog."
     ],
@@ -508,7 +513,7 @@ function formatTimestamp(date: Date, locale: Locale) {
 function buildStageLog(stageId: string, mode: DemoMode, locale: Locale): string {
   if (locale === "en") {
     if (stageId === "parse") {
-      return mode === "url" ? "Captured main structure and core copy blocks" : "Read the input material and prepared context";
+      return mode === "url" ? "Validated the URL and prepared Safe Mock context" : "Read the input material and prepared context";
     }
 
     if (stageId === "extract") {
@@ -523,7 +528,7 @@ function buildStageLog(stageId: string, mode: DemoMode, locale: Locale): string 
   }
 
   if (stageId === "parse") {
-    return mode === "url" ? "已抓取页面主结构与核心文案块" : "已读取输入素材并完成上下文预处理";
+    return mode === "url" ? "已校验 URL，并准备 Safe Mock 上下文" : "已读取输入素材并完成上下文预处理";
   }
 
   if (stageId === "extract") {
@@ -835,17 +840,20 @@ function toTitleCase(value: string) {
 function mapApiResultToDemoOutput(result: ApiAnalysisResult, locale: Locale): DemoOutput {
   const confidencePercent = `${Math.round(result.confidence * 100)}%`;
   const safeMockLabel = locale === "en" ? "Safe Mock API" : "Safe Mock API";
+  const captureLabel = result.source.capture.performed
+    ? (locale === "en" ? "public page captured; output remains a mock" : "已抓取公开页面；输出仍为 Mock")
+    : (locale === "en" ? "URL not fetched" : "未请求该 URL");
   const baseOutput = getMockOutput("url", result.source.url, locale);
 
   return {
     analysisId: result.analysis_id,
-    generatedAt: formatApiTimestamp(result.source.captured_at, locale),
+    generatedAt: formatApiTimestamp(result.source.generated_at, locale),
     headline: locale === "en"
       ? `D9 Safe Mock API result for ${result.source.url}`
       : `D9 Safe Mock API 已生成分析：${result.source.url}`,
     confidence: locale === "en"
-      ? `${confidencePercent} confidence (${safeMockLabel})`
-      : `置信度 ${confidencePercent}（${safeMockLabel}）`,
+      ? `${confidencePercent} confidence (${safeMockLabel}; ${captureLabel})`
+      : `置信度 ${confidencePercent}（${safeMockLabel}；${captureLabel}）`,
     scores: result.scores.map((score) => ({
       label: score.label,
       score: score.score

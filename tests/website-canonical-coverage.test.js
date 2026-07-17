@@ -6,21 +6,21 @@ const path = require('node:path');
 const root = process.cwd();
 
 const publicRoutes = [
-  ['/', 'apps/website/app/page.tsx'],
-  ['/blog', 'apps/website/app/blog/page.tsx'],
-  ['/projects', 'apps/website/app/projects/page.tsx'],
-  ['/explore', 'apps/website/app/explore/page.tsx'],
-  ['/changelog', 'apps/website/app/changelog/page.tsx'],
-  ['/labs', 'apps/website/app/labs/page.tsx'],
-  ['/labs/query', 'apps/website/app/labs/query/page.tsx'],
-  ['/labs/tools', 'apps/website/app/labs/tools/page.tsx'],
-  ['/tracker', 'apps/website/app/tracker/page.tsx'],
-  ['/resume', 'apps/website/app/resume/page.tsx'],
-  ['/now', 'apps/website/app/now/page.tsx'],
-  ['/about', 'apps/website/app/about/page.tsx'],
-  ['/contact', 'apps/website/app/contact/page.tsx'],
-  ['/enter', 'apps/website/app/enter/page.tsx'],
-  ['/ai-page-analysis', 'apps/website/app/ai-page-analysis/page.tsx']
+  ['/', 'apps/website/app/(zh)/page.tsx'],
+  ['/blog', 'apps/website/app/(zh)/blog/page.tsx'],
+  ['/projects', 'apps/website/app/(zh)/projects/page.tsx'],
+  ['/explore', 'apps/website/app/(zh)/explore/page.tsx'],
+  ['/changelog', 'apps/website/app/(zh)/changelog/page.tsx'],
+  ['/labs', 'apps/website/app/(zh)/labs/page.tsx'],
+  ['/labs/query', 'apps/website/app/(zh)/labs/query/page.tsx'],
+  ['/labs/tools', 'apps/website/app/(zh)/labs/tools/page.tsx'],
+  ['/tracker', 'apps/website/app/(zh)/tracker/page.tsx'],
+  ['/resume', 'apps/website/app/(zh)/resume/page.tsx'],
+  ['/now', 'apps/website/app/(zh)/now/page.tsx'],
+  ['/about', 'apps/website/app/(zh)/about/page.tsx'],
+  ['/contact', 'apps/website/app/(zh)/contact/page.tsx'],
+  ['/enter', 'apps/website/app/(zh)/enter/page.tsx'],
+  ['/ai-page-analysis', 'apps/website/app/(zh)/ai-page-analysis/page.tsx']
 ];
 
 function read(relPath) {
@@ -51,7 +51,7 @@ test('public website pages expose locale-aware canonical metadata', () => {
     assert.match(source, new RegExp(`getLanguageAlternates\\("${route === '/' ? '\\/' : route}"\\)`));
   }
 
-  const blogDetailSource = read('apps/website/app/blog/[slug]/page.tsx');
+  const blogDetailSource = read('apps/website/app/(zh)/blog/[slug]/page.tsx');
   assert.match(blogDetailSource, /canonicalPath\s*=\s*`\/blog\/\$\{slug\}`/);
   assert.match(blogDetailSource, /getLanguageAlternates\(canonicalPath,\s*post\.availableLocales\s*\?\?\s*\[defaultLocale\]\)/);
   assert.match(blogDetailSource, /canonical:\s*toAbsoluteUrl\(canonicalPath\)/);
@@ -59,7 +59,7 @@ test('public website pages expose locale-aware canonical metadata', () => {
   const englishBlogDetailSource = read('apps/website/app/en/blog/[slug]/page.tsx');
   assert.match(englishBlogDetailSource, /getLanguageAlternates\(canonicalPath,\s*post\.availableLocales\s*\?\?\s*\[locale\]\)/);
 
-  const projectDetailSource = read('apps/website/app/projects/[slug]/page.tsx');
+  const projectDetailSource = read('apps/website/app/(zh)/projects/[slug]/page.tsx');
   assert.match(projectDetailSource, /canonicalPath\s*=\s*`\/projects\/\$\{encodeURIComponent\(project\.slug\)\}`/);
   assert.match(projectDetailSource, /getLanguageAlternates\(canonicalPath\)/);
   assert.match(projectDetailSource, /canonical:\s*toAbsoluteUrl\(canonicalPath\)/);

@@ -10,7 +10,7 @@ function read(relPath) {
 }
 
 test('projects list page avoids page-level locale cookie reads', () => {
-  const pageSource = read('apps/website/app/projects/page.tsx');
+  const pageSource = read('apps/website/app/(zh)/projects/page.tsx');
   const clientSource = read('apps/website/app/projects/projects-client.tsx');
 
   assert.doesNotMatch(pageSource, /i18n-server/);

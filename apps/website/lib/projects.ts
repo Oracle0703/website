@@ -140,13 +140,13 @@ export const projects: Project[] = [
     problem:
       "页面改版常停留在个人审美和碎片意见上，缺少面向目标受众、业务目标和页面结构的统一证据链。",
     solution:
-      "URL 模式通过服务端安全抓取公开 HTML，再以可控的 Safe Mock 生成结构化评分、问题和 backlog；截图说明与 Brief 模式继续在浏览器内运行固定 mock。",
+      "URL 模式默认不请求目标网站并直接生成 Safe Mock；管理员可通过服务端开关启用受限公网 HTML 抓取，但评分、问题和 backlog 仍来自 Safe Mock。截图说明与 Brief 模式继续在浏览器内运行固定 mock。",
     role: ["产品范围定义", "信息架构设计", "Next.js 前端实现", "Mock 分析流水线", "交互状态设计"],
     stack: ["Next.js", "TypeScript", "Tailwind CSS", "Structured Output"],
     highlights: ["分析步骤可解释", "输出结构适合转任务", "失败与低置信度状态可扩展"],
     evidence: [
       { label: "可体验 Demo", value: "公开页面已覆盖输入、流水线、评分、问题、建议和 backlog" },
-      { label: "安全抓取", value: "URL 路径已实现 DNS 与重定向逐跳校验、大小限制、超时和内网地址拦截" },
+      { label: "安全抓取", value: "生产默认关闭；开启后逐跳固定到已验证公网 IP，并限制重定向、大小、超时与全局并发" },
       { label: "双语展示", value: "中文根路径和英文 /en 路径共用同一 locale-aware 页面组件" }
     ],
     asset: {
@@ -154,7 +154,7 @@ export const projects: Project[] = [
       src: "/projects/ai-page-analysis-product-mock.svg",
       alt: "AI 页面分析助手的 product mock，展示 URL 输入、评分、问题和 backlog 结构",
       caption:
-        "Product mock：URL 可经过安全抓取，但评分和建议仍来自 Safe Mock；当前未接入真实模型。"
+        "Product mock：URL 抓取默认关闭且只能由服务端显式开启；评分和建议始终来自 Safe Mock，当前未接入真实模型。"
     },
     gallery: [
       {
@@ -165,12 +165,12 @@ export const projects: Project[] = [
       }
     ],
     architecture:
-      "客户端负责三种输入模式与交互状态；URL 模式调用 Next.js API 完成受限网页抓取，再生成可复现的 Safe Mock 结果，截图说明和 Brief 模式则留在浏览器内。",
+      "客户端负责三种输入模式与交互状态；URL 模式调用 Next.js API 生成可复现的 Safe Mock，生产环境默认不请求目标网站。管理员显式开启后，API 才会先执行受限公网抓取；截图说明和 Brief 模式留在浏览器内。",
     architectureSteps: [
       { title: "浏览器输入", description: "统一承载 URL、截图说明和业务 Brief 三种输入与流水线状态。" },
       { title: "按模式分流", description: "URL 请求 POST /api/analyze；截图说明和 Brief 使用客户端固定 mock。" },
-      { title: "安全 URL 抓取", description: "服务端逐跳检查 DNS 与重定向，拒绝内网和 metadata 地址，并限制响应大小与超时。" },
-      { title: "Safe Mock 输出", description: "抓取标题与 Brief 进入确定性结果生成器，输出评分、问题、建议和 backlog，不调用真实模型。" },
+      { title: "可选 URL 抓取", description: "生产默认关闭；开启后服务端逐跳解析并固定已验证公网 IP，拒绝内网和 metadata 地址，并限制响应大小、超时与并发。" },
+      { title: "Safe Mock 输出", description: "URL、Brief 与可选抓取标题进入确定性结果生成器，输出评分、问题、建议和 backlog，不调用真实模型。" },
       { title: "结果界面", description: "客户端呈现进度、失败状态和结构化交付结果。" }
     ],
     decisions: [
@@ -191,7 +191,7 @@ export const projects: Project[] = [
       }
     ],
     tradeoffs: [
-      "真实 URL 抓取已落地，但结果生成继续使用 Safe Mock，避免把演示误写成真实模型分析。",
+      "受限 URL 抓取已实现但生产默认关闭；无论是否开启，结果生成都继续使用 Safe Mock，避免把演示误写成真实模型分析。",
       "不保存历史记录，减少隐私和账户系统复杂度，但也牺牲了复盘能力。",
       "截图说明和 Brief 留在浏览器内，减少服务端输入面，但目前不解析真实图片文件。"
     ],
@@ -204,7 +204,7 @@ export const projects: Project[] = [
         status: "available",
         label: "体验公开 Demo",
         href: "/ai-page-analysis",
-        description: "体验 URL 安全抓取、客户端 mock 流程和结构化结果界面。"
+        description: "体验默认不请求目标网站的 Safe Mock 流程和结构化结果界面。"
       },
       source: {
         label: "查看核心实现",
@@ -555,12 +555,12 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
     problem:
       "Page redesign decisions often depend on personal taste and scattered comments, without a shared evidence chain tied to audience, business goals, and page structure.",
     solution:
-      "The URL mode safely captures public HTML on the server, then uses a controlled Safe Mock for structured scores, issues, and backlog. Screenshot notes and brief modes continue through fixed browser-side mock output.",
+      "URL mode does not request the target site by default and returns a controlled Safe Mock. An administrator can explicitly enable bounded public-HTML capture, but scores, issues, and backlog still come from the Safe Mock. Screenshot notes and briefs stay in the browser.",
     role: ["Product scope", "Information architecture", "Next.js frontend", "Mock analysis pipeline", "Interaction states"],
     highlights: ["Explainable analysis steps", "Outputs shaped for task planning", "Extensible failure and low-confidence states"],
     evidence: [
       { label: "Interactive demo", value: "The public page covers input, pipeline, scoring, issues, recommendations, and backlog" },
-      { label: "Safe capture", value: "The URL path validates DNS and every redirect, limits response size and time, and rejects private addresses" },
+      { label: "Opt-in capture", value: "Off by default; when enabled, every hop is pinned to a validated public IP with redirect, size, timeout, and global concurrency limits" },
       { label: "Bilingual surface", value: "Chinese root routes and English /en routes share one locale-aware client component" }
     ],
     asset: {
@@ -568,7 +568,7 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       src: "/projects/ai-page-analysis-product-mock.svg",
       alt: "Product mock for the AI page analysis assistant showing URL input, scores, issues, and backlog",
       caption:
-        "Product mock: URLs can pass through safe capture, while scores and recommendations still come from a Safe Mock with no live model integration."
+        "Product mock: URL capture is off by default and requires an explicit server flag; scores and recommendations always come from a Safe Mock with no live model integration."
     },
     gallery: [
       {
@@ -579,12 +579,12 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       }
     ],
     architecture:
-      "The client owns the three input modes and interaction state. URL mode calls a Next.js API for bounded page capture before generating reproducible Safe Mock output; screenshot notes and briefs stay in the browser.",
+      "The client owns the three input modes and interaction state. URL mode calls a Next.js API for reproducible Safe Mock output without requesting the target by default. Only an explicit server flag enables bounded public capture; screenshot notes and briefs stay in the browser.",
     architectureSteps: [
       { title: "Browser input", description: "One client experience owns URL, screenshot-note, and product-brief input plus pipeline state." },
       { title: "Mode routing", description: "URLs call POST /api/analyze; screenshot notes and briefs use the fixed client-side mock." },
-      { title: "Safe URL capture", description: "The server checks DNS and every redirect, rejects private and metadata addresses, and bounds response size and time." },
-      { title: "Safe Mock output", description: "Captured title and brief feed deterministic scores, issues, recommendations, and backlog without calling a live model." },
+      { title: "Opt-in URL capture", description: "Off by default; when enabled, the server resolves and pins every hop to a validated public IP, rejects private and metadata addresses, and bounds size, time, and concurrency." },
+      { title: "Safe Mock output", description: "The URL, brief, and optional captured title feed deterministic scores, issues, recommendations, and backlog without calling a live model." },
       { title: "Result interface", description: "The client presents progress, explicit failures, and structured delivery output." }
     ],
     decisions: [
@@ -605,7 +605,7 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       }
     ],
     tradeoffs: [
-      "Real URL capture is implemented, while result generation remains a Safe Mock so the demo does not overstate model capability.",
+      "Bounded URL capture is implemented but off by default in production. Result generation remains a Safe Mock whether capture is enabled or not, so the demo does not overstate model capability.",
       "No saved history keeps privacy and account scope small, but removes review and comparison workflows.",
       "Screenshot notes and briefs stay in the browser, reducing server input scope but not parsing real image files yet."
     ],
@@ -618,7 +618,7 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
         status: "available",
         label: "Try the public demo",
         href: "/ai-page-analysis",
-        description: "Try safe URL capture, browser-side mock modes, and the structured result interface."
+        description: "Try the no-fetch-by-default Safe Mock flow, browser-side mock modes, and the structured result interface."
       },
       source: {
         label: "Inspect the core implementation",

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { defaultLocale } from "../../../lib/i18n";
-import { getLanguageAlternates } from "../../../lib/seo";
-import { toAbsoluteUrl } from "../../../lib/site-url";
-import { DeveloperToolsPage } from "./developer-tools-page";
+import { defaultLocale } from "../../../../lib/i18n";
+import { getLanguageAlternates } from "../../../../lib/seo";
+import { toAbsoluteUrl } from "../../../../lib/site-url";
+import { DeveloperToolsPage } from "../../../labs/tools/developer-tools-page";
 
 const title = "浏览器端开发者工具箱";
 const description = "在浏览器本地完成 JSON、URL/Base64、UUID、SHA-256 与颜色对比度处理。";

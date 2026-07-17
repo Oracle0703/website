@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { ProjectsClient } from "./projects-client";
-import { defaultLocale, getMessages } from "../../lib/i18n";
-import { getFeaturedProjectViews, getProjectViews } from "../../lib/projects";
-import { getLanguageAlternates } from "../../lib/seo";
-import { toAbsoluteUrl } from "../../lib/site-url";
+import { ProjectsClient } from "../../projects/projects-client";
+import { defaultLocale, getMessages } from "../../../lib/i18n";
+import { getFeaturedProjectViews, getProjectViews } from "../../../lib/projects";
+import { getLanguageAlternates } from "../../../lib/seo";
+import { toAbsoluteUrl } from "../../../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
   const { seo } = getMessages(defaultLocale);

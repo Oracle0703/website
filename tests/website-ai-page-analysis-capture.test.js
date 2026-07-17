@@ -223,6 +223,7 @@ test("D10 analyze pipeline can use captured title while preserving safe mock out
   const result = await analyzePageRequest(validPayload("https://example.com/pricing"), {
     now: new Date("2026-05-21T10:00:00.000Z"),
     identityKey: "d10-client",
+    capture: true,
     resolver: async () => ["93.184.216.34"],
     fetcher: async () => htmlResponse(enoughHtml)
   });
@@ -231,6 +232,8 @@ test("D10 analyze pipeline can use captured title while preserving safe mock out
   assert.equal(result.value.safe_mock_api, true);
   assert.equal(result.value.source.title, "Example Landing Page");
   assert.equal(result.value.source.url, "https://example.com/pricing");
+  assert.equal(result.value.source.capture.performed, true);
+  assert.equal(result.value.source.capture.final_url, "https://example.com/pricing");
 });
 
 test("D10 capture docs and release checklist are wired", () => {

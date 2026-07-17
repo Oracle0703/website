@@ -1,5 +1,6 @@
 import type { Locale } from "./i18n-core";
 import { shellMessages } from "./i18n-shell";
+import { siteIdentity } from "./site-identity";
 
 export {
   defaultLocale,
@@ -15,15 +16,24 @@ export const messages = {
   zh: {
     ...shellMessages.zh,
     home: {
-      heroEyebrow: "AI 产品工程 · 独立全栈开发",
+      heroEyebrow: `${siteIdentity.personName} · ${siteIdentity.byLocale.zh.role}`,
       heroTitle: "把复杂想法，做成清晰、可用的产品。",
-      heroSubtitle: "独立全栈开发者，专注 AI 应用、产品体验与可持续演进的工程系统。",
+      heroSubtitle: siteIdentity.byLocale.zh.positioning,
       heroIntro:
         "从问题定义、交互原型到上线验证，我使用 Next.js、TypeScript 与 Node.js，让产品判断和工程实现彼此支撑。",
       ctaEnter: "查看作品",
       ctaBlog: "阅读博客",
-      ctaProjects: "查看作品",
-      ctaContact: "联系我",
+      ctaProjects: "查看旗舰案例",
+      ctaContact: "发起项目沟通",
+      heroProof: {
+        title: "可验证的站点证据",
+        projectsLabel: "公开项目案例",
+        projectsUnit: "个案例",
+        demosLabel: "可运行入口",
+        demosUnit: "个 Demo",
+        deliveryLabel: "交付基线",
+        deliveryValue: "双语静态页面 · 内容校验 · 浏览器验收"
+      },
       heroEvidenceTitle: "当前证据链",
       heroEvidenceItems: [
         {
@@ -51,7 +61,7 @@ export const messages = {
         "AI 页面分析助手正在从展示型 Demo 走向可用 MVP：先固化输入、诊断、建议和 backlog，再接入真实抓取与模型分析。",
       currentFocusMeta: "Prototype · AI Tool",
       currentFocusHref: "/ai-page-analysis",
-      currentFocusAction: "查看当前原型",
+      currentFocusAction: "查看案例证据",
       featuredProjectsTitle: "精选作品",
       featuredProjectsDescription: "从产品判断到工程落地，选择几件正在持续演进的作品。",
       featuredSeriesTitle: "推荐系列",
@@ -307,10 +317,10 @@ export const messages = {
         description: "追踪习惯，沉淀成长数据。"
       },
       about: {
-        eyebrow: "关于我",
-        title: "关于我",
+        eyebrow: `${siteIdentity.personName} · 关于`,
+        title: `关于 ${siteIdentity.personName}`,
         description:
-          "我关注从问题定义到可运行产品的完整链路：把想法拆成可验证的原型，再用工程质量把它们沉淀成长期资产。",
+          `我是 ${siteIdentity.personName}。${siteIdentity.brandName} 是我记录公开作品与工程实践的个人站点：把想法拆成可验证的原型，再把它们沉淀成可维护的长期资产。`,
         sections: [
           {
             title: "工作背景",
@@ -336,8 +346,8 @@ export const messages = {
         ]
       },
       contact: {
-        eyebrow: "联系我",
-        title: "联系我",
+        eyebrow: `${siteIdentity.personName} · 联系`,
+        title: `与 ${siteIdentity.personName} 沟通`,
         description:
           "适合讨论边界清晰、可以快速验证的产品和工程合作。优先从目标、约束、交付物和时间线开始对齐。",
         collaborationTitle: "适合沟通",
@@ -376,7 +386,7 @@ export const messages = {
           {
             label: "GitHub 主页",
             description: "表单暂时不可用时，可查看公开仓库与个人资料中的可用联系信息。",
-            href: "https://github.com/Oracle0703"
+            href: siteIdentity.githubUrl
           }
         ],
         responseExpectation:
@@ -505,7 +515,7 @@ export const messages = {
       }
     },
     seo: {
-      siteName: "Meaningful · Ink",
+      siteName: siteIdentity.brandName,
       defaultTitle: "AI 工程与产品体验",
       defaultDescription: "专注 AI 工程与产品体验，用 Next.js、TypeScript 与 Node.js 构建可运行、可验证的产品原型。",
       homeTitle: "AI 工程与产品体验",
@@ -522,28 +532,36 @@ export const messages = {
       freeQueryDescription: "按城市查询当前天气、未来 3 天预报与空气质量。",
       trackerTitle: "打卡平台",
       trackerDescription: "追踪习惯，沉淀成长数据。",
-      aboutTitle: "关于我",
-      aboutDescription: "了解我如何构建 AI 工具、内容系统、后台控制台和产品原型。",
-      contactTitle: "联系我",
+      aboutTitle: `关于 ${siteIdentity.personName}`,
+      aboutDescription: `了解 ${siteIdentity.personName} 如何构建 AI 工具、内容系统、后台控制台和产品原型。`,
+      contactTitle: `联系 ${siteIdentity.personName}`,
       contactDescription: "围绕 AI 应用原型、个人网站工程化、内容系统和小产品落地发起沟通。",
       jsonLd: {
-        siteDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。",
-        jobTitle: "全栈开发者"
+        siteDescription: "展示 AI 工具、内容系统、后台控制台和产品原型的个人开发者网站。"
       }
     }
   },
   en: {
     ...shellMessages.en,
     home: {
-      heroEyebrow: "AI Product Engineering · Independent Full-Stack",
+      heroEyebrow: `${siteIdentity.personName} · ${siteIdentity.byLocale.en.role}`,
       heroTitle: "Turning complex ideas into clear, useful products.",
-      heroSubtitle: "Independent full-stack developer focused on AI applications, product experience, and systems built to evolve.",
+      heroSubtitle: siteIdentity.byLocale.en.positioning,
       heroIntro:
         "From framing the problem and shaping the interaction to shipping and validation, I use Next.js, TypeScript, and Node.js to connect product judgment with implementation.",
       ctaEnter: "View projects",
       ctaBlog: "Read the Blog",
-      ctaProjects: "View projects",
-      ctaContact: "Contact me",
+      ctaProjects: "View flagship case",
+      ctaContact: "Start a project conversation",
+      heroProof: {
+        title: "Verifiable site evidence",
+        projectsLabel: "Public project cases",
+        projectsUnit: "cases",
+        demosLabel: "Working entry points",
+        demosUnit: "demos",
+        deliveryLabel: "Delivery baseline",
+        deliveryValue: "Bilingual static pages · content validation · browser checks"
+      },
       heroEvidenceTitle: "Current proof chain",
       heroEvidenceItems: [
         {
@@ -571,7 +589,7 @@ export const messages = {
         "The AI page analysis assistant is moving from a demo into an MVP: inputs, diagnosis, recommendations, and backlog first, then real crawling and model analysis.",
       currentFocusMeta: "Prototype · AI Tool",
       currentFocusHref: "/ai-page-analysis",
-      currentFocusAction: "View current prototype",
+      currentFocusAction: "View case evidence",
       featuredProjectsTitle: "Featured projects",
       featuredProjectsDescription: "A few evolving projects, from product judgment through engineering delivery.",
       featuredSeriesTitle: "Recommended series",
@@ -835,10 +853,10 @@ export const messages = {
         description: "Track habits and learning progress."
       },
       about: {
-        eyebrow: "About",
-        title: "About",
+        eyebrow: `${siteIdentity.personName} · About`,
+        title: `About ${siteIdentity.personName}`,
         description:
-          "I work across the path from product questions to running software: shape the problem, build a testable prototype, then harden the system so it can keep evolving.",
+          `I'm ${siteIdentity.personName}. ${siteIdentity.brandName} is my personal site for public work and engineering notes: I shape product questions into testable prototypes, then harden the systems so they can keep evolving.`,
         sections: [
           {
             title: "Background",
@@ -864,8 +882,8 @@ export const messages = {
         ]
       },
       contact: {
-        eyebrow: "Contact",
-        title: "Contact",
+        eyebrow: `${siteIdentity.personName} · Contact`,
+        title: `Contact ${siteIdentity.personName}`,
         description:
           "Reach out for focused product and engineering work where the goal, constraints, deliverables, and timeline can be made explicit.",
         collaborationTitle: "Good fit",
@@ -904,7 +922,7 @@ export const messages = {
           {
             label: "GitHub profile",
             description: "If the form is temporarily unavailable, review public repositories and any contact details listed on the profile.",
-            href: "https://github.com/Oracle0703"
+            href: siteIdentity.githubUrl
           }
         ],
         responseExpectation:
@@ -1033,7 +1051,7 @@ export const messages = {
       }
     },
     seo: {
-      siteName: "Meaningful · Ink",
+      siteName: siteIdentity.brandName,
       defaultTitle: "AI Engineering and Product Experience",
       defaultDescription: "A full-stack developer building working, testable AI products with Next.js, TypeScript, and Node.js.",
       homeTitle: "AI Engineering and Product Experience",
@@ -1050,13 +1068,12 @@ export const messages = {
       freeQueryDescription: "Look up current weather, a three-day forecast, and air quality by city.",
       trackerTitle: "Tracker",
       trackerDescription: "Track habits and learning progress.",
-      aboutTitle: "About",
-      aboutDescription: "How I build AI tools, content systems, dashboards, and product prototypes.",
-      contactTitle: "Contact",
+      aboutTitle: `About ${siteIdentity.personName}`,
+      aboutDescription: `How ${siteIdentity.personName} builds AI tools, content systems, dashboards, and product prototypes.`,
+      contactTitle: `Contact ${siteIdentity.personName}`,
       contactDescription: "Start a focused conversation about AI prototypes, site engineering, content systems, or small product delivery.",
       jsonLd: {
-        siteDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes.",
-        jobTitle: "Full-Stack Developer"
+        siteDescription: "A personal developer site for AI tools, content systems, dashboards, and product prototypes."
       }
     }
   }

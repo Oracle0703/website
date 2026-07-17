@@ -5,9 +5,10 @@ import { useI18n } from "./language-provider";
 import { getLocalePath } from "../lib/locale-routing";
 import { getShellMessages } from "../lib/i18n-shell";
 import { PwaControls } from "./pwa-controls";
+import { siteIdentity } from "../lib/site-identity";
 
 const socialLinks = [
-  { href: "https://github.com/Oracle0703", label: "GitHub" }
+  { href: siteIdentity.githubUrl, label: `GitHub ${siteIdentity.githubHandle}` }
 ];
 
 export function SiteFooter() {
