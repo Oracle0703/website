@@ -593,9 +593,9 @@ test("captures a deterministic Timestamp Tool evidence image", async ({ page }, 
   const tool = page.locator("#timestamp-tool");
   await expect(tool).toBeVisible();
 
-  await page.getByLabel("Input time").fill("2026-02-11T12:34");
-  await page.getByLabel("Input timestamp").fill("1700000000");
-  await page.getByLabel("Unit").selectOption("seconds");
+  await page.getByLabel("Input time", { exact: true }).fill("2026-02-11T12:34");
+  await page.getByLabel("Input timestamp", { exact: true }).fill("1700000000");
+  await page.getByLabel("Unit", { exact: true }).selectOption("seconds");
   await page.getByRole("button", { name: "UTC", exact: true }).click();
 
   await expect(tool).toContainText("2023-11-14 22:13:20");
@@ -622,7 +622,10 @@ test("Timestamp Tool reports a failed clipboard fallback truthfully", async ({ p
   await page.goto("/en/labs#timestamp-tool");
   const tool = page.locator("#timestamp-tool");
   await expect(tool).toBeVisible();
-  const secondsRow = tool.getByText("Seconds timestamp").locator("..");
+  const conversionPanel = tool.getByText("Time → Timestamp", { exact: true }).locator("..");
+  const secondsRow = conversionPanel
+    .getByText("Seconds timestamp", { exact: true })
+    .locator("..");
   await expect(secondsRow).toContainText(/\d{10}/);
   await secondsRow.getByRole("button").click();
 
