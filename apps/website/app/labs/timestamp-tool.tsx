@@ -383,8 +383,8 @@ export function TimestampTool() {
               className="w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-hidden transition focus:border-accent focus:ring-2 focus:ring-accent/20"
               placeholder="1700000000"
             />
-            <label htmlFor="timestamp-unit-select" className={`flex items-center gap-2 ${EYEBROW_SECONDARY}`}>
-              {copy.unitLabel}
+            <div className={`flex items-center gap-2 ${EYEBROW_SECONDARY}`}>
+              <label htmlFor="timestamp-unit-select">{copy.unitLabel}</label>
               <select
                 id="timestamp-unit-select"
                 value={timestampUnit}
@@ -394,7 +394,7 @@ export function TimestampTool() {
                 <option value="seconds">{copy.secondsUnit}</option>
                 <option value="milliseconds">{copy.millisecondsUnit}</option>
               </select>
-            </label>
+            </div>
           </div>
           <div className="mt-4 space-y-2 text-sm text-muted">
             <div className="flex items-center justify-between">
