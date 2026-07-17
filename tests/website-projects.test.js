@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const sharp = require('sharp');
 
 const root = process.cwd();
 
@@ -174,6 +175,55 @@ test('D6 project model carries an explicit public asset strategy for every proje
       assert.ok(project.entry.demo.reason, `${project.slug} unavailable demo should explain why`);
     }
   }
+});
+
+test('all five primary project assets are public, visual, and repository-backed', async () => {
+  const { getAllProjects, getProjectView } = await importFresh('apps/website/lib/projects.ts');
+  const projects = getAllProjects();
+
+  assert.equal(projects.length, 5);
+
+  for (const project of projects) {
+    for (const [locale, asset] of [
+      ['zh', project.asset],
+      ['en', getProjectView(project, 'en').asset]
+    ]) {
+      assert.ok(
+        ['screenshot', 'mock', 'diagram'].includes(asset.kind),
+        `${project.slug} ${locale} primary asset should be visual`
+      );
+      assert.match(asset.src, /^\/projects\//, `${project.slug} ${locale} should use a project asset path`);
+      assert.ok(
+        exists(path.join('apps/website/public', asset.src.slice(1))),
+        `${project.slug} ${locale} primary asset should exist in public/projects`
+      );
+    }
+  }
+});
+
+test('Timestamp Tool publishes the reviewed browser capture and a 16:9 article cover', async () => {
+  const screenshotPath = 'apps/website/public/projects/timestamp-tool-screenshot.png';
+  const coverPath = 'apps/website/public/blog/timestamp-tool-evidence-cover.png';
+  const screenshotMetadata = await sharp(path.join(root, screenshotPath)).metadata();
+  const coverMetadata = await sharp(path.join(root, coverPath)).metadata();
+  const article = read('content/blog/2026-02-11-timestamp-tool-retrospective-timezone-precision-ux.mdx');
+  const { getAllProjects, getProjectView } = await importFresh('apps/website/lib/projects.ts');
+  const project = getAllProjects().find(({ slug }) => slug === 'timestamp-tool');
+
+  assert.ok(project, 'Timestamp Tool project should exist');
+  assert.equal(project.asset.kind, 'screenshot');
+  assert.equal(project.asset.src, '/projects/timestamp-tool-screenshot.png');
+  assert.equal(getProjectView(project, 'en').asset.kind, 'screenshot');
+  assert.equal(screenshotMetadata.format, 'png');
+  assert.equal(screenshotMetadata.width, 1104);
+  assert.equal(screenshotMetadata.height, 429);
+  assert.ok(fs.statSync(path.join(root, screenshotPath)).size < 100_000);
+
+  assert.equal(coverMetadata.format, 'png');
+  assert.equal(coverMetadata.width, 1200);
+  assert.equal(coverMetadata.height, 675);
+  assert.match(article, /src: "\/blog\/timestamp-tool-evidence-cover\.png"/);
+  assert.match(article, /width: 1200\s+height: 675/);
 });
 
 test('Knock and Dashboard publish accessible, privacy-safe current architecture diagrams', async () => {
