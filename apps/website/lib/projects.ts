@@ -321,9 +321,11 @@ export const projects: Project[] = [
       { label: "运营价值", value: "可作为 Dashboard Console 的运行摘要来源" }
     ],
     asset: {
-      kind: "none",
-      reason: "访问日志可能包含 IP、请求路径和运行时间线，当前不公开原始监控截图。",
-      nextAssetStep: "先生成脱敏运行摘要或架构图，再作为公开资产补充到项目详情。"
+      kind: "diagram",
+      src: "/projects/knock-architecture.svg",
+      alt: "Knock 当前架构：Nginx 日志经增量读取和解析后写入 SQLite WAL，再由 Express API 提供给受保护界面",
+      caption:
+        "仅展示当前已实现的单机数据流与 Basic Auth，不含真实日志；Dashboard 摘要和告警标为 roadmap。"
     },
     gallery: [
       {
@@ -402,9 +404,11 @@ export const projects: Project[] = [
       { label: "扩展方向", value: "后续可承接内容运营、部署记录和 Knock 摘要" }
     ],
     asset: {
-      kind: "none",
-      reason: "内部控制台可能包含任务、日志、OSS 对象和部署状态，不适合直接公开截图。",
-      nextAssetStep: "先裁剪敏感字段或制作公开架构图，再进入项目资产展示。"
+      kind: "diagram",
+      src: "/projects/dashboard-console-architecture.svg",
+      alt: "Dashboard Console 当前架构：管理员 JWT 与自动 ingest 分路进入 API，再读写带 ETag 边界的 OSS JSON",
+      caption:
+        "仅展示当前已实现的双鉴权、存储与一致性边界，不含真实标识或运营数据；内容编辑、部署记录和 Knock 摘要标为 roadmap。"
     },
     gallery: [
       {
@@ -490,9 +494,9 @@ export const projects: Project[] = [
     gallery: [
       {
         kind: "doc",
-        label: "查看实现复盘草稿",
+        label: "查看实现复盘文章",
         href: "https://github.com/Oracle0703/website/blob/main/content/blog/2026-02-11-timestamp-tool-retrospective-timezone-precision-ux.mdx",
-        description: "仓库草稿记录时区、秒/毫秒精度、复制反馈和输入边界的设计考虑。"
+        description: "公开文章记录时区、秒/毫秒精度、复制反馈和输入边界的设计考虑。"
       }
     ],
     architecture:
@@ -723,9 +727,11 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       { label: "Operations value", value: "It can become a runtime summary source for Dashboard Console" }
     ],
     asset: {
-      kind: "none",
-      reason: "Access logs can expose IPs, request paths, and runtime timelines, so raw monitoring screenshots are not public.",
-      nextAssetStep: "Publish a redacted runtime summary or architecture diagram before adding a visual asset."
+      kind: "diagram",
+      src: "/projects/knock-architecture.svg",
+      alt: "Current Knock architecture: an Nginx log flows through incremental ingest, parsing, SQLite WAL storage, and an Express API into a protected monitoring interface",
+      caption:
+        "Architecture diagram: only the implemented single-machine data flow and Basic Auth boundary are shown, with no real IPs, request paths, or logs. Dashboard summaries and alert signals are explicitly marked as roadmap work."
     },
     gallery: [
       {
@@ -799,9 +805,11 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       { label: "Expansion path", value: "The console can host content operations, deployment records, and Knock summaries" }
     ],
     asset: {
-      kind: "none",
-      reason: "The internal console can include tasks, logs, object storage state, and deployment signals that should not be exposed directly.",
-      nextAssetStep: "Redact sensitive fields or publish an architecture diagram before showing it as a public asset."
+      kind: "diagram",
+      src: "/projects/dashboard-console-architecture.svg",
+      alt: "Current Dashboard Console architecture: separate administrator JWT and automated ingest paths reach dashboard-api, which reads and writes OSS JSON objects with ETag boundaries",
+      caption:
+        "Architecture diagram: the implemented dual-authentication paths, API, OSS JSON storage, and consistency boundaries are shown without real buckets, domains, credentials, or operations data. Content editing, deployment records, and Knock summaries are explicitly marked as roadmap work."
     },
     gallery: [
       {
@@ -882,9 +890,9 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
     gallery: [
       {
         kind: "doc",
-        label: "Read the implementation retrospective draft",
+        label: "Read the implementation retrospective",
         href: "https://github.com/Oracle0703/website/blob/main/content/blog/2026-02-11-timestamp-tool-retrospective-timezone-precision-ux.mdx",
-        description: "This repository draft records decisions around timezone display, seconds and milliseconds, copy feedback, and input boundaries."
+        description: "This published article records decisions around timezone display, seconds and milliseconds, copy feedback, and input boundaries."
       }
     ],
     architecture:

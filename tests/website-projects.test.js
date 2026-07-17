@@ -176,6 +176,63 @@ test('D6 project model carries an explicit public asset strategy for every proje
   }
 });
 
+test('Knock and Dashboard publish accessible, privacy-safe current architecture diagrams', async () => {
+  const diagrams = [
+    {
+      slug: 'knock',
+      relPath: 'apps/website/public/projects/knock-architecture.svg',
+      sourcePath: '/projects/knock-architecture.svg',
+      implementedSignals: [/Incremental reader/, /SQLite WAL/, /Express API/, /Basic Auth when exposed/],
+      roadmapSignals: [/ROADMAP · NOT IMPLEMENTED HERE/, /Dashboard summaries/, /alert signals/]
+    },
+    {
+      slug: 'dashboard-console',
+      relPath: 'apps/website/public/projects/dashboard-console-architecture.svg',
+      sourcePath: '/projects/dashboard-console-architecture.svg',
+      implementedSignals: [/bearer JWT/, /INGEST_TOKEN/, /OSS JSON objects/, /If-Match → 409/, /idempotency key/],
+      roadmapSignals: [/ROADMAP · NOT IMPLEMENTED/, /Content editing/, /Deployment records/, /Knock summaries/]
+    }
+  ];
+
+  const { getAllProjects, getProjectView } = await importFresh('apps/website/lib/projects.ts');
+  const projectsBySlug = new Map(getAllProjects().map((project) => [project.slug, project]));
+
+  for (const diagram of diagrams) {
+    assert.ok(exists(diagram.relPath), `${diagram.slug} diagram should exist`);
+    const source = read(diagram.relPath);
+
+    assert.match(source, /<svg\b[^>]*\brole="img"/);
+    const labelledBy = source.match(/<svg\b[^>]*\baria-labelledby="([^"]+)"/)?.[1];
+    assert.ok(labelledBy, `${diagram.slug} diagram should connect its accessible name and description`);
+    const labelledIds = labelledBy.split(/\s+/);
+    assert.equal(labelledIds.length, 2, `${diagram.slug} diagram should reference title and desc ids`);
+    assert.match(source, new RegExp(`<title id="${labelledIds[0]}">[^<]+<\\/title>`));
+    assert.match(source, new RegExp(`<desc id="${labelledIds[1]}">[^<]{80,}<\\/desc>`));
+
+    for (const signal of [...diagram.implementedSignals, ...diagram.roadmapSignals]) {
+      assert.match(source, signal, `${diagram.slug} diagram should keep current and roadmap claims explicit`);
+    }
+
+    assert.doesNotMatch(source, /<script\b|<foreignObject\b/i);
+    assert.doesNotMatch(source, /(?:href|src)=["']https?:/i);
+    assert.doesNotMatch(source, /meaningful\.ink|localhost|(?:\d{1,3}\.){3}\d{1,3}|[A-Za-z]:\\/i);
+    assert.doesNotMatch(source, /(?:password|secret|access[_-]?key)\s*[:=]|BEGIN [A-Z ]*PRIVATE KEY/i);
+    assert.doesNotMatch(source, /KNOCK_LOG_PATH\s*=|DASHBOARD_OSS_BUCKET\s*=/);
+
+    const project = projectsBySlug.get(diagram.slug);
+    assert.ok(project, `${diagram.slug} project should exist`);
+    assert.equal(project.asset.kind, 'diagram');
+    assert.equal(project.asset.src, diagram.sourcePath);
+    assert.match(project.asset.caption, /当前已实现|roadmap/i);
+
+    const englishView = getProjectView(project, 'en');
+    assert.equal(englishView.asset.kind, 'diagram');
+    assert.equal(englishView.asset.src, diagram.sourcePath);
+    assert.match(englishView.asset.caption, /implemented/);
+    assert.match(englishView.asset.caption, /roadmap/);
+  }
+});
+
 test('AI project evidence matches the implemented safe capture and Safe Mock boundary', () => {
   const projectsSource = read('apps/website/lib/projects.ts');
   const mockSource = read('apps/website/public/projects/ai-page-analysis-product-mock.svg');

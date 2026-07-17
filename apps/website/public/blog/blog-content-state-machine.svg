@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Blog content publishing state machine</title>
+  <desc id="desc">An MDX record passes through validation, publication state, and locale availability before feeding localized routes, metadata, sitemap, and search.</desc>
+  <defs>
+    <linearGradient id="background" x1="72" y1="46" x2="1128" y2="584" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08111f"/>
+      <stop offset="1" stop-color="#102a43"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#f4f7fb"/>
+  <rect x="38" y="34" width="1124" height="562" rx="34" fill="url(#background)"/>
+
+  <text x="82" y="94" fill="#7dd3fc" font-family="Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="3">MEANINGFUL INK / CONTENT ENGINEERING</text>
+  <text x="82" y="142" fill="#f8fafc" font-family="Arial, sans-serif" font-size="34" font-weight="700">From MDX record to public discovery</text>
+  <text x="82" y="176" fill="#a9bfd5" font-family="Arial, sans-serif" font-size="18">One reviewed content contract, three explicit gates, four derived surfaces.</text>
+
+  <g transform="translate(82 226)">
+    <rect width="196" height="210" rx="22" fill="#f8fafc"/>
+    <rect x="18" y="18" width="160" height="34" rx="10" fill="#e0f2fe"/>
+    <text x="34" y="41" fill="#075985" font-family="Arial, sans-serif" font-size="15" font-weight="700">MDX RECORD</text>
+    <text x="24" y="84" fill="#0f172a" font-family="Arial, sans-serif" font-size="17" font-weight="700">Frontmatter</text>
+    <text x="24" y="111" fill="#475569" font-family="Arial, sans-serif" font-size="14">title / slug / dates</text>
+    <text x="24" y="136" fill="#475569" font-family="Arial, sans-serif" font-size="14">status / locale</text>
+    <text x="24" y="161" fill="#475569" font-family="Arial, sans-serif" font-size="14">cover / SEO / links</text>
+    <rect x="24" y="181" width="116" height="7" rx="3.5" fill="#bae6fd"/>
+  </g>
+
+  <g fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M292 331h46"/>
+    <path d="m330 322 9 9-9 9"/>
+  </g>
+
+  <g transform="translate(354 226)">
+    <rect width="214" height="210" rx="22" fill="#122e48" stroke="#29567a"/>
+    <circle cx="35" cy="36" r="15" fill="#0ea5e9"/>
+    <path d="m28 36 5 5 9-11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="61" y="42" fill="#f8fafc" font-family="Arial, sans-serif" font-size="17" font-weight="700">Validation gate</text>
+    <text x="24" y="85" fill="#b8ccde" font-family="Arial, sans-serif" font-size="14">schema and dates</text>
+    <text x="24" y="111" fill="#b8ccde" font-family="Arial, sans-serif" font-size="14">cover and image alt</text>
+    <text x="24" y="137" fill="#b8ccde" font-family="Arial, sans-serif" font-size="14">slug and series order</text>
+    <text x="24" y="163" fill="#b8ccde" font-family="Arial, sans-serif" font-size="14">related-post integrity</text>
+    <rect x="24" y="184" width="166" height="6" rx="3" fill="#29567a"/>
+  </g>
+
+  <g fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M582 331h46"/>
+    <path d="m620 322 9 9-9 9"/>
+  </g>
+
+  <g transform="translate(644 226)">
+    <rect width="214" height="210" rx="22" fill="#122e48" stroke="#29567a"/>
+    <rect x="22" y="21" width="170" height="35" rx="10" fill="url(#accent)"/>
+    <text x="40" y="44" fill="#fff" font-family="Arial, sans-serif" font-size="15" font-weight="700">PUBLICATION STATE</text>
+    <circle cx="35" cy="91" r="7" fill="#64748b"/>
+    <text x="52" y="97" fill="#b8ccde" font-family="Arial, sans-serif" font-size="14">draft</text>
+    <circle cx="35" cy="122" r="7" fill="#f59e0b"/>
+    <text x="52" y="128" fill="#b8ccde" font-family="Arial, sans-serif" font-size="14">scheduled</text>
+    <circle cx="35" cy="153" r="7" fill="#22c55e"/>
+    <text x="52" y="159" fill="#f8fafc" font-family="Arial, sans-serif" font-size="14" font-weight="700">published</text>
+    <circle cx="35" cy="184" r="7" fill="#475569"/>
+    <text x="52" y="190" fill="#b8ccde" font-family="Arial, sans-serif" font-size="14">archived</text>
+  </g>
+
+  <g fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M872 331h46"/>
+    <path d="m910 322 9 9-9 9"/>
+  </g>
+
+  <g transform="translate(934 226)">
+    <rect width="184" height="210" rx="22" fill="#f8fafc"/>
+    <text x="22" y="42" fill="#0f172a" font-family="Arial, sans-serif" font-size="17" font-weight="700">Locale gate</text>
+    <rect x="22" y="68" width="140" height="42" rx="12" fill="#e0f2fe"/>
+    <text x="40" y="95" fill="#075985" font-family="Arial, sans-serif" font-size="14" font-weight="700">ROOT / ZH</text>
+    <rect x="22" y="124" width="140" height="42" rx="12" fill="#e0e7ff"/>
+    <text x="40" y="151" fill="#3730a3" font-family="Arial, sans-serif" font-size="14" font-weight="700">/EN / ENGLISH</text>
+    <text x="22" y="193" fill="#64748b" font-family="Arial, sans-serif" font-size="12">availability is explicit</text>
+  </g>
+
+  <g transform="translate(82 478)">
+    <rect width="1036" height="74" rx="20" fill="#0c2136" stroke="#29567a"/>
+    <text x="28" y="31" fill="#7dd3fc" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2">DERIVED OUTPUTS</text>
+    <g font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#f8fafc">
+      <text x="28" y="56">Localized routes</text>
+      <text x="274" y="56">Metadata + JSON-LD</text>
+      <text x="584" y="56">Sitemap</text>
+      <text x="796" y="56">Search + related reading</text>
+    </g>
+    <g fill="#38bdf8">
+      <circle cx="250" cy="51" r="3"/>
+      <circle cx="560" cy="51" r="3"/>
+      <circle cx="772" cy="51" r="3"/>
+    </g>
+  </g>
+</svg>

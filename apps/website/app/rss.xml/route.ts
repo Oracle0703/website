@@ -1,4 +1,4 @@
-import { getPublishedPosts } from "../../lib/blog";
+import { getPublishedPostsForLocale } from "../../lib/blog";
 import { defaultLocale, getMessages } from "../../lib/i18n";
 import { renderRssFeed } from "../../lib/rss.mjs";
 import { toAbsoluteUrl } from "../../lib/site-url";
@@ -7,7 +7,9 @@ export const dynamic = "force-static";
 
 export function GET() {
   const { seo } = getMessages(defaultLocale);
-  const posts = getPublishedPosts().filter((post) => !post.seo?.noindex);
+  const posts = getPublishedPostsForLocale(defaultLocale).filter(
+    (post) => !post.seo?.noindex
+  );
   const xml = renderRssFeed({
     title: `${seo.siteName} RSS`,
     description: seo.defaultDescription,

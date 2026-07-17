@@ -571,6 +571,31 @@ test("free query lab selects a location and refreshes results when units change"
   await expectNoBrowserErrors(page);
 });
 
+test("captures a deterministic Timestamp Tool evidence image", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "website-desktop", "One desktop evidence asset is enough.");
+
+  await page.goto("/en/labs#timestamp-tool");
+  const tool = page.locator("#timestamp-tool");
+  await expect(tool).toBeVisible();
+
+  await page.getByLabel("Input time").fill("2026-02-11T12:34");
+  await page.getByLabel("Input timestamp").fill("1700000000");
+  await page.getByLabel("Unit").selectOption("seconds");
+  await page.getByRole("button", { name: "UTC", exact: true }).click();
+  await page.getByRole("button", { name: "Show local" }).click();
+
+  await expect(tool).toContainText("2023-11-14 22:13:20");
+  await tool.locator(":scope > div").last().evaluate((element) => {
+    (element as HTMLElement).style.display = "none";
+  });
+
+  await tool.screenshot({
+    path: "test-results/evidence/timestamp-tool.png",
+    animations: "disabled"
+  });
+  await expectNoBrowserErrors(page);
+});
+
 test("project detail evidence sections are visible", async ({ page }) => {
   await page.goto("/en/projects/ai-page-analysis");
 

@@ -175,6 +175,19 @@ test("browser verification covers D3 routes, console errors, preferences, and sc
   assert.match(source, /toHaveScreenshot/);
 });
 
+test("browser verification captures and uploads deterministic project evidence", () => {
+  const spec = read("tests/website-browser-static.spec.ts");
+  const workflow = read(".github/workflows/website-ci.yml");
+
+  assert.match(spec, /captures a deterministic Timestamp Tool evidence image/);
+  assert.match(spec, /2026-02-11T12:34/);
+  assert.match(spec, /1700000000/);
+  assert.match(spec, /test-results\/evidence\/timestamp-tool\.png/);
+  assert.match(workflow, /Upload browser evidence/);
+  assert.match(workflow, /website-browser-evidence/);
+  assert.match(workflow, /test-results\/evidence\/\*\.png/);
+});
+
 test("static rendering document records the browser verifier", () => {
   const source = read("docs/website/STATIC_RENDERING_SPIKE.md");
 

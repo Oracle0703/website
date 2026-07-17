@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import type { BlogPost } from "../../../lib/blog";
 import type { BlogSeries } from "../../../lib/blog-series";
-import { getPublishedPosts } from "../../../lib/blog";
-import { getPublishedSeries } from "../../../lib/blog-series";
+import { getPublishedPostsForLocale } from "../../../lib/blog";
+import { getPublishedSeriesForLocale } from "../../../lib/blog-series";
 import { defaultLocale, getMessages } from "../../../lib/i18n";
 import { getLanguageAlternates } from "../../../lib/seo";
 import { toAbsoluteUrl } from "../../../lib/site-url";
@@ -64,8 +64,8 @@ function mapSeriesForList(series: BlogSeries): BlogListSeries {
 }
 
 export default function Page() {
-  const posts = getPublishedPosts().map(mapPostForList);
-  const series = getPublishedSeries().map(mapSeriesForList);
+  const posts = getPublishedPostsForLocale(defaultLocale).map(mapPostForList);
+  const series = getPublishedSeriesForLocale(defaultLocale).map(mapSeriesForList);
   const { pages } = getMessages(defaultLocale);
 
   return (

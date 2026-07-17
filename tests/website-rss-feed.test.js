@@ -71,12 +71,13 @@ test("RSS renderer rejects relative item URLs", async () => {
   );
 });
 
-test("RSS route uses published indexable posts and exposes feed discovery metadata", () => {
+test("RSS route uses default-locale published posts and exposes feed discovery metadata", () => {
   const routeSource = read("apps/website/app/rss.xml/route.ts");
   const rootMetadataSource = read("apps/website/lib/root-metadata.ts");
   const seoSource = read("apps/website/lib/seo.ts");
 
-  assert.match(routeSource, /getPublishedPosts\(\)\.filter\(\(post\) => !post\.seo\?\.noindex\)/);
+  assert.match(routeSource, /getPublishedPostsForLocale\(defaultLocale\)\.filter\(/);
+  assert.doesNotMatch(routeSource, /getPublishedPosts\(\)/);
   assert.match(routeSource, /toAbsoluteUrl\(`\/blog\/\$\{encodeURIComponent\(post\.slug\)\}`\)/);
   assert.match(routeSource, /renderRssFeed/);
   assert.match(routeSource, /categories:\s*post\.category\s*\?\s*\[post\.category\]/);
@@ -84,4 +85,23 @@ test("RSS route uses published indexable posts and exposes feed discovery metada
   assert.match(routeSource, /export const dynamic = "force-static"/);
   assert.match(rootMetadataSource, /"application\/rss\+xml": `\$\{baseUrl\}\/rss\.xml`/);
   assert.match(seoSource, /"application\/rss\+xml": toAbsoluteUrl\("\/rss\.xml"\)/);
+});
+
+test("Chinese RSS cannot include native English-only article URLs", () => {
+  const routeSource = read("apps/website/app/rss.xml/route.ts");
+  const contentModelPost = read(
+    "content/blog/2026-02-11-blog-content-model-state-machine.mdx"
+  );
+  const timestampPost = read(
+    "content/blog/2026-02-11-timestamp-tool-retrospective-timezone-precision-ux.mdx"
+  );
+
+  assert.match(routeSource, /getPublishedPostsForLocale\(defaultLocale\)/);
+  assert.match(routeSource, /toAbsoluteUrl\(`\/blog\//);
+  assert.doesNotMatch(routeSource, /toAbsoluteUrl\(`\/en\/blog\//);
+
+  for (const source of [contentModelPost, timestampPost]) {
+    assert.match(source, /^locale: "en"$/m);
+    assert.match(source, /^availableLocales: \["en"\]$/m);
+  }
 });

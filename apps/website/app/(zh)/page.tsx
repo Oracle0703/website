@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HomePageClient } from "../../components/home/home-page-client";
 import { defaultLocale, getMessages } from "../../lib/i18n";
-import { getPublishedPosts } from "../../lib/blog";
+import { getPublishedPostsForLocale } from "../../lib/blog";
 import { getFeaturedProjectViews, getProjectViews } from "../../lib/projects";
 import { getJsonLdLanguage, getLanguageAlternates } from "../../lib/seo";
 import { toAbsoluteUrl } from "../../lib/site-url";
@@ -38,7 +38,7 @@ export default function HomePage() {
     projectCount: projectViews.length,
     demoCount: projectViews.filter((project) => project.entry.demo.status === "available").length
   };
-  const latestBlogItems = getPublishedPosts()
+  const latestBlogItems = getPublishedPostsForLocale(defaultLocale)
     .slice(0, 3)
     .map((post) => ({
       title: post.title,
