@@ -26,7 +26,7 @@ export default defineConfig({
     screenshot: "only-on-failure"
   },
   webServer: {
-    command: `npm run build:website && cd apps/website && npx next start -p ${verifyPort}`,
+    command: `npm run build:website && cd apps/website && npx next start -H 127.0.0.1 -p ${verifyPort}`,
     url: verifyBaseUrl,
     reuseExistingServer: false,
     timeout: 120_000

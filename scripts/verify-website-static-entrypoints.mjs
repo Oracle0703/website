@@ -94,6 +94,33 @@ async function verifySecurityHeaders(pathname = "/") {
       fail(`${pathname} permissions-policy is missing ${directive}`);
     }
   }
+
+  if (response.headers.has("x-powered-by")) {
+    fail(`${pathname} exposes the x-powered-by implementation header`);
+  }
+}
+
+async function verifyApiBoundary(pathname = "/api/analyze/healthz") {
+  const response = await fetch(new URL(pathname, baseUrl), {
+    headers: {
+      "user-agent": "website-static-entrypoint-verifier"
+    }
+  });
+
+  if (!response.ok) {
+    fail(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  if (response.headers.get("x-robots-tag") !== "noindex, nofollow") {
+    fail(`${pathname} must return X-Robots-Tag: noindex, nofollow`);
+  }
+
+  const cacheControl = response.headers.get("cache-control") ?? "";
+  for (const directive of ["private", "no-store"]) {
+    if (!cacheControl.toLowerCase().includes(directive)) {
+      fail(`${pathname} cache-control is missing ${directive}`);
+    }
+  }
 }
 
 async function waitForServer() {
@@ -131,14 +158,18 @@ async function startServerIfNeeded() {
   });
   baseUrl = `http://127.0.0.1:${port}`;
 
-  serverProcess = spawn(process.execPath, [nextCliPath, "start", "-p", String(port)], {
-    cwd: `${root}/apps/website`,
-    env: {
-      ...process.env,
-      PORT: String(port)
-    },
-    stdio: ["ignore", "pipe", "pipe"]
-  });
+  serverProcess = spawn(
+    process.execPath,
+    [nextCliPath, "start", "-H", "127.0.0.1", "-p", String(port)],
+    {
+      cwd: `${root}/apps/website`,
+      env: {
+        ...process.env,
+        PORT: String(port)
+      },
+      stdio: ["ignore", "pipe", "pipe"]
+    }
+  );
 
   serverProcess.stdout.on("data", (chunk) => {
     const output = String(chunk);
@@ -372,6 +403,9 @@ async function main() {
   if (!robotsText.includes(`${siteBaseUrl}/sitemap.xml`)) {
     fail("robots.txt does not point to the production sitemap URL");
   }
+  if (!robotsText.includes("Disallow: /api/")) {
+    fail("robots.txt must disallow API routes");
+  }
 
   const sitemap = await fetchPublicAsset("/sitemap.xml", /^(application|text)\/(xml|[^;]+\+xml)/i);
   const sitemapText = await sitemap.text();
@@ -476,6 +510,7 @@ async function main() {
   }
 
   await verifySecurityHeaders();
+  await verifyApiBoundary();
 
   await verifyScriptBundles(scriptSources);
 

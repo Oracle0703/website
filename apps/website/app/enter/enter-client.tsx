@@ -1,6 +1,6 @@
 "use client";
 
-import type { MouseEvent, SVGProps } from "react";
+import type { MouseEvent, ReactElement, SVGProps } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -25,7 +25,7 @@ type Entry = {
   title: string;
   subtitle: string;
   href: string;
-  Icon: (props: SVGProps<SVGSVGElement>) => JSX.Element;
+  Icon: (props: SVGProps<SVGSVGElement>) => ReactElement;
 };
 
 const BlogIcon = (props: SVGProps<SVGSVGElement>) => (

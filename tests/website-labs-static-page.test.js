@@ -19,7 +19,7 @@ test('labs page avoids page-level locale cookie reads', () => {
   assert.match(pageSource, /getMessages\(defaultLocale\)/);
   assert.match(pageSource, /<LabsClient locale=\{defaultLocale\} copy=\{pages\.labs\} common=\{pages\.common\} \/>/);
 
-  assert.match(clientSource, /"use client"/);
+  assert.doesNotMatch(clientSource, /["']use client["']/);
   assert.doesNotMatch(clientSource, /useI18n|getMessages\(/);
   assert.match(clientSource, /copy: Messages\["pages"\]\["labs"\]/);
   assert.match(clientSource, /common: Messages\["pages"\]\["common"\]/);
@@ -44,6 +44,8 @@ test('timestamp tool reads locale from client i18n context', () => {
   assert.match(source, /role="status"/);
   assert.match(source, /aria-live="polite"/);
   assert.match(source, /copyFailedLabel/);
+  assert.match(source, /aria-pressed=\{!isUtc\}/);
+  assert.match(source, /aria-pressed=\{isUtc\}/);
   assert.match(source, /htmlFor="timestamp-date-input"/);
   assert.match(source, /htmlFor="timestamp-value-input"/);
   assert.match(source, /htmlFor="timestamp-unit-select"/);

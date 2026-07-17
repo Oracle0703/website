@@ -791,6 +791,6 @@ test("Tracker and developer tools remain usable from the bounded offline cache",
   await expectNoBrowserErrors(page);
 });
 
-// Pixel matching via toHaveScreenshot is intentionally not the default gate. The two home
-// theme states above are attached to the Playwright report for review without committing a
-// large, brittle snapshot matrix for every route and viewport.
+// Pixel matching is intentionally not the default gate. The two home theme states above are
+// attached to the Playwright report for review without committing a large, brittle snapshot
+// matrix for every route and viewport.

@@ -27,12 +27,13 @@
 
 | 顺序 | 命令 | 通过标准 | 失败定位 |
 |---:|---|---|---|
-| 1 | `npm test` | 根测试套件全部通过 | 先看失败 test 名；静态化相关失败优先检查 `PUBLIC_WEBSITE_ROUTES`、page-level cookie 读取、metadata/canonical 护栏 |
-| 2 | `npm run validate:website-content` | published 内容无 error | 检查 frontmatter、cover alt、正文图片 alt、series order、draft 引用 |
-| 3 | `npm run audit:website-english-content` | D4 英文 route surface、ProjectView、BlogView 无中文主体泄漏，localized-source 不超过登记基线 | 检查 Projects view、Blog locale availability、AI 页面分析 copy 和 D4 localized-source 阈值 |
-| 4 | `npm run build:website` | Next.js production build exit 0 | 类型错误先修代码；路由输出变化要确认是否符合预期 |
-| 5 | `npm run verify:website-static` | 中英文公开静态入口、RSS、SEO 资源、安全响应头和 Next 静态脚本验收通过 | 如果某入口或资源 404，检查路由与构建产物；如果响应头缺失，检查 `next.config.js` 与反向代理配置；如果 hydration warning 命中，检查 provider、boot script 或 client 文案 |
-| 6 | `git diff --check` | 无 whitespace error | 修正行尾空格、文件尾空行或 patch 格式问题 |
+| 1 | `npm run audit:production` | monorepo 生产依赖无 high/critical 漏洞 | 升级直接依赖或锁定修复后的传递依赖；不要只检查单一 workspace |
+| 2 | `npm test` | 根测试套件全部通过 | 先看失败 test 名；静态化相关失败优先检查 `PUBLIC_WEBSITE_ROUTES`、page-level cookie 读取、metadata/canonical 护栏 |
+| 3 | `npm run validate:website-content` | published 内容无 error | 检查 frontmatter、cover alt、正文图片 alt、series order、draft 引用 |
+| 4 | `npm run audit:website-english-content` | D4 英文 route surface、ProjectView、BlogView 无中文主体泄漏，localized-source 不超过登记基线 | 检查 Projects view、Blog locale availability、AI 页面分析 copy 和 D4 localized-source 阈值 |
+| 5 | `npm run build:website` | Next.js production build exit 0 | 类型错误先修代码；路由输出变化要确认是否符合预期 |
+| 6 | `npm run verify:website-static` | 中英文公开静态入口、RSS、SEO 资源、安全响应头和 Next 静态脚本验收通过 | 如果某入口或资源 404，检查路由与构建产物；如果响应头缺失，检查 `next.config.js` 与反向代理配置；如果 hydration warning 命中，检查 provider、boot script 或 client 文案 |
+| 7 | `git diff --check` | 无 whitespace error | 修正行尾空格、文件尾空行或 patch 格式问题 |
 
 ## 3. 条件必跑
 
@@ -43,7 +44,7 @@
 | 改动 D5 视觉 token、首页证据链、Project evidence、Contact 转化路径、Blog detail CTA 或 AI 产品页 roadmap/limitation | `npm test` + `npm run audit:website-english-content` + `npm run verify:website-browser` | D5 静态护栏通过，英文主内容无 CJK，Contact 无占位联系方式，Project detail evidence/trade-offs/roadmap 可见，AI demo 不伪装真实生产分析 |
 | 改动 D6 项目资产、ProjectAsset 模型、项目截图、product mock 或公开资产路径 | `npm test` + `npm run validate:website-content` + `npm run audit:website-english-content` + `npm run verify:website-browser` | 每个项目有 screenshot/mock/diagram/doc/none 策略，mock 明确标记，none 有原因和下一步，英文 alt/caption/reason 无 CJK |
 | 改动 D6 Contact 真实渠道、联系闭环决策或 D7 表单规格 | `npm test` + `npm run audit:website-english-content` + `npm run verify:website-browser` | 不出现 `example.com`、`mailto:hello` 或占位邮箱；若新增真实渠道，需要确认隐私、反垃圾、失败状态和浏览器可见文案 |
-| 改动 D7 Contact API、Contact form、保存目录或通知 webhook | `npm test` + `npm run audit:website-english-content` + `npm run validate:website-content` + `npm run build:website` + `npm run verify:website-static` + `npm run verify:website-browser` | `POST /api/contact` 校验、rate limit、duplicate submit、JSONL 落盘和 `received_with_notification_failure` 状态正常；`CONTACT_SUBMISSIONS_DIR` 不指向公开目录；`CONTACT_NOTIFICATION_WEBHOOK_URL` 不在前端暴露 |
+| 改动 D7 Contact API、Contact form、保存目录或通知 webhook | `npm run audit:production` + `npm test` + `npm run audit:website-english-content` + `npm run validate:website-content` + `npm run build:website` + `npm run verify:website-static` + `npm run verify:website-browser` | `POST /api/contact` 校验、rate limit、duplicate submit、JSONL 落盘和 `received_with_notification_failure` 状态正常；生产存储是发布目录外的绝对路径；webhook 仅接受 HTTPS 且不在前端暴露 |
 | 改动 D8 Contact Operations、retention cleanup 或 storage guard | `npm test` + `npm run contact:ops -- --check-storage` + `npm run contact:ops -- --cleanup --dry-run` + `npm run build:website` + `git diff --check` | `unsafe_storage_directory` 护栏有效；cleanup dry run 不改文件；malformed JSONL 行保留；默认 retention 为 90 天 |
 | 改动 D9 AI Page Analysis API、SSRF guard、mock output schema 或前端 API 调用链 | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | `/api/analyze` 只接受 URL mode；请求体流式限制 16 KiB；默认 Safe Mock 不解析 DNS、不请求目标网站、不调用模型、不保存历史；频率与并发分别返回明确 `429`/`503` |
 | 改动 D10 AI Page Analysis capture、DNS resolver、redirect guard、size limit 或 content extraction | `npm test` + `npm run audit:website-english-content` + `npm run build:website` + `git diff --check` | 仅精确服务端开关启用；每跳解析并检查全部地址，只连接固定后的公网 IPv4；IPv6-only、转换、私网与特殊地址不作为出站目标；超限流会取消，3 次重定向、2 MiB、240 字符标题、10 秒和并发 2 上限生效 |

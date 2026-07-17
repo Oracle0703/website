@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 const { pathToFileURL } = require("node:url");
 
 const root = process.cwd();
@@ -125,6 +126,46 @@ test("D8 cleanup deletes expired records and preserves malformed lines", async (
   assert.match(updated, /not-json/);
   assert.match(updated, /contact_fresh/);
   assert.doesNotMatch(updated, /contact_old/);
+});
+
+test("V11 contact operations reject external links that resolve into a release", (t) => {
+  if (process.platform === "win32") {
+    t.skip("creating directory symlinks requires elevated Windows privileges");
+    return;
+  }
+
+  const temporaryRoot = makeTempDir();
+  const releaseRoot = path.join(temporaryRoot, "release");
+  const workingDirectory = path.join(releaseRoot, "apps", "website");
+  const protectedDirectory = path.join(releaseRoot, "data", "contact");
+  const externalParent = path.join(temporaryRoot, "external-parent");
+  const externalDirectory = path.join(externalParent, "contact");
+  fs.mkdirSync(workingDirectory, { recursive: true });
+  fs.mkdirSync(protectedDirectory, { recursive: true });
+  fs.symlinkSync(path.dirname(protectedDirectory), externalParent, "dir");
+
+  try {
+    for (const args of [["--check-storage"], ["--cleanup", "--dry-run"]]) {
+      const result = spawnSync(
+        process.execPath,
+        [path.join(root, "scripts/manage-website-contact-submissions.mjs"), ...args],
+        {
+          cwd: workingDirectory,
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            NODE_ENV: "production",
+            CONTACT_SUBMISSIONS_DIR: externalDirectory
+          }
+        }
+      );
+
+      assert.notEqual(result.status, 0, `${args.join(" ")} must reject the linked directory`);
+      assert.match(result.stdout, /unsafe_storage_directory/);
+    }
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
 });
 
 test("D8 contact operations script and docs are wired into release workflow", () => {

@@ -136,3 +136,25 @@ test("typography exposes the secondary accent role", () => {
   assert.match(source, /EYEBROW_ACCENT_SECONDARY/);
   assert.match(source, /text-accent-secondary/);
 });
+
+test("accent-backed interactive surfaces use the semantic foreground token", () => {
+  const sources = [
+    "apps/website/app/labs/timestamp-tool.tsx",
+    "apps/website/app/tracker/tracker-client.tsx",
+    "apps/website/components/mdx-components.tsx"
+  ].map(read);
+
+  for (const source of sources) {
+    assert.doesNotMatch(source, /bg-accent[^"'\n]*text-white/);
+    assert.doesNotMatch(source, /hover:bg-accent[^"'\n]*hover:text-white/);
+    assert.match(source, /text-on-accent/);
+  }
+});
+
+test("AI analysis status surfaces keep readable semantic text in both themes", () => {
+  const source = read("apps/website/components/landing/ai-page-analysis-landing-client.tsx");
+
+  assert.doesNotMatch(source, /text-red-200|text-emerald-300/);
+  assert.match(source, /border-red-500\/40 bg-red-500\/10[^"']*text-primary/);
+  assert.match(source, /border-emerald-500\/45 bg-emerald-500\/10 text-primary/);
+});

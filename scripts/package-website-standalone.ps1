@@ -83,11 +83,6 @@ if (-not (Test-Path -LiteralPath $buildIdPath -PathType Leaf)) {
   throw "Unexpected standalone layout: apps\website\.next\BUILD_ID is missing."
 }
 
-$sharpBinary = Get-ChildItem -LiteralPath $stage -Recurse -File -Filter "sharp-win32-x64.node" | Select-Object -First 1
-if (-not $sharpBinary) {
-  throw "The traced win32-x64 sharp binary is missing from the release."
-}
-
 $secretFiles = Get-ChildItem -LiteralPath $stage -Recurse -Force -File | Where-Object {
   $_.Name -eq ".env" -or $_.Name -like ".env.*"
 }

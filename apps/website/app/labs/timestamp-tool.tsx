@@ -292,18 +292,20 @@ export function TimestampTool() {
           <div className="flex rounded-full border border-edge bg-base/60 p-1">
             <button
               type="button"
+              aria-pressed={!isUtc}
               onClick={() => handleTimeZoneChange("local")}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                !isUtc ? "bg-accent text-white" : "text-muted hover:text-primary"
+                !isUtc ? "bg-accent text-on-accent" : "text-muted hover:text-primary"
               }`}
             >
               {copy.localLabel}
             </button>
             <button
               type="button"
+              aria-pressed={isUtc}
               onClick={() => handleTimeZoneChange("utc")}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                isUtc ? "bg-accent text-white" : "text-muted hover:text-primary"
+                isUtc ? "bg-accent text-on-accent" : "text-muted hover:text-primary"
               }`}
             >
               {copy.utcLabel}

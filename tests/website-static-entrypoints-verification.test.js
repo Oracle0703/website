@@ -62,6 +62,7 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
   assert.doesNotMatch(source, /for \(const route of PUBLIC_WEBSITE_ROUTES\)/);
   assert.doesNotMatch(source, /const staticRoutes\s*=/);
   assert.match(source, /findAvailablePort/);
+  assert.match(source, /"-H",\s*"127\.0\.0\.1"/);
   assert.match(portSource, /EADDRINUSE/);
   assert.match(source, /serverProcess/);
   assert.equal(publicRoutes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 30);
@@ -79,6 +80,7 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
   assert.match(source, /og:image/);
   assert.match(source, /twitter:image/);
   assert.match(source, /robots\.txt/);
+  assert.match(source, /Disallow: \/api\//);
   assert.match(source, /sitemap\.xml/);
   assert.match(source, /favicon\.ico/);
   assert.match(source, /og\.png/);
@@ -94,6 +96,8 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
   assert.match(source, /verifySecurityHeaders/);
   assert.match(source, /strict-transport-security/);
   assert.match(source, /permissions-policy/);
+  assert.match(source, /api\/analyze\/healthz/);
+  assert.match(source, /x-powered-by/);
 });
 
 test("static entrypoint verifier falls forward from the default port when it is occupied", async () => {

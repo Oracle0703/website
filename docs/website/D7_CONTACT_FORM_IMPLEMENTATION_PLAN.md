@@ -16,8 +16,8 @@
 |---|---|
 | 表单字段 | `name`、`contact`、`project_goal`、`timeline`、`budget_range`、`links`、`honeypot` |
 | 反垃圾 | honeypot、同 IP/联系渠道 rate limit、同联系渠道和相似内容 duplicate submit |
-| 保存 | 默认写入 `.data/website-contact/submissions.jsonl`，可用 `CONTACT_SUBMISSIONS_DIR` 覆盖 |
-| 通知 | `CONTACT_NOTIFICATION_WEBHOOK_URL` 存在时发送 webhook；失败返回 `received_with_notification_failure` |
+| 保存 | 开发默认写入 `.data/website-contact/submissions.jsonl`；生产必须设置发布目录外的绝对 `CONTACT_SUBMISSIONS_DIR` |
+| 通知 | HTTPS `CONTACT_NOTIFICATION_WEBHOOK_URL` 存在时发送且不跟随重定向；失败返回 `received_with_notification_failure` |
 | 隐私 | 不公开提交内容；不保存原始 IP，只保存 hash；默认 retention policy 为 90 天 |
 | 非目标 | 不新增数据库、登录、后台查看页、真实邮箱、公开社交链接或 CRM |
 

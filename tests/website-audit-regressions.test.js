@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const sharp = require("sharp");
+const { readPng } = require("./png-utils");
 
 const root = process.cwd();
 
@@ -34,17 +34,15 @@ test("P0 home, reveal sections, and enter page are visible before hydration", ()
 
 test("P0 social preview is a branded, non-uniform 1200 by 630 image", async () => {
   const imagePath = path.join(root, "apps/website/public/og.png");
-  const image = sharp(imagePath);
-  const metadata = await image.metadata();
-  const stats = await image.stats();
+  const metadata = readPng(imagePath, { analyzePixels: true });
 
   assert.equal(metadata.width, 1200);
   assert.equal(metadata.height, 630);
   assert.ok(
-    stats.channels.slice(0, 3).some((channel) => channel.stdev > 5),
+    metadata.channelStandardDeviations.some((standardDeviation) => standardDeviation > 5),
     "og.png must contain visible contrast instead of a single flat color"
   );
-  assert.ok(stats.entropy > 1, "og.png must contain enough visual information for a branded preview");
+  assert.ok(metadata.entropy > 1, "og.png must contain enough visual information for a branded preview");
 });
 
 test("P0 homepage positioning states a specific outcome and exposes three direct actions", () => {
@@ -87,4 +85,38 @@ test("GitHub CI uses the supported runtime and a portable public lockfile", () =
   assert.match(giteeCiSource, /node-version:\s*"22\.22\.0"/);
   assert.match(giteeCdSource, /node-version:\s*"22\.22\.0"/);
   assert.doesNotMatch(lockfileSource, /192\.168\.5\.16|http:\/\/[^"\s]+\.tgz/);
+});
+
+test("Next workspaces use one patched runtime and production dependencies have a high severity gate", () => {
+  const rootPackage = JSON.parse(read("package.json"));
+  const websitePackage = JSON.parse(read("apps/website/package.json"));
+  const analysisPackage = JSON.parse(read("apps/ai-page-analysis/package.json"));
+  const dashboardPackage = JSON.parse(read("apps/dashboard-web/package.json"));
+  const workflowSource = read(".github/workflows/website-ci.yml");
+
+  assert.equal(
+    rootPackage.scripts["audit:production"],
+    "npm audit --omit=dev --audit-level=high"
+  );
+  for (const workspacePackage of [websitePackage, analysisPackage, dashboardPackage]) {
+    assert.equal(workspacePackage.dependencies.next, "15.5.20");
+    assert.equal(workspacePackage.dependencies.react, "19.2.7");
+    assert.equal(workspacePackage.dependencies["react-dom"], "19.2.7");
+    assert.equal(workspacePackage.devDependencies["eslint-config-next"], "15.5.20");
+    assert.equal(workspacePackage.devDependencies["@types/react"], "19.2.17");
+    assert.equal(
+      workspacePackage.scripts.lint,
+      "eslint app components lib --ext .js,.jsx,.ts,.tsx --max-warnings=0"
+    );
+  }
+  assert.equal(websitePackage.dependencies["next-mdx-remote"], "6.0.0");
+  assert.match(workflowSource, /run:\s*npm run audit:production/);
+  assert.match(workflowSource, /npm run lint -w apps\/ai-page-analysis/);
+  assert.match(workflowSource, /npm run lint -w apps\/dashboard-web/);
+  assert.match(workflowSource, /npm run build -w apps\/ai-page-analysis/);
+  assert.match(workflowSource, /npm run build:dashboard-web/);
+  const giteeWorkflowSource = read(".gitee/workflows/website-ci.yml");
+  assert.match(giteeWorkflowSource, /run:\s*npm run audit:production/);
+  assert.match(giteeWorkflowSource, /npm run lint -w apps\/ai-page-analysis/);
+  assert.match(giteeWorkflowSource, /npm run build:dashboard-web/);
 });

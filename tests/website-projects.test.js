@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const sharp = require('sharp');
+const { readPng } = require('./png-utils');
 
 const root = process.cwd();
 
@@ -204,8 +204,8 @@ test('all five primary project assets are public, visual, and repository-backed'
 test('Timestamp Tool publishes the reviewed browser capture and a 16:9 article cover', async () => {
   const screenshotPath = 'apps/website/public/projects/timestamp-tool-screenshot.png';
   const coverPath = 'apps/website/public/blog/timestamp-tool-evidence-cover.png';
-  const screenshotMetadata = await sharp(path.join(root, screenshotPath)).metadata();
-  const coverMetadata = await sharp(path.join(root, coverPath)).metadata();
+  const screenshotMetadata = readPng(path.join(root, screenshotPath));
+  const coverMetadata = readPng(path.join(root, coverPath));
   const article = read('content/blog/2026-02-11-timestamp-tool-retrospective-timezone-precision-ux.mdx');
   const { getAllProjects, getProjectView } = await importFresh('apps/website/lib/projects.ts');
   const project = getAllProjects().find(({ slug }) => slug === 'timestamp-tool');

@@ -52,7 +52,7 @@ test('public website pages expose locale-aware canonical metadata', () => {
   }
 
   const blogDetailSource = read('apps/website/app/(zh)/blog/[slug]/page.tsx');
-  assert.match(blogDetailSource, /canonicalPath\s*=\s*`\/blog\/\$\{slug\}`/);
+  assert.match(blogDetailSource, /canonicalPath\s*=\s*`\/blog\/\$\{encodedSlug\}`/);
   assert.match(blogDetailSource, /getLanguageAlternates\(canonicalPath,\s*post\.availableLocales\s*\?\?\s*\[defaultLocale\]\)/);
   assert.match(blogDetailSource, /canonical:\s*toAbsoluteUrl\(canonicalPath\)/);
 

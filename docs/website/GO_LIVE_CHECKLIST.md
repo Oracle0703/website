@@ -30,8 +30,8 @@
   - Contact data：`C:\services\website\data\contact`（必须独立于 Releases，避免版本轮换丢失提交）
   - Logs：`C:\logs\website`
   - Deploy script：`C:\deploy\website-deploy.ps1`
-- **联系表单持久化**：生产环境必须设置 `CONTACT_SUBMISSIONS_DIR=C:\services\website\data\contact`，并确认 NSSM 服务账号可写。
-- **联系表单通知**：配置 `CONTACT_NOTIFICATION_WEBHOOK_URL`；如果暂不配置，必须明确由谁、以什么频率检查 JSONL 提交文件。
+- **联系表单持久化**：生产环境必须设置绝对路径 `CONTACT_SUBMISSIONS_DIR=C:\services\website\data\contact`，保证它位于 `current`/`releases` 之外，并确认 NSSM 服务账号可写；否则服务会失败关闭。
+- **联系表单通知**：仅配置 HTTPS `CONTACT_NOTIFICATION_WEBHOOK_URL`；如果暂不配置，必须明确由谁、以什么频率检查 JSONL 提交文件。
 - **天气服务**：查询功能上线前注册 WeatherAPI.com Free key。Free 方案为每月 100,000 次调用，current 缓存最多 60 分钟、forecast 缓存最多 24 小时，并要求 attribution/免责声明。
 
 ---

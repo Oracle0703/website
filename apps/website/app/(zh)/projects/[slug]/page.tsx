@@ -7,16 +7,17 @@ import { toAbsoluteUrl } from "../../../../lib/site-url";
 import { ProjectDetailClient } from "../../../projects/[slug]/project-detail-client";
 
 type PageProps = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 export const generateStaticParams = () => {
   return getAllProjects().map((project) => ({ slug: project.slug }));
 };
 
-export const generateMetadata = ({ params }: PageProps): Metadata => {
+export const generateMetadata = async ({ params }: PageProps): Promise<Metadata> => {
+  const { slug } = await params;
   const { seo } = getMessages(defaultLocale);
-  const project = getProjectBySlug(params.slug);
+  const project = getProjectBySlug(slug);
 
   if (!project) {
     return {
@@ -49,8 +50,9 @@ export const generateMetadata = ({ params }: PageProps): Metadata => {
   };
 };
 
-export default function Page({ params }: PageProps) {
-  const project = getProjectBySlug(params.slug);
+export default async function Page({ params }: PageProps) {
+  const { slug } = await params;
+  const project = getProjectBySlug(slug);
 
   if (!project) {
     notFound();

@@ -5,7 +5,7 @@ import {
   cleanupContactSubmissionsFile,
   CONTACT_RETENTION_DAYS,
   getContactSubmissionsDir,
-  validateContactSubmissionsDirectory
+  validateResolvedContactSubmissionsDirectory
 } from "../apps/website/lib/contact-form.ts";
 
 function parseArgs(argv) {
@@ -59,7 +59,7 @@ async function main() {
   }
 
   const directory = getContactSubmissionsDir();
-  const storage = validateContactSubmissionsDirectory(directory);
+  const storage = await validateResolvedContactSubmissionsDirectory(directory);
 
   if (!storage.ok) {
     printJson({

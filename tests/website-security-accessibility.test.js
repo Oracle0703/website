@@ -13,6 +13,9 @@ test("website config applies the low-risk security header baseline", async () =>
   const nextConfig = require(path.join(root, "apps/website/next.config.js"));
   const rules = await nextConfig.headers();
 
+  assert.equal(nextConfig.poweredByHeader, false);
+  assert.equal(nextConfig.images.unoptimized, true);
+
   const globalRule = rules.find((rule) => rule.source === "/:path*");
   assert.ok(globalRule);
 
@@ -29,6 +32,15 @@ test("website config applies the low-risk security header baseline", async () =>
   assert.match(headers.get("Permissions-Policy"), /microphone=\(\)/);
   assert.match(headers.get("Permissions-Policy"), /geolocation=\(\)/);
   assert.equal(headers.has("Content-Security-Policy"), false);
+
+  const apiRule = rules.find((rule) => rule.source === "/api/:path*");
+  assert.ok(apiRule);
+  const apiHeaders = new Map(apiRule.headers.map(({ key, value }) => [key, value]));
+  assert.equal(apiHeaders.get("Cache-Control"), "private, no-store");
+  assert.equal(apiHeaders.get("X-Robots-Tag"), "noindex, nofollow");
+
+  const robotsSource = read("apps/website/app/robots.ts");
+  assert.match(robotsSource, /disallow:\s*["']\/api\/["']/);
 });
 
 test("layout exposes a keyboard skip link without nesting a second main landmark", () => {
