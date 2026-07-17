@@ -42,13 +42,15 @@ function tagBlockContaining(source, marker, tagName) {
   return source.slice(start, end + tagName.length + 3);
 }
 
-test('home pages provide recent posts and asset-backed featured projects without series data', () => {
+test('home pages provide recent posts, releases, and asset-backed featured projects without series data', () => {
   for (const relPath of ['apps/website/app/page.tsx', 'apps/website/app/en/page.tsx']) {
     const source = read(relPath);
 
     assert.match(source, /getPublishedPosts(?:ForLocale)?/);
     assert.match(source, /getFeaturedProjectViews\(/);
     assert.match(source, /latestBlogItems=\{latestBlogItems\}/);
+    assert.match(source, /latestChangelogItems=\{latestChangelogItems\}/);
+    assert.match(source, /getRecentChangelogEntries\([^,]+, 3\)/);
     assert.match(source, /featuredProjects=\{featuredProjects\}/);
     assert.match(source, /project\.asset\.kind === "screenshot"/);
     assert.match(source, /project\.asset\.kind === "mock"/);
@@ -60,17 +62,18 @@ test('home pages provide recent posts and asset-backed featured projects without
   }
 });
 
-test('home client has four focused sections and no ParticleTime or series dependency', () => {
+test('home client has five focused sections and no ParticleTime or series dependency', () => {
   const clientSource = read('apps/website/components/home/home-page-client.tsx');
 
   assert.equal(count(clientSource, '<section'), 1, 'home should have one semantic hero section');
   assert.equal(
     count(clientSource, '<RevealSection'),
-    3,
-    'home should add projects, latest writing, and contact sections'
+    4,
+    'home should add projects, latest writing, changelog, and contact sections'
   );
   assert.match(clientSource, /supportingProjects\.map/);
   assert.match(clientSource, /latestBlogSectionItems\.map/);
+  assert.match(clientSource, /latestChangelogItems\.slice\(0, 3\)\.map/);
   assert.match(clientSource, /copy\.contactTitle/);
   assert.doesNotMatch(clientSource, /ParticleTime|particle-time/);
   assert.doesNotMatch(clientSource, /HomeSeriesItem|featuredSeries/);

@@ -9,20 +9,31 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Get-ResponseContentText([object]$Response) {
+  $content = $Response.Content
+  if ($content -is [byte[]]) {
+    return [System.Text.Encoding]::UTF8.GetString($content)
+  }
+
+  return [string]$content
+}
+
 $ReleaseDirectory = [System.IO.Path]::GetFullPath($ReleaseDirectory)
 $manifestPath = Join-Path $ReleaseDirectory "release-manifest.json"
 $serverPath = Join-Path $ReleaseDirectory "apps\website\server.js"
+$buildIdPath = Join-Path $ReleaseDirectory "apps\website\.next\BUILD_ID"
 $staticPath = Join-Path $ReleaseDirectory "apps\website\.next\static"
 $publicPath = Join-Path $ReleaseDirectory "apps\website\public"
 $contentPath = Join-Path $ReleaseDirectory "content\blog"
 
-foreach ($requiredPath in @($manifestPath, $serverPath, $staticPath, $publicPath, $contentPath)) {
+foreach ($requiredPath in @($manifestPath, $serverPath, $buildIdPath, $staticPath, $publicPath, $contentPath)) {
   if (-not (Test-Path -LiteralPath $requiredPath)) {
     throw "Release verification failed; required path is missing: $requiredPath"
   }
 }
 
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$buildId = (Get-Content -LiteralPath $buildIdPath -Raw).Trim()
 if ($manifest.platform -ne "win32" -or $manifest.architecture -ne "x64") {
   throw "Release target must be win32-x64."
 }
@@ -92,9 +103,38 @@ try {
   if ([string]$searchResponse.Headers["X-Robots-Tag"] -ne "noindex, nofollow") {
     throw "/search-index.json must return X-Robots-Tag: noindex, nofollow."
   }
-  $searchPayload = $searchResponse.Content | ConvertFrom-Json
+  $searchPayload = Get-ResponseContentText $searchResponse | ConvertFrom-Json
   if ($searchPayload.version -ne 1 -or -not $searchPayload.entries -or $searchPayload.entries.Count -lt 1) {
     throw "/search-index.json does not contain a valid v1 index."
+  }
+
+  $pwaManifestResponse = Invoke-WebRequest -Uri "$baseUrl/manifest.webmanifest" -UseBasicParsing -TimeoutSec 15
+  if ($pwaManifestResponse.StatusCode -ne 200) {
+    throw "Health request failed for /manifest.webmanifest with status $($pwaManifestResponse.StatusCode)."
+  }
+  $pwaManifest = Get-ResponseContentText $pwaManifestResponse | ConvertFrom-Json
+  if ($pwaManifest.id -ne "/" -or $pwaManifest.scope -ne "/" -or $pwaManifest.start_url -ne "/tracker" -or $pwaManifest.display -ne "standalone") {
+    throw "/manifest.webmanifest does not contain the expected root-scoped PWA metadata."
+  }
+
+  $serviceWorkerResponse = Invoke-WebRequest -Uri "$baseUrl/sw.js" -UseBasicParsing -TimeoutSec 15
+  if ($serviceWorkerResponse.StatusCode -ne 200) {
+    throw "Health request failed for /sw.js with status $($serviceWorkerResponse.StatusCode)."
+  }
+  if ([string]$serviceWorkerResponse.Headers["Service-Worker-Allowed"] -ne "/") {
+    throw "/sw.js must return Service-Worker-Allowed: /."
+  }
+  if ([string]$serviceWorkerResponse.Headers["Cache-Control"] -notmatch "no-cache") {
+    throw "/sw.js must return Cache-Control containing no-cache."
+  }
+  $serviceWorkerContent = Get-ResponseContentText $serviceWorkerResponse
+  if ($serviceWorkerContent -notmatch [regex]::Escape($buildId)) {
+    throw "/sw.js does not contain the packaged Next.js BUILD_ID."
+  }
+  foreach ($offlineRoute in @("/tracker", "/en/tracker", "/labs/tools", "/en/labs/tools")) {
+    if ($serviceWorkerContent -notmatch [regex]::Escape($offlineRoute)) {
+      throw "/sw.js is missing offline route $offlineRoute."
+    }
   }
 
   Write-Host "Standalone release verified at $baseUrl (commit $($manifest.shortSha))."

@@ -35,6 +35,8 @@ test('timestamp tool reads locale from client i18n context', () => {
 
   assert.match(source, /useI18n/);
   assert.match(source, /const \{ locale \} = useI18n\(\)/);
+  assert.match(source, /id="timestamp-tool"/);
+  assert.match(source, /scroll-mt-24/);
   assert.doesNotMatch(source, /export function TimestampTool\(\{\s*locale\s*\}/);
   assert.doesNotMatch(source, /import type \{ Locale \}/);
 });

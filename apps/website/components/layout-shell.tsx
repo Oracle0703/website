@@ -8,6 +8,7 @@ import { LanguageProvider } from "./language-provider";
 import type { Locale } from "../lib/i18n-core";
 import { ThemeProvider } from "./theme-provider";
 import type { Theme } from "../lib/theme";
+import { PwaOfflineBoundary } from "./pwa-offline-boundary";
 
 const CHROME_HIDDEN_ROUTES = new Set(["/enter", "/en/enter"]);
 
@@ -34,6 +35,7 @@ export function LayoutShell({
           <a href="#main-content" className="skip-link">
             {skipLinkLabel}
           </a>
+          <PwaOfflineBoundary />
           {!hideChrome && <SiteHeader />}
           <div id="main-content" tabIndex={-1}>
             {children}

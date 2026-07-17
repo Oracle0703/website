@@ -12,6 +12,11 @@ import {
   TITLE_XL
 } from "../../lib/typography";
 import type { ProjectStatus, ProjectType } from "../../lib/projects";
+import type {
+  ChangelogCopy,
+  ChangelogEntryView,
+  ChangelogKind
+} from "../../lib/changelog";
 
 type HomeLatestBlogItem = {
   title: string;
@@ -43,8 +48,20 @@ type HomePageClientProps = {
   common: Messages["pages"]["common"];
   projectStatusLabels: Messages["pages"]["projects"]["status"];
   latestBlogItems?: HomeLatestBlogItem[];
+  latestChangelogItems?: ChangelogEntryView[];
+  changelogCopy: ChangelogCopy["home"];
+  changelogKindLabels: Record<ChangelogKind, string>;
   featuredProjects?: HomeProjectItem[];
 };
+
+function formatChangelogDate(releasedAt: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "zh-CN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "Asia/Shanghai"
+  }).format(new Date(releasedAt));
+}
 
 export function HomePageClient({
   locale,
@@ -52,6 +69,9 @@ export function HomePageClient({
   common,
   projectStatusLabels,
   latestBlogItems = [],
+  latestChangelogItems = [],
+  changelogCopy,
+  changelogKindLabels,
   featuredProjects = []
 }: HomePageClientProps) {
   const getHref = (href: string) => getLocalePath(href, locale);
@@ -220,6 +240,49 @@ export function HomePageClient({
           </div>
         </div>
       </RevealSection>
+
+      {latestChangelogItems.length > 0 ? (
+        <RevealSection className="section-plain py-16 md:py-20">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div className="max-w-2xl">
+              <p className={EYEBROW_ACCENT}>{changelogCopy.eyebrow}</p>
+              <h2 className={`mt-2 ${TITLE_XL}`}>{changelogCopy.title}</h2>
+              <p className={`mt-3 ${TEXT_SM_MUTED} leading-7`}>{changelogCopy.description}</p>
+            </div>
+            <Link href={getHref("/changelog")} className="link-accent text-sm font-semibold">
+              {changelogCopy.viewAll} <span aria-hidden>{common.arrowRight}</span>
+            </Link>
+          </div>
+
+          <ol className="mt-8 grid gap-px overflow-hidden border border-edge/70 bg-edge/70 md:grid-cols-3">
+            {latestChangelogItems.slice(0, 3).map((entry) => (
+              <li key={entry.id} className="bg-base">
+                <Link
+                  href={getHref(`/changelog#${entry.id}`)}
+                  prefetch={false}
+                  className="group flex h-full min-h-56 flex-col p-5 transition-colors hover:bg-surface sm:p-6"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <time dateTime={entry.releasedAt} className={TEXT_XS_MUTED}>
+                      {formatChangelogDate(entry.releasedAt, locale)}
+                    </time>
+                    <span className="text-xs font-semibold uppercase tracking-[0.1em] text-accent-secondary">
+                      {changelogKindLabels[entry.kind]}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold tracking-tight text-primary transition-colors group-hover:text-accent">
+                    {entry.title}
+                  </h3>
+                  <p className={`mt-3 ${TEXT_SM_MUTED} leading-6`}>{entry.summary}</p>
+                  <span className="mt-auto pt-5 text-sm font-semibold text-secondary group-hover:text-accent">
+                    {changelogCopy.viewEntry} <span aria-hidden>{common.arrowRight}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </RevealSection>
+      ) : null}
 
       <RevealSection className="py-16 md:py-20">
         <div className="brand-banner grid gap-7 overflow-hidden p-6 sm:p-8 md:grid-cols-[1fr_auto] md:items-end md:p-10">

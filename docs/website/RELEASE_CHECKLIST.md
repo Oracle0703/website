@@ -52,6 +52,7 @@
 | 改动静态入口清单、sitemap、公开页面新增/删除 | `npm test` + `npm run verify:website-static` + `npm run verify:website-browser` | `PUBLIC_WEBSITE_ROUTES` 保持中文根路径，`PUBLIC_WEBSITE_LOCALE_ROUTES`、sitemap、HTML 验收和浏览器验收保持一致 |
 | 改动 RSS、`next.config.js` 安全头或反向代理响应头 | `npm test` + `npm run build:website` + `npm run verify:website-static` | `/rss.xml` 为合法 RSS 2.0；HSTS、nosniff、Referrer-Policy、Permissions-Policy 与 frame protection 在实际响应中存在 |
 | 改动搜索、Tracker、Blog engagement、Resume/Now 或 Developer toolbox | `npm test` + `npm run build:website` + `npm run verify:website-static` + `npm run verify:website-browser` | 搜索索引仍为静态且按需加载；Tracker 导入失败不覆盖数据；工具输入不离开浏览器；评论关闭时不加载 Giscus；中英文入口、键盘路径与 canonical 正常 |
+| 改动 PWA manifest、service worker、离线路由或缓存策略 | `npm test` + `npm run build:website` + `npm run verify:website-static` + `npm run verify:website-browser` + Windows standalone 验收 | `/sw.js` 含当前 `BUILD_ID` 且为 `no-cache`；只缓存中英文 Tracker/Tools 静态壳层与对应 `_next/static`；API、Contact、AI 分析、免费查询、搜索、RSS、RSC 与带查询参数请求全部绕过；旧 worker 不自动覆盖新 HTML，更新由用户确认后重载 |
 | 验证部署预览地址 | `NEXT_STATIC_VERIFY_BASE_URL=https://example.com npm run verify:website-static` | 远端公开入口返回 200，HTML 和静态脚本信号通过 |
 | 触及 dashboard-api | `npm test -w apps/dashboard-api` | API 工作区测试通过 |
 | 触及 knock | `npm run build:knock` | 只跑构建；完整 knock 测试可能受 `better-sqlite3` ABI 影响 |

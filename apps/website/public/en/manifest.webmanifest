@@ -1,0 +1,43 @@
+{
+  "id": "/en/",
+  "name": "Meaningful · Ink — Personal Work & Tools",
+  "short_name": "Meaningful",
+  "description": "Personal work, engineering notes, and local-first tools.",
+  "lang": "en",
+  "start_url": "/en/tracker",
+  "scope": "/en/",
+  "display": "standalone",
+  "background_color": "#0c0c0f",
+  "theme_color": "#e7a75b",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Habit Tracker",
+      "short_name": "Tracker",
+      "description": "Private habit check-ins stored only in this browser.",
+      "url": "/en/tracker",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Developer Tools",
+      "short_name": "Tools",
+      "description": "Offline JSON, encoding, digest, and color utilities.",
+      "url": "/en/labs/tools",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

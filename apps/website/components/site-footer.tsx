@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useI18n } from "./language-provider";
 import { getLocalePath } from "../lib/locale-routing";
 import { getShellMessages } from "../lib/i18n-shell";
+import { PwaControls } from "./pwa-controls";
 
 const socialLinks = [
   { href: "https://github.com/Oracle0703", label: "GitHub" }
@@ -35,11 +36,13 @@ export function SiteFooter() {
         </div>
 
         <div className="space-y-4 text-sm text-secondary md:text-right">
+          <PwaControls locale={locale} />
           <div className="flex flex-wrap gap-x-5 gap-y-2 md:justify-end">
             {messages.nav.items.map((item) => (
               <Link
                 key={item.href}
                 href={getLocalePath(item.href, locale)}
+                prefetch={false}
                 className="font-medium text-secondary transition-colors hover:text-accent"
               >
                 {item.label}
@@ -52,6 +55,7 @@ export function SiteFooter() {
                 <Link
                   key={item.href}
                   href={getLocalePath(item.href, locale)}
+                  prefetch={false}
                   className="font-medium text-secondary transition-colors hover:text-accent"
                 >
                   {item.label}

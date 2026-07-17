@@ -5,6 +5,7 @@ import { getPublishedPosts } from "../lib/blog";
 import { getFeaturedProjectViews } from "../lib/projects";
 import { getJsonLdLanguage, getLanguageAlternates } from "../lib/seo";
 import { toAbsoluteUrl } from "../lib/site-url";
+import { getChangelogCopy, getRecentChangelogEntries } from "../lib/changelog";
 
 export const generateMetadata = (): Metadata => {
   const { seo } = getMessages(defaultLocale);
@@ -29,6 +30,8 @@ export const generateMetadata = (): Metadata => {
 
 export default function HomePage() {
   const { seo, home, pages } = getMessages(defaultLocale);
+  const changelogCopy = getChangelogCopy(defaultLocale);
+  const latestChangelogItems = getRecentChangelogEntries(defaultLocale, 3);
   const latestBlogItems = getPublishedPosts()
     .slice(0, 3)
     .map((post) => ({
@@ -87,6 +90,9 @@ export default function HomePage() {
         common={pages.common}
         projectStatusLabels={pages.projects.status}
         latestBlogItems={latestBlogItems}
+        latestChangelogItems={latestChangelogItems}
+        changelogCopy={changelogCopy.home}
+        changelogKindLabels={changelogCopy.kindLabels}
         featuredProjects={featuredProjects}
       />
       <script

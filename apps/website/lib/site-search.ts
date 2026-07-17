@@ -1,5 +1,6 @@
 import { getPublishedPostsForLocale } from "./blog";
 import { getBlogTopicLabel } from "./blog-topics";
+import { getChangelogEntries } from "./changelog";
 import type { Locale } from "./i18n-core";
 import { getLocalePath } from "./locale-routing";
 import { getProjectViews } from "./projects";
@@ -34,6 +35,13 @@ const staticEntries: Record<Locale, StaticSearchEntry[]> = {
       description: "集中发现网站中的工具、原型、文章与个人动态。",
       path: "/explore",
       keywords: ["导航", "工具", "实验", "入口"]
+    },
+    {
+      kind: "page",
+      title: "更新日志",
+      description: "按时间查看已经上线并可以验证的网站功能、改进与修复。",
+      path: "/changelog",
+      keywords: ["Changelog", "发布记录", "网站更新", "版本"]
     },
     {
       kind: "page",
@@ -127,6 +135,13 @@ const staticEntries: Record<Locale, StaticSearchEntry[]> = {
       description: "Discover tools, prototypes, writing, and current work in one place.",
       path: "/explore",
       keywords: ["navigation", "tools", "experiments", "directory"]
+    },
+    {
+      kind: "page",
+      title: "Changelog",
+      description: "Browse the site features, improvements, and fixes that are live and verifiable.",
+      path: "/changelog",
+      keywords: ["releases", "updates", "build log", "versions"]
     },
     {
       kind: "page",
@@ -281,11 +296,31 @@ function projectIndex(locale: Locale): SiteSearchEntry[] {
   });
 }
 
+function changelogIndex(locale: Locale): SiteSearchEntry[] {
+  const changelogPath = getLocalePath("/changelog", locale);
+
+  return getChangelogEntries(locale).map((entry) => {
+    const text = [entry.title, entry.summary, ...entry.highlights].join(" ");
+
+    return {
+      id: `${locale}:release:${entry.id}`,
+      locale,
+      kind: "page",
+      title: entry.title,
+      description: entry.summary,
+      href: `${changelogPath}#${entry.id}`,
+      keywords: ["changelog", "release", entry.kind],
+      text: truncate(stripMarkdown(text))
+    };
+  });
+}
+
 export function getSiteSearchIndex() {
   const locales: Locale[] = ["zh", "en"];
 
   return locales.flatMap((locale) => [
     ...staticIndex(locale),
+    ...changelogIndex(locale),
     ...articleIndex(locale),
     ...projectIndex(locale)
   ]);

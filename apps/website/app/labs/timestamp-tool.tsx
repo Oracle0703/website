@@ -259,7 +259,10 @@ export function TimestampTool() {
       : copy.showUtcLabel;
 
   return (
-    <section className="rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-8">
+    <section
+      id="timestamp-tool"
+      className="scroll-mt-24 rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-8"
+    >
       <div className="space-y-2">
         <p className={EYEBROW_ACCENT}>{copy.eyebrow}</p>
         <h2 className={TITLE_XL}>{copy.title}</h2>

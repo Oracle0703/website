@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import { PUBLIC_WEBSITE_LOCALE_ROUTES } from "../apps/website/lib/public-routes.mjs";
@@ -16,6 +17,7 @@ const siteBaseUrl = (
 ).replace(/\/$/, "");
 const hydrationWarningPattern = /Hydration failed|Text content does not match|Minified React error/i;
 const scriptSrcPattern = /<script[^>]+src="([^"]+\/_next\/static\/[^"]+\.js[^"]*)"[^>]*>/g;
+const offlineRoutes = ["/tracker", "/en/tracker", "/labs/tools", "/en/labs/tools"];
 
 let serverProcess;
 let baseUrl = providedBaseUrl;
@@ -201,6 +203,13 @@ function findTag(html, tagName, identifyingAttribute, identifyingValue) {
   );
 }
 
+function findTags(html, tagName, identifyingAttribute, identifyingValue) {
+  const tags = html.match(new RegExp(`<${tagName}\\b[^>]*>`, "gi")) ?? [];
+  return tags.filter(
+    (tag) => getTagAttribute(tag, identifyingAttribute)?.toLowerCase() === identifyingValue
+  );
+}
+
 function getExpectedPublicUrl(pathname) {
   return new URL(pathname, `${siteBaseUrl}/`).toString().replace(/\/$/, "");
 }
@@ -236,6 +245,36 @@ function verifyMetadata(route, html) {
   }
 }
 
+function verifyManifestLink(route, html) {
+  const manifestTags = findTags(html, "link", "rel", "manifest");
+  if (manifestTags.length !== 1) {
+    fail(`${route.path} has ${manifestTags.length} manifest links; expected exactly one`);
+  }
+
+  const actual = getTagAttribute(manifestTags[0], "href");
+  const expected = route.locale === "en" ? "/en/manifest.webmanifest" : "/manifest.webmanifest";
+  if (actual !== expected) {
+    fail(`${route.path} manifest is ${actual ?? "<missing>"}; expected ${expected}`);
+  }
+}
+
+function verifyPwaManifest(manifest, expected) {
+  if (
+    manifest?.id !== expected.id ||
+    manifest?.lang !== expected.lang ||
+    manifest?.scope !== expected.scope ||
+    manifest?.start_url !== expected.startUrl ||
+    manifest?.display !== "standalone" ||
+    !Array.isArray(manifest?.icons) ||
+    !manifest.icons.some((icon) => icon?.src === "/icon-192.png" && icon?.sizes === "192x192") ||
+    !manifest.icons.some((icon) => icon?.src === "/icon-512.png" && icon?.sizes === "512x512") ||
+    !Array.isArray(manifest?.shortcuts) ||
+    !expected.shortcutUrls.every((url) => manifest.shortcuts.some((shortcut) => shortcut?.url === url))
+  ) {
+    fail(`${expected.pathname} is missing its locale-specific install metadata`);
+  }
+}
+
 function collectScriptSources(html) {
   return Array.from(html.matchAll(scriptSrcPattern), (match) => normalizeAssetUrl(match[1]));
 }
@@ -265,12 +304,17 @@ async function main() {
   await startServerIfNeeded();
   await waitForServer();
 
+  const expectedBuildId = providedBaseUrl
+    ? null
+    : (await readFile(buildIdPath, "utf8")).trim();
+
   const scriptSources = [];
 
   for (const route of PUBLIC_WEBSITE_LOCALE_ROUTES) {
     const html = await fetchText(route.path);
     verifyHtml(route.path, html);
     verifyMetadata(route, html);
+    verifyManifestLink(route, html);
     scriptSources.push(...collectScriptSources(html));
   }
 
@@ -315,6 +359,60 @@ async function main() {
     !searchPayload.entries.some((entry) => entry?.locale === "en")
   ) {
     fail("search-index.json is missing a valid bilingual v1 index");
+  }
+
+  const manifestResponse = await fetchPublicAsset(
+    "/manifest.webmanifest",
+    /^application\/(manifest\+json|json)/i
+  );
+  const manifest = await manifestResponse.json();
+  verifyPwaManifest(manifest, {
+    pathname: "/manifest.webmanifest",
+    id: "/",
+    lang: "zh-CN",
+    scope: "/",
+    startUrl: "/tracker",
+    shortcutUrls: ["/tracker", "/labs/tools"]
+  });
+
+  const englishManifestResponse = await fetchPublicAsset(
+    "/en/manifest.webmanifest",
+    /^application\/(manifest\+json|json)/i
+  );
+  const englishManifest = await englishManifestResponse.json();
+  verifyPwaManifest(englishManifest, {
+    pathname: "/en/manifest.webmanifest",
+    id: "/en/",
+    lang: "en",
+    scope: "/en/",
+    startUrl: "/en/tracker",
+    shortcutUrls: ["/en/tracker", "/en/labs/tools"]
+  });
+
+  const serviceWorkerResponse = await fetchPublicAsset(
+    "/sw.js",
+    /^(application|text)\/javascript/i
+  );
+  const workerCacheControl = serviceWorkerResponse.headers.get("cache-control") ?? "";
+  if (!workerCacheControl.toLowerCase().includes("no-cache")) {
+    fail(`sw.js cache-control must include no-cache, received ${workerCacheControl || "<missing>"}`);
+  }
+  if (serviceWorkerResponse.headers.get("service-worker-allowed") !== "/") {
+    fail("sw.js must return Service-Worker-Allowed: /");
+  }
+  const serviceWorker = await serviceWorkerResponse.text();
+  if (expectedBuildId) {
+    if (!serviceWorker.includes(expectedBuildId)) {
+      fail("sw.js does not contain the current Next.js BUILD_ID");
+    }
+  } else if (!/const BUILD_ID = "[A-Za-z0-9._-]{1,128}";/.test(serviceWorker)) {
+    fail("sw.js does not contain a valid generated Next.js BUILD_ID");
+  }
+  for (const route of offlineRoutes) {
+    if (!serviceWorker.includes(route)) fail(`sw.js is missing offline route ${route}`);
+  }
+  for (const signal of ["/api/", "/contact", "/ai-page-analysis", "/labs/query", "/search-index.json", "/rss.xml", "Next-Router-State-Tree"]) {
+    if (!serviceWorker.includes(signal)) fail(`sw.js is missing network-only guard ${signal}`);
   }
 
   await verifySecurityHeaders();

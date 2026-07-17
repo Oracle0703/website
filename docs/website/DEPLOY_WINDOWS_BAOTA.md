@@ -161,6 +161,8 @@ $home.Headers["X-Release-Sha"]
 Invoke-WebRequest http://127.0.0.1:3001/api/contact/healthz -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/api/query/healthz -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/rss.xml -UseBasicParsing
+Invoke-WebRequest http://127.0.0.1:3001/manifest.webmanifest -UseBasicParsing
+Invoke-WebRequest http://127.0.0.1:3001/sw.js -UseBasicParsing
 ```
 
 `/api/query/healthz` 只检查本地路由和运行时配置是否就绪，不会请求 WeatherAPI.com，也不会验证或返回 key。设置或轮换 `WEATHERAPI_KEY` 并重启后，应确认该接口返回本地就绪状态；第三方短暂故障不应导致宝塔反复重启整个网站。
@@ -230,6 +232,19 @@ location / {
   proxy_redirect off;
 }
 
+# Service worker 必须每次重新验证，不能套用静态资源的 immutable 缓存。
+location = /sw.js {
+  proxy_pass http://127.0.0.1:3001;
+  proxy_set_header Host $http_host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $remote_addr;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_hide_header Cache-Control;
+  proxy_hide_header Service-Worker-Allowed;
+  add_header Cache-Control "no-cache" always;
+  add_header Service-Worker-Allowed "/" always;
+}
+
 location ^~ /_next/static/ {
   proxy_pass http://127.0.0.1:3001;
   expires 30d;
@@ -238,6 +253,8 @@ location ^~ /_next/static/ {
 ```
 
 Node 只监听环回地址，公网仍只开放 Nginx 的 80/443。
+
+PWA 只在 HTTPS（以及浏览器认可的 localhost 安全上下文）中注册。`/sw.js` 是每个构建生成的发布产物，内容包含当前 Next.js `BUILD_ID`；不要把它放进 `/_next/static/` 的 30 天 immutable 规则，也不要让 CDN 长时间缓存。它只预缓存 `/tracker`、`/en/tracker`、`/labs/tools`、`/en/labs/tools` 四个静态页面壳层、对应的中英文 Manifest 及其构建静态资源，不缓存 Contact、AI 分析、免费查询、搜索索引、RSS 或任何 `/api/*` 响应。发布后应在浏览器开发者工具的 Application → Service Workers/Cache Storage 中确认新版本进入 waiting/active 状态，并确认缓存条目没有 API URL。
 
 `access_log logs/query-access.log ...` 中的 `logs/query-access.log` 是相对于 Nginx prefix 的路径，不要凭经验假定其绝对位置。先在管理员 PowerShell 使用宝塔实际安装的 `nginx.exe` 执行 `nginx.exe -V 2>&1`，查看构建参数中的 prefix；若输出未给出可直接采用的 prefix，则以宝塔显示的实际安装目录、Nginx 启动工作目录和主配置为准。执行一次查询后，必须在确认过的实际目录中找到新日志并核对时间戳。
 

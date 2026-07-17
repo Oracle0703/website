@@ -48,6 +48,17 @@ test("site search builds a bilingual static index across pages, writing, project
       };
     }
     if (request === "./blog-topics") return { getBlogTopicLabel: () => "Engineering" };
+    if (request === "./changelog") {
+      return {
+        getChangelogEntries: (locale) => [{
+          id: "low-memory-windows-release",
+          kind: "improvement",
+          title: locale === "zh" ? "小内存服务器与 Windows 发布流程" : "Low-memory server and Windows release workflow",
+          summary: locale === "zh" ? "把构建工作移到 Windows CI。" : "Moved production builds to Windows CI.",
+          highlights: locale === "zh" ? ["本地优先套件发布记录"] : ["Windows release artifact verification"]
+        }]
+      };
+    }
     if (request === "./locale-routing") {
       return { getLocalePath: (pathname, locale) => locale === "en" ? (pathname === "/" ? "/en" : `/en${pathname}`) : pathname };
     }
@@ -81,6 +92,18 @@ test("site search builds a bilingual static index across pages, writing, project
   assert.equal(new Set(entries.map((entry) => entry.id)).size, entries.length);
   assert.ok(entries.some((entry) => entry.locale === "zh" && entry.href === "/labs/tools"));
   assert.ok(entries.some((entry) => entry.locale === "en" && entry.href === "/en/labs/tools"));
+  assert.ok(entries.some((entry) => entry.locale === "zh" && entry.href === "/changelog"));
+  assert.ok(entries.some((entry) => entry.locale === "en" && entry.href === "/en/changelog"));
+  assert.ok(entries.some((entry) =>
+    entry.locale === "zh"
+    && entry.href === "/changelog#low-memory-windows-release"
+    && entry.text.includes("本地优先套件")
+  ));
+  assert.ok(entries.some((entry) =>
+    entry.locale === "en"
+    && entry.href === "/en/changelog#low-memory-windows-release"
+    && entry.text.includes("Windows release")
+  ));
   assert.ok(entries.some((entry) => entry.kind === "article" && entry.locale === "zh"));
   assert.ok(entries.some((entry) => entry.kind === "project" && entry.locale === "en"));
   assert.ok(!entries.some((entry) => entry.id.includes("hidden-")));
@@ -116,13 +139,14 @@ test("Explore exposes bilingual static routes and all five product areas", async
   const zhRoute = read("apps/website/app/explore/page.tsx");
   const enRoute = read("apps/website/app/en/explore/page.tsx");
 
-  for (const route of ["/explore", "/labs/tools", "/tracker", "/resume", "/now"]) {
+  for (const route of ["/explore", "/changelog", "/labs/tools", "/tracker", "/resume", "/now"]) {
     assert.ok(routes.PUBLIC_WEBSITE_ROUTES.includes(route));
   }
   assert.ok(routes.PUBLIC_WEBSITE_EN_ROUTES.includes("/en/explore"));
   assert.match(page, /Local habit tracker/);
   assert.match(page, /Developer toolbox/);
   assert.match(page, /Capability resume/);
+  assert.match(page, /href: "\/changelog"/);
   assert.match(page, /AI page analysis/);
   assert.match(zhRoute, /getLanguageAlternates\("\/explore"\)/);
   assert.match(enRoute, /canonical: toAbsoluteUrl\("\/en\/explore"\)/);

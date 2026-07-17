@@ -13,10 +13,10 @@ test("website config applies the low-risk security header baseline", async () =>
   const nextConfig = require(path.join(root, "apps/website/next.config.js"));
   const rules = await nextConfig.headers();
 
-  assert.equal(rules.length, 1);
-  assert.equal(rules[0].source, "/:path*");
+  const globalRule = rules.find((rule) => rule.source === "/:path*");
+  assert.ok(globalRule);
 
-  const headers = new Map(rules[0].headers.map(({ key, value }) => [key, value]));
+  const headers = new Map(globalRule.headers.map(({ key, value }) => [key, value]));
 
   assert.equal(
     headers.get("Strict-Transport-Security"),

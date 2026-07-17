@@ -34,7 +34,7 @@ test("free query lab exposes bilingual static routes with canonical metadata", a
 
   assert.ok(routes.PUBLIC_WEBSITE_ROUTES.includes("/labs/query"));
   assert.ok(routes.PUBLIC_WEBSITE_EN_ROUTES.includes("/en/labs/query"));
-  assert.equal(routes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 28);
+  assert.equal(routes.PUBLIC_WEBSITE_LOCALE_ROUTES.length, 30);
 });
 
 test("free query page keeps the interactive boundary narrow and documents same-origin APIs", () => {

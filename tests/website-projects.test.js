@@ -66,15 +66,23 @@ test('website project links do not point at repository-only docs paths', () => {
   );
 });
 
-test('D5 project model carries maintainable evidence, tradeoffs, and roadmap fields', () => {
+test('project model carries maintainable evidence, architecture, decisions, and roadmap fields', () => {
   const projectsSource = read('apps/website/lib/projects.ts');
 
   assert.match(projectsSource, /export type ProjectEvidence/);
+  assert.match(projectsSource, /export type ProjectArchitectureStep/);
+  assert.match(projectsSource, /export type ProjectDecision/);
+  assert.match(projectsSource, /export type ProjectEntry/);
   assert.match(projectsSource, /evidence:\s*ProjectEvidence\[\]/);
   assert.match(projectsSource, /architecture:\s*string/);
+  assert.match(projectsSource, /architectureSteps:\s*ProjectArchitectureStep\[\]/);
+  assert.match(projectsSource, /decisions:\s*ProjectDecision\[\]/);
   assert.match(projectsSource, /tradeoffs:\s*string\[\]/);
   assert.match(projectsSource, /roadmap:\s*string\[\]/);
   assert.match(projectsSource, /evidence:\s*project\.evidence/);
+  assert.match(projectsSource, /architectureSteps:\s*project\.architectureSteps/);
+  assert.match(projectsSource, /decisions:\s*project\.decisions/);
+  assert.match(projectsSource, /entry:\s*project\.entry/);
 
   for (const slug of [
     'ai-page-analysis',
@@ -90,8 +98,11 @@ test('D5 project model carries maintainable evidence, tradeoffs, and roadmap fie
 
     assert.match(block, /evidence:\s*\[/, `${slug} should define evidence`);
     assert.match(block, /architecture:/, `${slug} should define architecture`);
+    assert.match(block, /architectureSteps:\s*\[/, `${slug} should define architecture steps`);
+    assert.match(block, /decisions:\s*\[/, `${slug} should define key decisions`);
     assert.match(block, /tradeoffs:\s*\[/, `${slug} should define tradeoffs`);
     assert.match(block, /roadmap:\s*\[/, `${slug} should define roadmap`);
+    assert.match(block, /entry:\s*\{/, `${slug} should define demo and source entries`);
   }
 });
 
@@ -103,37 +114,81 @@ test('D6 project model carries an explicit public asset strategy for every proje
   assert.match(projectsSource, /kind:\s*"doc"/);
   assert.match(projectsSource, /kind:\s*"none"/);
   assert.match(projectsSource, /asset:\s*ProjectAsset/);
+  assert.match(projectsSource, /gallery:\s*ProjectAsset\[\]/);
   assert.match(projectsSource, /asset:\s*project\.asset/);
+  assert.match(projectsSource, /gallery:\s*project\.gallery/);
 
   const { getAllProjects } = await importFresh('apps/website/lib/projects.ts');
   const projects = getAllProjects();
 
   assert.equal(projects.length, 5);
 
+  const assertAsset = (asset, label) => {
+    if (['screenshot', 'mock', 'diagram'].includes(asset.kind)) {
+      assert.ok(asset.src, `${label} image asset should define src`);
+      assert.ok(asset.alt, `${label} image asset should define alt`);
+      assert.ok(asset.caption, `${label} image asset should define caption`);
+      assert.match(asset.src, /^\//, `${label} asset src should be a public path`);
+      assert.doesNotMatch(asset.src, /^\/docs\//, `${label} should not link repository-only docs`);
+      return;
+    }
+
+    if (asset.kind === 'doc') {
+      assert.ok(asset.label, `${label} doc asset should define label`);
+      assert.ok(asset.href, `${label} doc asset should define href`);
+      assert.ok(asset.description, `${label} doc asset should define description`);
+      assert.doesNotMatch(asset.href, /^\/docs\//, `${label} should not expose private docs paths`);
+      return;
+    }
+
+    assert.equal(asset.kind, 'none', `${label} should use a known asset kind`);
+    assert.ok(asset.reason, `${label} none asset should explain why it is unavailable`);
+    assert.ok(asset.nextAssetStep, `${label} none asset should define the next asset step`);
+  };
+
   for (const project of projects) {
     assert.ok(project.asset, `${project.slug} should define an asset strategy`);
+    assert.ok(Array.isArray(project.gallery), `${project.slug} should define an evidence gallery`);
+    assert.ok(project.gallery.length > 0, `${project.slug} should expose at least one additional evidence item`);
+    [project.asset, ...project.gallery].forEach((asset, index) => {
+      assertAsset(asset, `${project.slug} asset ${index + 1}`);
+    });
 
-    if (['screenshot', 'mock', 'diagram'].includes(project.asset.kind)) {
-      assert.ok(project.asset.src, `${project.slug} image asset should define src`);
-      assert.ok(project.asset.alt, `${project.slug} image asset should define alt`);
-      assert.ok(project.asset.caption, `${project.slug} image asset should define caption`);
-      assert.match(project.asset.src, /^\//, `${project.slug} asset src should be a public path`);
-      assert.doesNotMatch(project.asset.src, /^\/docs\//, `${project.slug} should not link repository-only docs`);
-      continue;
+    assert.ok(project.architectureSteps.length >= 4, `${project.slug} should define a useful architecture flow`);
+    for (const step of project.architectureSteps) {
+      assert.ok(step.title, `${project.slug} architecture step should have a title`);
+      assert.ok(step.description, `${project.slug} architecture step should have a description`);
     }
 
-    if (project.asset.kind === 'doc') {
-      assert.ok(project.asset.label, `${project.slug} doc asset should define label`);
-      assert.ok(project.asset.href, `${project.slug} doc asset should define href`);
-      assert.ok(project.asset.description, `${project.slug} doc asset should define description`);
-      assert.doesNotMatch(project.asset.href, /^\/docs\//, `${project.slug} should not expose private docs paths`);
-      continue;
+    assert.ok(project.decisions.length >= 3, `${project.slug} should define structured decisions`);
+    for (const decision of project.decisions) {
+      assert.ok(decision.decision, `${project.slug} decision should name the choice`);
+      assert.ok(decision.rationale, `${project.slug} decision should explain its rationale`);
+      assert.ok(decision.impact, `${project.slug} decision should state its impact`);
     }
 
-    assert.equal(project.asset.kind, 'none', `${project.slug} should use a known asset kind`);
-    assert.ok(project.asset.reason, `${project.slug} none asset should explain why it is unavailable`);
-    assert.ok(project.asset.nextAssetStep, `${project.slug} none asset should define the next asset step`);
+    assert.match(project.entry.source.href, /^https:\/\/github\.com\/Oracle0703\/website\//);
+    if (project.entry.demo.status === 'available') {
+      assert.ok(project.entry.demo.href, `${project.slug} available demo should define href`);
+    } else {
+      assert.ok(project.entry.demo.reason, `${project.slug} unavailable demo should explain why`);
+    }
   }
+});
+
+test('AI project evidence matches the implemented safe capture and Safe Mock boundary', () => {
+  const projectsSource = read('apps/website/lib/projects.ts');
+  const mockSource = read('apps/website/public/projects/ai-page-analysis-product-mock.svg');
+  const aiStart = projectsSource.indexOf('slug: "ai-page-analysis"');
+  const trackerStart = projectsSource.indexOf('slug: "tracker"');
+  const aiBlock = projectsSource.slice(aiStart, trackerStart);
+
+  assert.match(aiBlock, /安全 URL 抓取|安全抓取/);
+  assert.match(aiBlock, /Safe Mock/);
+  assert.doesNotMatch(aiBlock, /后续 V1 会把抓取/);
+  assert.match(mockSource, /Live URL capture \+ Safe Mock output/);
+  assert.match(mockSource, /no live model integration/);
+  assert.doesNotMatch(mockSource, /live crawling and model integration are not enabled/);
 });
 
 test('projects list uses a flagship hierarchy, real assets, and a compact archive', () => {

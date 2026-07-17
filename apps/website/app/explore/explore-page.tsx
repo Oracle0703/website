@@ -99,7 +99,13 @@ const content: Record<Locale, {
             title: "Now",
             description: "最近完成、当前关注与接下来准备推进的事情。",
             href: "/now",
-            meta: "Build log"
+            meta: "当前快照"
+          },
+          {
+            title: "更新日志",
+            description: "按时间查看已经上线并可以从页面或公开仓库验证的变化。",
+            href: "/changelog",
+            meta: "Changelog"
           },
           {
             title: "联系",
@@ -187,7 +193,13 @@ const content: Record<Locale, {
             title: "Now",
             description: "What recently shipped, what has my attention, and what comes next.",
             href: "/now",
-            meta: "Build log"
+            meta: "Current snapshot"
+          },
+          {
+            title: "Changelog",
+            description: "Browse changes that are live and verifiable through the site or public repository.",
+            href: "/changelog",
+            meta: "Release history"
           },
           {
             title: "Contact",

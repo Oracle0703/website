@@ -28,7 +28,7 @@ export function DeveloperToolsPage({ locale }: { locale: Locale }) {
           {t.title}
         </h1>
         <p className="mt-5 max-w-3xl text-base leading-8 text-secondary sm:text-lg">{t.description}</p>
-        <Link href={getLocalePath("/labs", locale)} className="link-muted mt-6 inline-flex text-sm font-medium">
+        <Link href={getLocalePath("/labs", locale)} prefetch={false} className="link-muted mt-6 inline-flex text-sm font-medium">
           <span aria-hidden="true">←</span><span className="ml-2">{t.back}</span>
         </Link>
       </header>

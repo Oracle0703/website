@@ -3,6 +3,7 @@ export const PUBLIC_WEBSITE_ROUTES = [
   "/blog",
   "/projects",
   "/explore",
+  "/changelog",
   "/labs",
   "/labs/query",
   "/labs/tools",

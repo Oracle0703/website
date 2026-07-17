@@ -64,23 +64,23 @@ function EvidenceSection({
   );
 }
 
-function AssetSection({
+function ProjectAssetCard({
   asset,
-  copy
+  copy,
+  locale
 }: {
   asset: ProjectAsset;
   copy: Messages["pages"]["projects"];
+  locale: Locale;
 }) {
   const assetLabel = copy.assetKind[asset.kind];
 
   if (asset.kind === "none") {
     return (
-      <section className="feature-surface flex min-h-72 flex-col justify-between p-6 sm:p-7">
+      <article className="feature-surface flex min-h-64 flex-col justify-between p-6 sm:p-7">
         <div>
           <p className="section-kicker">{copy.assetUnavailableLabel}</p>
-          <h2 className="mt-2 text-xl font-semibold text-primary sm:text-2xl">
-            {copy.assetTitle}
-          </h2>
+          <h3 className="mt-2 text-xl font-semibold text-primary">{assetLabel}</h3>
         </div>
         <dl className="mt-8 divide-y divide-edge/70 border-y border-edge/70">
           <div className="py-4">
@@ -94,24 +94,23 @@ function AssetSection({
             <dd className="mt-2 text-sm leading-6 text-muted">{asset.nextAssetStep}</dd>
           </div>
         </dl>
-      </section>
+      </article>
     );
   }
 
   if (asset.kind === "doc") {
     const isExternal = /^https?:\/\//.test(asset.href);
+    const href = isExternal ? asset.href : getLocalePath(asset.href, locale);
 
     return (
-      <section className="feature-surface flex min-h-72 flex-col justify-between p-6 sm:p-7">
+      <article className="feature-surface flex min-h-64 flex-col justify-between p-6 sm:p-7">
         <div>
           <p className="section-kicker">{copy.assetKindLabel}: {assetLabel}</p>
-          <h2 className="mt-2 text-xl font-semibold text-primary sm:text-2xl">
-            {copy.assetTitle}
-          </h2>
+          <h3 className="mt-2 text-xl font-semibold text-primary">{asset.label}</h3>
           <p className="mt-4 text-sm leading-6 text-muted">{asset.description}</p>
         </div>
         <Link
-          href={asset.href}
+          href={href}
           prefetch={false}
           className="mt-6 w-fit btn-secondary"
           target={isExternal ? "_blank" : undefined}
@@ -119,69 +118,228 @@ function AssetSection({
         >
           {asset.label}
         </Link>
-      </section>
+      </article>
     );
   }
 
   return (
-    <section className="feature-surface overflow-hidden p-4 sm:p-5">
+    <figure className="feature-surface overflow-hidden p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-4">
-        <div>
-          <p className="section-kicker">{copy.assetKindLabel}: {assetLabel}</p>
-          <h2 className="mt-1 text-lg font-semibold text-primary">{copy.assetTitle}</h2>
-        </div>
+        <p className="section-kicker">{copy.assetKindLabel}: {assetLabel}</p>
         <span className="rounded-full border border-edge-strong px-3 py-1 text-xs font-semibold text-secondary">
           {assetLabel}
         </span>
       </div>
-      <figure>
-        <div className="aspect-[16/9] overflow-hidden rounded-xl border border-edge bg-base/50">
-          <Image
-            src={asset.src}
-            alt={asset.alt}
-            width={1280}
-            height={720}
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="h-full w-full object-contain"
-          />
-        </div>
-        <figcaption className="px-2 pt-3 text-sm leading-6 text-muted">
-          {asset.caption}
-        </figcaption>
-      </figure>
+      <div className="aspect-[16/9] overflow-hidden rounded-xl border border-edge bg-base/50">
+        <Image
+          src={asset.src}
+          alt={asset.alt}
+          width={1280}
+          height={720}
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="h-full w-full object-contain"
+        />
+      </div>
+      <figcaption className="px-2 pt-3 text-sm leading-6 text-muted">
+        {asset.caption}
+      </figcaption>
+    </figure>
+  );
+}
+
+function ProjectAssetGallery({
+  assets,
+  copy,
+  locale
+}: {
+  assets: ProjectAsset[];
+  copy: Messages["pages"]["projects"];
+  locale: Locale;
+}) {
+  if (assets.length === 0) return null;
+
+  return (
+    <section aria-labelledby="project-evidence-gallery-title">
+      <div className="max-w-3xl">
+        <p className="section-kicker">{copy.assetTitle}</p>
+        <h2
+          id="project-evidence-gallery-title"
+          className="mt-2 text-2xl font-semibold text-primary sm:text-3xl"
+        >
+          {copy.evidenceGalleryTitle}
+        </h2>
+        <p className="mt-3 text-base leading-7 text-secondary">
+          {copy.evidenceGalleryDescription}
+        </p>
+      </div>
+      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        {assets.map((asset, index) => {
+          const key = asset.kind === "doc"
+            ? `${asset.kind}-${asset.href}`
+            : asset.kind === "none"
+              ? `${asset.kind}-${index}`
+              : `${asset.kind}-${asset.src}`;
+
+          return (
+            <ProjectAssetCard
+              key={key}
+              asset={asset}
+              copy={copy}
+              locale={locale}
+            />
+          );
+        })}
+      </div>
     </section>
   );
 }
 
-function ProjectLinks({
+function ArchitectureDiagram({
   project,
-  title
+  copy
 }: {
   project: ProjectView;
-  title: string;
+  copy: Messages["pages"]["projects"];
 }) {
-  if (project.links.length === 0) return null;
+  return (
+    <section className="section-plain pt-8" aria-labelledby="project-architecture-title">
+      <h2
+        id="project-architecture-title"
+        className="text-2xl font-semibold text-primary sm:text-3xl"
+      >
+        {copy.architectureTitle}
+      </h2>
+      <p className="mt-3 max-w-4xl text-base leading-8 text-secondary">
+        {project.architecture}
+      </p>
+      <ol className="mt-7 flex flex-col gap-3 xl:flex-row">
+        {project.architectureSteps.map((step, index) => (
+          <li key={`${step.title}-${index}`} className="flex min-w-0 flex-1 flex-col items-center gap-3 xl:flex-row">
+            <article className="h-full w-full rounded-2xl border border-edge bg-surface/65 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+                {copy.architectureStepLabel} {String(index + 1).padStart(2, "0")}
+              </p>
+              <h3 className="mt-3 text-base font-semibold text-primary">{step.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-muted">{step.description}</p>
+            </article>
+            {index < project.architectureSteps.length - 1 ? (
+              <span
+                aria-hidden="true"
+                className="shrink-0 rotate-90 text-xl font-semibold text-accent xl:rotate-0"
+              >
+                →
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function DecisionSection({
+  project,
+  copy
+}: {
+  project: ProjectView;
+  copy: Messages["pages"]["projects"];
+}) {
+  if (project.decisions.length === 0) return null;
 
   return (
-    <nav className="flex flex-wrap gap-3" aria-label={title}>
-      {project.links.map((link, index) => {
-        const isExternal = link.external ?? /^https?:\/\//.test(link.href);
+    <section aria-labelledby="project-decisions-title">
+      <h2 id="project-decisions-title" className="text-2xl font-semibold text-primary sm:text-3xl">
+        {copy.decisionsTitle}
+      </h2>
+      <ol className="mt-6 grid gap-5 lg:grid-cols-3">
+        {project.decisions.map((item, index) => (
+          <li key={`${item.decision}-${index}`} className="rounded-2xl border border-edge bg-surface/55 p-5 sm:p-6">
+            <p className="section-kicker">
+              {copy.decisionLabel} {String(index + 1).padStart(2, "0")}
+            </p>
+            <h3 className="mt-3 text-lg font-semibold leading-7 text-primary">{item.decision}</h3>
+            <dl className="mt-5 divide-y divide-edge/70 border-y border-edge/70">
+              <div className="py-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                  {copy.rationaleLabel}
+                </dt>
+                <dd className="mt-2 text-sm leading-6 text-muted">{item.rationale}</dd>
+              </div>
+              <div className="py-4">
+                <dt className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                  {copy.impactLabel}
+                </dt>
+                <dd className="mt-2 text-sm leading-6 text-muted">{item.impact}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
 
-        return (
+function ProjectEntryPanel({
+  project,
+  copy,
+  locale
+}: {
+  project: ProjectView;
+  copy: Messages["pages"]["projects"];
+  locale: Locale;
+}) {
+  const { demo, source } = project.entry;
+  const demoIsExternal = demo.status === "available"
+    ? demo.external ?? /^https?:\/\//.test(demo.href)
+    : false;
+
+  return (
+    <section className="feature-surface flex min-h-72 flex-col p-6 sm:p-7" aria-labelledby="project-entry-title">
+      <p className="section-kicker">{copy.entryEyebrow}</p>
+      <h2 id="project-entry-title" className="mt-2 text-xl font-semibold text-primary sm:text-2xl">
+        {copy.entryTitle}
+      </h2>
+
+      <div className="mt-6 flex-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
+          {demo.status === "available" ? copy.demoAvailableLabel : copy.demoUnavailableLabel}
+        </p>
+        {demo.status === "available" ? (
+          <>
+            <p className="mt-3 text-sm leading-6 text-muted">{demo.description}</p>
+            <Link
+              href={demoIsExternal ? demo.href : getLocalePath(demo.href, locale)}
+              prefetch={false}
+              className="mt-5 btn-primary"
+              target={demoIsExternal ? "_blank" : undefined}
+              rel={demoIsExternal ? "noreferrer" : undefined}
+            >
+              {demo.label}
+            </Link>
+          </>
+        ) : (
+          <p className="mt-3 text-sm leading-6 text-muted">{demo.reason}</p>
+        )}
+      </div>
+
+      <div className="mt-7 border-t border-edge/70 pt-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
+          {copy.sourceEntryLabel}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-muted">{source.description}</p>
+        <div className="mt-4">
           <Link
-            key={`${link.label}-${link.href}`}
-            href={link.href}
+            href={source.href}
             prefetch={false}
-            className={index === 0 ? "btn-primary" : "btn-secondary"}
-            target={isExternal ? "_blank" : undefined}
-            rel={isExternal ? "noreferrer" : undefined}
+            className="btn-secondary"
+            target="_blank"
+            rel="noreferrer"
           >
-            {link.label}
+            {source.label}
           </Link>
-        );
-      })}
-    </nav>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -233,15 +391,18 @@ export function ProjectDetailClient({
           </dl>
 
           <p className="mt-6 max-w-2xl text-base leading-8 text-secondary">{project.summary}</p>
-          <div className="mt-7">
-            <ProjectLinks project={project} title={copy.linksTitle} />
-          </div>
         </div>
 
-        <AssetSection asset={project.asset} copy={copy} />
+        <ProjectEntryPanel project={project} copy={copy} locale={locale} />
       </header>
 
       <EvidenceSection title={copy.evidenceTitle} items={project.evidence} />
+
+      <ProjectAssetGallery
+        assets={[project.asset, ...project.gallery]}
+        copy={copy}
+        locale={locale}
+      />
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
         <TextSection title={copy.problemTitle}>{project.problem}</TextSection>
@@ -254,7 +415,9 @@ export function ProjectDetailClient({
         <ListSection title={copy.highlightsTitle} items={project.highlights} />
       </div>
 
-      <TextSection title={copy.architectureTitle}>{project.architecture}</TextSection>
+      <ArchitectureDiagram project={project} copy={copy} />
+
+      <DecisionSection project={project} copy={copy} />
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
         <ListSection title={copy.tradeoffsTitle} items={project.tradeoffs} />
