@@ -10,7 +10,7 @@ function read(relPath) {
 }
 
 test('enter page avoids page-level locale cookie reads', () => {
-  const pageSource = read('apps/website/app/enter/page.tsx');
+  const pageSource = read('apps/website/app/(zh)/enter/page.tsx');
   const clientSource = read('apps/website/app/enter/enter-client.tsx');
 
   assert.doesNotMatch(pageSource, /i18n-server/);

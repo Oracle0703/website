@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { defaultLocale, getMessages } from "../../../lib/i18n";
-import { getAllProjects, getProjectBySlug, getProjectView } from "../../../lib/projects";
-import { getJsonLdLanguage, getLanguageAlternates } from "../../../lib/seo";
-import { toAbsoluteUrl } from "../../../lib/site-url";
-import { ProjectDetailClient } from "./project-detail-client";
+import { defaultLocale, getMessages } from "../../../../lib/i18n";
+import { getAllProjects, getProjectBySlug, getProjectView } from "../../../../lib/projects";
+import { getJsonLdLanguage, getLanguageAlternates } from "../../../../lib/seo";
+import { toAbsoluteUrl } from "../../../../lib/site-url";
+import { ProjectDetailClient } from "../../../projects/[slug]/project-detail-client";
 
 type PageProps = {
   params: { slug: string };

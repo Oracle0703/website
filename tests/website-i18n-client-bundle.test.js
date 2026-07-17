@@ -53,14 +53,14 @@ test("page clients receive locale-specific copy through typed static props", () 
 
 test("both static locale trees inject their own copy without request-time locale reads", () => {
   const routePairs = [
-    ["apps/website/app/page.tsx", "apps/website/app/en/page.tsx"],
-    ["apps/website/app/about/page.tsx", "apps/website/app/en/about/page.tsx"],
-    ["apps/website/app/contact/page.tsx", "apps/website/app/en/contact/page.tsx"],
-    ["apps/website/app/blog/page.tsx", "apps/website/app/en/blog/page.tsx"],
-    ["apps/website/app/projects/page.tsx", "apps/website/app/en/projects/page.tsx"],
-    ["apps/website/app/labs/page.tsx", "apps/website/app/en/labs/page.tsx"],
-    ["apps/website/app/labs/query/page.tsx", "apps/website/app/en/labs/query/page.tsx"],
-    ["apps/website/app/tracker/page.tsx", "apps/website/app/en/tracker/page.tsx"]
+    ["apps/website/app/(zh)/page.tsx", "apps/website/app/en/page.tsx"],
+    ["apps/website/app/(zh)/about/page.tsx", "apps/website/app/en/about/page.tsx"],
+    ["apps/website/app/(zh)/contact/page.tsx", "apps/website/app/en/contact/page.tsx"],
+    ["apps/website/app/(zh)/blog/page.tsx", "apps/website/app/en/blog/page.tsx"],
+    ["apps/website/app/(zh)/projects/page.tsx", "apps/website/app/en/projects/page.tsx"],
+    ["apps/website/app/(zh)/labs/page.tsx", "apps/website/app/en/labs/page.tsx"],
+    ["apps/website/app/(zh)/labs/query/page.tsx", "apps/website/app/en/labs/query/page.tsx"],
+    ["apps/website/app/(zh)/tracker/page.tsx", "apps/website/app/en/tracker/page.tsx"]
   ];
 
   for (const [zhRoute, enRoute] of routePairs) {

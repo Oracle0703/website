@@ -9,34 +9,38 @@ function read(relPath) {
   return fs.readFileSync(path.join(root, relPath), 'utf8');
 }
 
-test('root layout uses default locale and theme without server cookie helpers', () => {
-  const source = read('apps/website/app/layout.tsx');
+test('localized root layouts make the route the server-rendered document language', () => {
+  const zhLayout = read('apps/website/app/(zh)/layout.tsx');
+  const enLayout = read('apps/website/app/en/layout.tsx');
+  const rootDocument = read('apps/website/components/root-document.tsx');
+  const rootMetadata = read('apps/website/lib/root-metadata.ts');
 
-  assert.doesNotMatch(source, /i18n-server/);
-  assert.doesNotMatch(source, /theme-server/);
-  assert.doesNotMatch(source, /getLocale\(/);
-  assert.doesNotMatch(source, /getTheme\(/);
-  assert.match(source, /defaultLocale/);
-  assert.match(source, /defaultTheme/);
-  assert.match(source, /getMessages\(defaultLocale\)/);
-  assert.match(source, /getHtmlLang\(defaultLocale\)/);
-  assert.match(source, /data-theme=\{defaultTheme\}/);
-  assert.match(source, /<PreferenceBootScript \/>/);
-  assert.match(source, /initialLocale=\{defaultLocale\}/);
-  assert.match(source, /initialTheme=\{defaultTheme\}/);
+  assert.equal(fs.existsSync(path.join(root, 'apps/website/app/layout.tsx')), false);
+  assert.match(zhLayout, /import "\.\.\/globals\.css"/);
+  assert.match(enLayout, /import "\.\.\/globals\.css"/);
+  assert.match(zhLayout, /locale="zh"/);
+  assert.match(enLayout, /locale="en"/);
+  assert.match(rootDocument, /getHtmlLang\(locale\)/);
+  assert.match(rootDocument, /data-theme=\{defaultTheme\}/);
+  assert.match(rootDocument, /<PreferenceBootScript \/>/);
+  assert.match(rootDocument, /initialLocale=\{locale\}/);
+  assert.match(rootDocument, /initialTheme=\{defaultTheme\}/);
+  assert.match(rootMetadata, /getMessages\(locale\)/);
+  assert.match(rootMetadata, /locale === "en"/);
 });
 
-test('preference boot script restores valid cookie or localStorage values before hydration', () => {
+test('preference boot script restores only theme because the route owns document language', () => {
   const source = read('apps/website/app/preference-boot-script.tsx');
 
   assert.match(source, /export function PreferenceBootScript/);
   assert.match(source, /dangerouslySetInnerHTML/);
-  assert.match(source, /localStorage\.getItem\("locale"\)/);
   assert.match(source, /localStorage\.getItem\("theme"\)/);
   assert.match(source, /document\.cookie/);
-  assert.match(source, /document\.documentElement\.lang/);
   assert.match(source, /document\.documentElement\.dataset\.theme/);
   assert.match(source, /suppressHydrationWarning/);
+  assert.doesNotMatch(source, /localStorage\.getItem\("locale"\)/);
+  assert.doesNotMatch(source, /document\.documentElement\.lang/);
+  assert.doesNotMatch(source, /location\.pathname/);
 });
 
 test('language and theme providers restore preferences on mount without refresh loops', () => {
@@ -50,6 +54,7 @@ test('language and theme providers restore preferences on mount without refresh 
   assert.match(languageSource, /setLocale\(routeLocale\)/);
   assert.match(languageSource, /router\.push/);
   assert.doesNotMatch(languageSource, /router\.refresh\(\)/);
+  assert.doesNotMatch(languageSource, /document\.documentElement\.lang/);
 
   assert.match(themeSource, /getStoredTheme/);
   assert.match(themeSource, /localStorage\.setItem\(THEME_COOKIE,\s*theme\)/);

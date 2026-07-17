@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { HomePageClient } from "../../components/home/home-page-client";
 import { getPublishedPostsForLocale } from "../../lib/blog";
 import { getMessages, type Locale } from "../../lib/i18n";
-import { getFeaturedProjectViews } from "../../lib/projects";
+import { getFeaturedProjectViews, getProjectViews } from "../../lib/projects";
 import { getJsonLdLanguage, getLanguageAlternates } from "../../lib/seo";
 import { toAbsoluteUrl } from "../../lib/site-url";
 import { getChangelogCopy, getRecentChangelogEntries } from "../../lib/changelog";
+import { getPersonStructuredData, siteIdentity } from "../../lib/site-identity";
 
 const locale: Locale = "en";
 
@@ -37,6 +38,11 @@ export default function HomePage() {
   const { seo, home, pages } = getMessages(locale);
   const changelogCopy = getChangelogCopy(locale);
   const latestChangelogItems = getRecentChangelogEntries(locale, 3);
+  const projectViews = getProjectViews(locale);
+  const proofMetrics = {
+    projectCount: projectViews.length,
+    demoCount: projectViews.filter((project) => project.entry.demo.status === "available").length
+  };
   const latestBlogItems = getPublishedPostsForLocale(locale)
     .slice(0, 3)
     .map((post) => ({
@@ -77,13 +83,7 @@ export default function HomePage() {
         description: seo.jsonLd.siteDescription,
         inLanguage: getJsonLdLanguage(locale)
       },
-      {
-        "@type": "Person",
-        name: seo.siteName,
-        jobTitle: seo.jsonLd.jobTitle,
-        url: toAbsoluteUrl("/en"),
-        sameAs: ["https://github.com/Oracle0703"]
-      }
+      getPersonStructuredData(locale, toAbsoluteUrl(`/en${siteIdentity.profilePath}`))
     ]
   };
 
@@ -99,6 +99,7 @@ export default function HomePage() {
         changelogCopy={changelogCopy.home}
         changelogKindLabels={changelogCopy.kindLabels}
         featuredProjects={featuredProjects}
+        proofMetrics={proofMetrics}
       />
       <script
         type="application/ld+json"

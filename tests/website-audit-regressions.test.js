@@ -12,8 +12,10 @@ function read(relPath) {
 
 test("P0 footer links to the confirmed GitHub profile without platform-home placeholders", () => {
   const source = read("apps/website/components/site-footer.tsx");
+  const identitySource = read("apps/website/lib/site-identity.ts");
 
-  assert.match(source, /https:\/\/github\.com\/Oracle0703/);
+  assert.match(source, /siteIdentity\.githubUrl/);
+  assert.match(identitySource, /githubUrl: "https:\/\/github\.com\/Oracle0703"/);
   assert.doesNotMatch(source, /href:\s*"https:\/\/github\.com"/);
   assert.doesNotMatch(source, /href:\s*"https:\/\/x\.com"/);
   assert.doesNotMatch(source, /href:\s*"https:\/\/www\.linkedin\.com"/);
@@ -52,14 +54,14 @@ test("P0 homepage positioning states a specific outcome and exposes three direct
   assert.match(i18nSource, /把复杂想法，做成清晰、可用的产品。/);
   assert.match(i18nSource, /Turning complex ideas into clear, useful products\./);
   assert.match(i18nSource, /ctaContact:/);
-  assert.match(homeSource, /getHref\("\/projects"\)/);
+  assert.match(homeSource, /getHref\(flagshipProjectHref\)/);
   assert.match(homeSource, /getHref\("\/blog"\)/);
   assert.match(homeSource, /getHref\("\/contact"\)/);
 });
 
 test("P1 article alternates and sitemap respect locale and indexability boundaries", () => {
   const seoSource = read("apps/website/lib/seo.ts");
-  const zhArticleSource = read("apps/website/app/blog/[slug]/page.tsx");
+  const zhArticleSource = read("apps/website/app/(zh)/blog/[slug]/page.tsx");
   const enArticleSource = read("apps/website/app/en/blog/[slug]/page.tsx");
   const sitemapSource = read("apps/website/app/sitemap.ts");
 

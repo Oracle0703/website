@@ -124,6 +124,7 @@ I/O（建议）：
 - `CONTACT_SUBMISSIONS_DIR=C:\services\website\data\contact`
 - `CONTACT_NOTIFICATION_WEBHOOK_URL=<private webhook URL>`（若启用通知）
 - `WEATHERAPI_KEY=<WeatherAPI.com Free key>`（server-only；禁止改名为 `NEXT_PUBLIC_WEATHERAPI_KEY`）
+- `AI_PAGE_ANALYSIS_ENABLE_PUBLIC_CAPTURE=false`（server-only；只有精确值 `true` 才开启公网 URL 抓取）
 
 `WEATHERAPI_KEY` 不参与浏览器构建，也不应进入 CI Artifact、Nginx 配置、URL 或日志。新增或轮换 key 后必须重启 NSSM/宝塔 Node 进程；单纯 reload Nginx 或刷新网页无效。
 
@@ -151,6 +152,9 @@ log_format query_no_args '$remote_addr [$time_local] '
 # 可选；启用时同时取消下面 location 内对应指令的注释。
 # limit_req_zone  $binary_remote_addr zone=query_per_ip:1m rate=20r/m;
 # limit_conn_zone $binary_remote_addr zone=query_conn_per_ip:1m;
+
+limit_req_zone  $binary_remote_addr zone=analyze_per_ip:1m rate=5r/m;
+limit_conn_zone $server_name zone=analyze_global:1m;
 ```
 
 在站点 `server {}` 中加入：
@@ -171,6 +175,23 @@ location ^~ /api/query/ {
 
   # limit_req zone=query_per_ip burst=5 nodelay;
   # limit_conn query_conn_per_ip 2;
+}
+
+location = /api/analyze {
+  proxy_pass http://127.0.0.1:3000;
+  client_max_body_size 16k;
+  proxy_set_header Host $http_host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $remote_addr;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_connect_timeout 5s;
+  proxy_send_timeout 12s;
+  proxy_read_timeout 12s;
+  proxy_redirect off;
+  limit_req zone=analyze_per_ip burst=2 nodelay;
+  limit_req_status 429;
+  limit_conn analyze_global 2;
+  limit_conn_status 503;
 }
 ```
 
@@ -231,7 +252,10 @@ server {
 curl http://127.0.0.1:3000/
 curl http://127.0.0.1:3000/api/contact/healthz
 curl http://127.0.0.1:3000/api/query/healthz
+curl http://127.0.0.1:3000/api/analyze/healthz
 ```
+
+公网 URL 抓取默认关闭。关闭时 Safe Mock 不做 DNS 或出站请求；只有应用与 Nginx 限制均生效后，才考虑把服务端环境变量精确改为 `true` 并重启。开启后每次连接固定到逐跳验证的公网 IP，应用仍限制 16 KiB 请求体、2 个全局并发、10 秒总超时、2 MiB 响应和 3 次重定向。单机并发计数不支持多 Node 实例。
 
 `/api/query/healthz` 只检查本地进程是否已读取运行时配置，不访问 WeatherAPI.com，也不得返回 key。设置或轮换 `WEATHERAPI_KEY` 后重启进程，再确认该接口本地就绪；不要让第三方短暂故障触发整站重启。
 

@@ -1,5 +1,7 @@
 # Website D10 AI Page Analysis Capture Harness Implementation Plan
 
+> Historical plan: current production behavior is default-off, address-pinned capture as documented in `AI_PAGE_ANALYSIS_SECURITY_BOUNDARY.md`. The original default-capture statements below describe the D10 milestone and are not the current deployment contract.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a testable capture harness for AI Page Analysis so `/api/analyze` can validate DNS, redirects, HTML size, login-page signals, and content sufficiency before returning the existing safe mock analysis result.

@@ -361,10 +361,12 @@ test("language toggle moves between Chinese and English canonical URLs", async (
   await page.goto("/blog");
   await clickLanguageToggle(page, /切换到英文|Switch to English/);
   await expect(page).toHaveURL(/\/en\/blog$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("#site-mobile-menu")).toHaveCount(0);
 
   await clickLanguageToggle(page, /切换到中文|Switch to Chinese/);
   await expect(page).toHaveURL(/\/blog$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await expect(page.locator("#site-mobile-menu")).toHaveCount(0);
 });
 

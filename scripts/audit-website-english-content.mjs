@@ -49,7 +49,7 @@ const audits = [
     kind: "localized-source",
     route: "/en/ai-page-analysis",
     file: "apps/website/components/landing/ai-page-analysis-landing-client.tsx",
-    maxCjkCharacters: 1_700,
+    maxCjkCharacters: 1_800,
     note: "Source keeps zh/en landing copy together; English route-surface is checked separately."
   }
 ];

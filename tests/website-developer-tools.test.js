@@ -53,7 +53,7 @@ test("developer toolbox pages keep input local, bounded, bilingual, and canonica
   const client = read("apps/website/app/labs/tools/developer-tools-client.tsx");
   const moduleSource = read("apps/website/lib/developer-tools.ts");
   const page = read("apps/website/app/labs/tools/developer-tools-page.tsx");
-  const zhRoute = read("apps/website/app/labs/tools/page.tsx");
+  const zhRoute = read("apps/website/app/(zh)/labs/tools/page.tsx");
   const enRoute = read("apps/website/app/en/labs/tools/page.tsx");
 
   assert.match(client, /DEVELOPER_TOOL_MAX_INPUT/);

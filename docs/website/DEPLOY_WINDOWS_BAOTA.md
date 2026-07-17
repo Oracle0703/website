@@ -128,9 +128,14 @@ NODE_ENV=production
 CONTACT_SUBMISSIONS_DIR=C:\services\meaningful-website\data\contact
 CONTACT_NOTIFICATION_WEBHOOK_URL=<只在服务器填写，不要提交到 Git>
 WEATHERAPI_KEY=<WeatherAPI.com Free key，只在服务器填写>
+AI_PAGE_ANALYSIS_ENABLE_PUBLIC_CAPTURE=false
 ```
 
 `NEXT_PUBLIC_SITE_URL` 和 commit SHA 已在构建时固化。发布包自带 `content/blog`，正常情况下不需要设置 `BLOG_CONTENT_ROOT`。
+
+`AI_PAGE_ANALYSIS_ENABLE_PUBLIC_CAPTURE` 是纯服务端功能开关。省略、`false`、`1` 或其他值都保持关闭；只有精确设置为 `true` 并完整重启 Node 进程后，`/api/analyze` 才会请求用户提交的公网 URL。关闭时 API 仍返回明确标记的 Safe Mock，结果中的 `source.capture.performed` 为 `false`，不会解析 DNS 或建立出站连接。建议小机器先长期保持 `false`；若以后开启，必须先应用下方 `/api/analyze` 专用 Nginx 限制，并确认服务器只运行一个 Node 实例。
+
+开启后的应用边界为：请求体 16 KiB、每 IP 15 分钟 5 次、全进程最多 2 个并发分析、抓取总超时 10 秒、响应体 2 MiB、标题 240 字符、最多 3 次重定向。每一跳都会重新解析并验证全部 DNS 结果，连接通过 Node 原生 HTTP(S) lookup 固定到本跳已验证的公网 IPv4，避免“先查 DNS、随后普通 fetch 再解析”的时间差；内网、链路本地、metadata、文档地址、IPv6-only 与转换地址均不会被选为出站目标，声明或流式超限的请求/响应体会主动取消。该进程内并发计数不跨多实例共享，因此不要在未迁移到共享 authority 前开启 cluster、PM2 多实例或多副本。
 
 ### WeatherAPI.com Free 上线准备
 
@@ -160,6 +165,7 @@ $home.Headers["X-Release-Sha"]
 
 Invoke-WebRequest http://127.0.0.1:3001/api/contact/healthz -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/api/query/healthz -UseBasicParsing
+Invoke-WebRequest http://127.0.0.1:3001/api/analyze/healthz -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/rss.xml -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/manifest.webmanifest -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:3001/sw.js -UseBasicParsing
@@ -197,6 +203,10 @@ log_format query_no_args '$remote_addr [$time_local] '
 # 可选的小站保护。启用时，还要取消下方 /api/query/ location 中对应两行的注释。
 # limit_req_zone  $binary_remote_addr zone=query_per_ip:1m rate=20r/m;
 # limit_conn_zone $binary_remote_addr zone=query_conn_per_ip:1m;
+
+# AI 分析接口的外围保护；与应用内 5 次/15 分钟和全局并发 2 共同生效。
+limit_req_zone  $binary_remote_addr zone=analyze_per_ip:1m rate=5r/m;
+limit_conn_zone $server_name zone=analyze_global:1m;
 ```
 
 `query_no_args` 只使用 `$uri`，不要改成 `$request`、`$request_uri` 或追加 `$args`。随后在同一站点的 `server {}` 中使用下面的 location；更长的 `/api/query/` 前缀会优先于现有 `/`：
@@ -218,6 +228,25 @@ location ^~ /api/query/ {
   # 可选：先实测正常交互，再与 http {} 中的 zone 定义一起启用。
   # limit_req zone=query_per_ip burst=5 nodelay;
   # limit_conn query_conn_per_ip 2;
+}
+
+location = /api/analyze {
+  proxy_pass http://127.0.0.1:3001;
+  client_max_body_size 16k;
+
+  proxy_set_header Host $http_host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $remote_addr;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_connect_timeout 5s;
+  proxy_send_timeout 12s;
+  proxy_read_timeout 12s;
+  proxy_redirect off;
+
+  limit_req zone=analyze_per_ip burst=2 nodelay;
+  limit_req_status 429;
+  limit_conn analyze_global 2;
+  limit_conn_status 503;
 }
 
 location / {
@@ -253,6 +282,8 @@ location ^~ /_next/static/ {
 ```
 
 Node 只监听环回地址，公网仍只开放 Nginx 的 80/443。
+
+`/api/analyze` 的 Nginx 限制只是外围保护，应用内仍会流式读取并在 16 KiB 处硬停止，频率过高返回 `429`，两个槽位都被占用时返回 `503` 和 `Retry-After`。不要把 `client_max_body_size` 当成应用内上限的替代品。启用公网抓取后，用 `/api/analyze/healthz` 确认 `public_capture_enabled` 与预期一致；测试 URL 只使用你控制的公开页面，不要尝试内网、登录页或云 metadata 地址。
 
 PWA 只在 HTTPS（以及浏览器认可的 localhost 安全上下文）中注册。`/sw.js` 是每个构建生成的发布产物，内容包含当前 Next.js `BUILD_ID`；不要把它放进 `/_next/static/` 的 30 天 immutable 规则，也不要让 CDN 长时间缓存。它只预缓存 `/tracker`、`/en/tracker`、`/labs/tools`、`/en/labs/tools` 四个静态页面壳层、对应的中英文 Manifest 及其构建静态资源，不缓存 Contact、AI 分析、免费查询、搜索索引、RSS 或任何 `/api/*` 响应。发布后应在浏览器开发者工具的 Application → Service Workers/Cache Storage 中确认新版本进入 waiting/active 状态，并确认缓存条目没有 API URL。
 

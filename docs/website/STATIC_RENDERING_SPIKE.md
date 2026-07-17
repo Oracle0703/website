@@ -4,11 +4,19 @@
 
 | 项目 | 结论 |
 |---|---|
-| 当前 D2 状态 | app 代码已无 `i18n-server` / `getLocale()` page-level 依赖；根布局改为默认语言和默认主题，客户端负责恢复用户偏好 |
+| 当前状态 | 中文页面位于 `app/(zh)` 根布局，英文页面位于 `app/en` 根布局；路由直接决定服务端 `<html lang>`，客户端只恢复主题偏好 |
 | 构建结果 | 公开入口为 `○`；详情页保持 `●` SSG，继续由 `generateStaticParams` 生成已发布内容路径 |
-| 体验边界 | SEO HTML 使用默认语言生成；用户语言、主题偏好在 hydration 前后由 `PreferenceBootScript`、`LanguageProvider`、`ThemeProvider` 接管 |
+| 体验边界 | 中文路由输出 `lang="zh-CN"`，`/en/**` 输出 `lang="en"`；`PreferenceBootScript` 只在 hydration 前恢复主题 |
 | 验收方式 | `verify:website-static` 负责 HTML/静态资源信号，`verify:website-browser` 负责 Playwright 桌面/移动截图、console error 和偏好恢复 |
-| 后续方向 | 当前不引入 `/zh`、`/en` locale 路由；如果英文内容规模继续扩大，再单独进入 D3 信息架构设计 |
+| 路由结构 | 中文继续使用既有无前缀 URL，英文继续使用 `/en` 前缀；`(zh)` route group 不会出现在公开 URL 中 |
+
+### 1.1 2026-07 多根布局更新
+
+站点已进入 D3 locale 路由化后的源码级收尾：顶层共享 `app/layout.tsx` 被拆为
+`app/(zh)/layout.tsx` 与 `app/en/layout.tsx`，两者通过 `RootDocument` 复用主题、页头、页脚和
+provider。这样静态 HTML、开发环境和生产 SSR 的文档语言都由路由决定，不需要构建后改写 HTML，
+也不会再让 localStorage 中的旧语言偏好覆盖当前 URL 的语义。跨根布局切换语言时由 Next.js 执行
+完整文档导航，主题偏好仍由启动脚本恢复。
 
 ## 2. 初始诊断
 
@@ -66,7 +74,7 @@ D1.5 的目标不是立刻让所有页面变成 `○`，而是把静态化的阻
 | 项目 | 调整 | 边界 |
 |---|---|---|
 | 根布局 | `layout.tsx` 使用 `defaultLocale` 和 `defaultTheme`，不再导入 `i18n-server` / `theme-server` | 根布局不再主动读取 request cookie，但页面级 `getLocale()` 仍会让未迁移页面保持动态 |
-| 首屏偏好 | 新增 `PreferenceBootScript`，在 hydration 前从 `localStorage` 或旧 cookie 恢复 `<html lang>` 和 `data-theme` | 脚本只恢复合法值，失败时保留默认中文和默认主题 |
+| 首屏偏好（D2 历史方案） | 新增 `PreferenceBootScript`，在 hydration 前恢复语言和主题 | 当前 D3 实现已把语言交给路由根布局，脚本只恢复合法主题值 |
 | 客户端状态 | `LanguageProvider` / `ThemeProvider` 挂载后读取 `localStorage` 或 cookie，并写回两者 | 挂载恢复不触发 `router.refresh()`，只有用户手动切换语言继续刷新 server payload |
 | 迁移状态 | `/about`、`/contact` 已移除 page-level server cookie 读取；其他页面继续逐步迁移 | 这是 D2 最小 spike，不是全站 locale 路由化 |
 
@@ -149,7 +157,7 @@ D1.5 的目标不是立刻让所有页面变成 `○`，而是把静态化的阻
 |---|---|
 | hydration | 不允许出现 React hydration warning |
 | 主题首屏 | 默认 theme 到用户偏好恢复过程不能出现明显背景/文字闪烁 |
-| HTML lang | 默认 HTML `lang` 必须可解释，语言切换后客户端更新语义不冲突 |
+| HTML lang | 每个路由的服务端 HTML 必须与其 locale 精确一致，客户端不得覆盖当前 URL 的语言语义 |
 | SEO | 搜索引擎抓取到的默认语言内容必须完整，不依赖客户端切换才能看到主内容 |
 | 旧 cookie | 已存在的 `LOCALE_COOKIE`、`THEME_COOKIE` 需要兼容或迁移 |
 | 用户操作 | 切换语言后是否还需要 `router.refresh()` 必须重新评估 |
@@ -165,7 +173,7 @@ D1.5 的目标不是立刻让所有页面变成 `○`，而是把静态化的阻
 | 浏览器级视觉验收 | `npm run verify:website-browser` | Playwright 使用生产构建，覆盖桌面/移动两档，检查公开入口清单、Blog 详情页和 Project 详情页的 console error、语言/主题 DOM 恢复和截图基线；默认 `4323` 被占用时会自动尝试后续端口 |
 | 指定浏览器验收端口 | `WEBSITE_BROWSER_VERIFY_PORT=4327 npm run verify:website-browser` | 显式端口被占用时直接报 `EADDRINUSE`；该端口会同时注入 Playwright `baseURL` 和 `webServer.url` |
 
-该验收覆盖 D2 的最小自动化边界，并与 `PUBLIC_WEBSITE_ROUTES` 的公开入口清单保持一致：每个公开静态入口必须返回 200，HTML 必须保留 `<html lang>`、`data-theme`、偏好恢复脚本中的 `localStorage`、`document.documentElement.lang` 与 `document.documentElement.dataset.theme` 信号，并扫描 HTML 与 Next 静态脚本中是否出现常见 hydration warning 签名。本地运行时脚本会优先使用 `NEXT_STATIC_VERIFY_PORT` 或默认 `4321`，默认端口占用时自动向后寻找可用端口；只有用户显式指定端口时才把占用视为失败。它不能替代 Playwright 截图验收；如果后续要验证“是否有肉眼可见闪烁”，仍应补浏览器截图或 trace。
+该验收覆盖双语静态入口，并与 `PUBLIC_WEBSITE_LOCALE_ROUTES` 的公开入口清单保持一致：每个入口必须返回 200，中文路由的 `<html lang>` 必须为 `zh-CN`，英文路由必须为 `en`，同时保留 `data-theme`、主题恢复脚本中的 `localStorage` 与 `document.documentElement.dataset.theme` 信号，并扫描 HTML 与 Next 静态脚本中是否出现常见 hydration warning 签名。本地运行时脚本会优先使用 `NEXT_STATIC_VERIFY_PORT` 或默认 `4321`，默认端口占用时自动向后寻找可用端口；只有用户显式指定端口时才把占用视为失败。它不能替代 Playwright 截图验收；如果后续要验证“是否有肉眼可见闪烁”，仍应补浏览器截图或 trace。
 
 Playwright 验收是 D2 的第二层质量门：它不进入默认 `npm test`，避免日常单元测试变慢；需要确认桌面/移动首屏视觉、偏好恢复和浏览器 console 时单独运行。脚本通过 `scripts/verify-website-browser.mjs` 先解析可用端口，再把 `WEBSITE_BROWSER_VERIFY_PORT` 注入 Playwright 配置，避免固定 `4323` 时误连旧服务。首次建立或主动更新截图基线时使用 `npm run verify:website-browser -- --update-snapshots`，后续常规运行使用 `npm run verify:website-browser`。
 

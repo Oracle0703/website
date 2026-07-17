@@ -10,7 +10,7 @@ function read(relPath) {
 }
 
 test('blog list page avoids page-level request reads', () => {
-  const pageSource = read('apps/website/app/blog/page.tsx');
+  const pageSource = read('apps/website/app/(zh)/blog/page.tsx');
   const clientSource = read('apps/website/app/blog/blog-client.tsx');
 
   assert.doesNotMatch(pageSource, /i18n-server/);
@@ -35,7 +35,7 @@ test('blog list page avoids page-level request reads', () => {
 });
 
 test('blog client receives list-shaped data instead of full mdx posts', () => {
-  const pageSource = read('apps/website/app/blog/page.tsx');
+  const pageSource = read('apps/website/app/(zh)/blog/page.tsx');
   const clientSource = read('apps/website/app/blog/blog-client.tsx');
   const listViewSource = read('apps/website/app/blog/blog-list-view.tsx');
 

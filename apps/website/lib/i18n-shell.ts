@@ -1,9 +1,10 @@
 import type { Locale } from "./i18n-core";
+import { siteIdentity } from "./site-identity";
 
 export const shellMessages = {
   zh: {
     nav: {
-      brand: "Meaningful · Ink",
+      brand: siteIdentity.brandName,
       items: [
         { href: "/projects", label: "作品" },
         { href: "/blog", label: "文章" },
@@ -49,7 +50,7 @@ export const shellMessages = {
       switchToDark: "切换到暗色"
     },
     footer: {
-      copyright: "© 2026 Meaningful · Ink",
+      copyright: `© 2026 ${siteIdentity.brandName}`,
       tagline: "AI 产品 · 全栈工程 · 独立创作",
       links: [
         { href: "/resume", label: "简历", localized: true },
@@ -61,7 +62,7 @@ export const shellMessages = {
   },
   en: {
     nav: {
-      brand: "Meaningful · Ink",
+      brand: siteIdentity.brandName,
       items: [
         { href: "/projects", label: "Work" },
         { href: "/blog", label: "Writing" },
@@ -107,7 +108,7 @@ export const shellMessages = {
       switchToDark: "Switch to dark mode"
     },
     footer: {
-      copyright: "© 2026 Meaningful · Ink",
+      copyright: `© 2026 ${siteIdentity.brandName}`,
       tagline: "AI products · Full-stack engineering · Independent making",
       links: [
         { href: "/resume", label: "Resume", localized: true },

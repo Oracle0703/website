@@ -5,7 +5,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { usePathname, useRouter } from "next/navigation";
 import {
   defaultLocale,
-  getHtmlLang,
   LOCALE_COOKIE,
   type Locale
 } from "../lib/i18n-core";
@@ -32,7 +31,6 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 const persistLocale = (locale: Locale) => {
   if (typeof document === "undefined") return;
   document.cookie = `${LOCALE_COOKIE}=${locale};path=/;max-age=${COOKIE_MAX_AGE};samesite=lax`;
-  document.documentElement.lang = getHtmlLang(locale);
 
   try {
     window.localStorage.setItem(LOCALE_COOKIE, locale);

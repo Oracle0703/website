@@ -16,7 +16,7 @@ async function importFresh(relPath) {
 }
 
 test("free query lab exposes bilingual static routes with canonical metadata", async () => {
-  const zhPage = read("apps/website/app/labs/query/page.tsx");
+  const zhPage = read("apps/website/app/(zh)/labs/query/page.tsx");
   const enPage = read("apps/website/app/en/labs/query/page.tsx");
   const routes = await importFresh("apps/website/lib/public-routes.mjs");
 

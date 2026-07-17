@@ -1,4 +1,5 @@
 import type { Locale } from "./i18n-core";
+import { siteIdentity } from "./site-identity";
 
 export const profileUpdatedAt = "2026-07-16";
 
@@ -70,9 +71,9 @@ type ResumeNowCopy = {
 const copyByLocale: Record<Locale, ResumeNowCopy> = {
   zh: {
     resume: {
-      eyebrow: "能力型简历",
+      eyebrow: `${siteIdentity.personName} · 能力型简历`,
       title: "把产品判断转化为可运行、可验证的系统",
-      role: "独立全栈开发者 · AI 产品工程",
+      role: siteIdentity.byLocale.zh.role,
       introduction:
         "专注 Next.js、TypeScript 与 Node.js，也关注产品范围、交互体验、内容结构和上线后的维护边界。擅长从不确定的想法出发，先做清晰原型，再逐步补齐数据、安全、测试与部署闭环。",
       evidenceBoundary:
@@ -187,9 +188,9 @@ const copyByLocale: Record<Locale, ResumeNowCopy> = {
   },
   en: {
     resume: {
-      eyebrow: "Capability resume",
+      eyebrow: `${siteIdentity.personName} · Capability resume`,
       title: "Turning product judgment into working, testable systems",
-      role: "Independent full-stack developer · AI product engineering",
+      role: siteIdentity.byLocale.en.role,
       introduction:
         "Focused on Next.js, TypeScript, and Node.js, with equal attention to product scope, interaction quality, content structure, and operational boundaries. I turn uncertain ideas into clear prototypes, then add data, security, testing, and deployment discipline as the product earns complexity.",
       evidenceBoundary:

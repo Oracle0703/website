@@ -53,9 +53,9 @@ test('selected published posts include first batch series metadata', () => {
 });
 
 test('blog list and detail pages expose series discovery and article ctas', () => {
-  const listSource = read('apps/website/app/blog/page.tsx');
+  const listSource = read('apps/website/app/(zh)/blog/page.tsx');
   const listViewSource = read('apps/website/app/blog/blog-list-view.tsx');
-  const detailPageSource = read('apps/website/app/blog/[slug]/page.tsx');
+  const detailPageSource = read('apps/website/app/(zh)/blog/[slug]/page.tsx');
   const detailClientSource = read('apps/website/app/blog/[slug]/blog-detail-client.tsx');
   const i18nSource = read('apps/website/lib/i18n.ts');
 

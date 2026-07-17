@@ -10,7 +10,7 @@ function read(relPath) {
 }
 
 test('blog detail page emits BlogPosting JSON-LD from the post data', () => {
-  const source = read('apps/website/app/blog/[slug]/page.tsx');
+  const source = read('apps/website/app/(zh)/blog/[slug]/page.tsx');
 
   assert.match(source, /const jsonLd\s*=\s*\{/);
   assert.match(source, /"@context":\s*"https:\/\/schema\.org"/);
@@ -19,7 +19,9 @@ test('blog detail page emits BlogPosting JSON-LD from the post data', () => {
   assert.match(source, /description:\s*description/);
   assert.match(source, /datePublished:\s*post\.date/);
   assert.match(source, /dateModified:\s*post\.updatedAt/);
-  assert.match(source, /author:\s*\{\s*"@type":\s*"Person",\s*name:\s*post\.author\s*\}/s);
+  assert.match(source, /import \{ getAuthorStructuredData, siteIdentity \} from/);
+  assert.match(source, /author:\s*getAuthorStructuredData\(/);
+  assert.match(source, /post\.author,\s*defaultLocale,\s*toAbsoluteUrl\(siteIdentity\.profilePath\)/s);
   assert.match(source, /url:\s*toAbsoluteUrl\(canonicalPath\)/);
   assert.match(source, /mainEntityOfPage:\s*\{/);
   assert.match(source, /"@type":\s*"WebPage"/);
@@ -32,7 +34,7 @@ test('blog detail page emits BlogPosting JSON-LD from the post data', () => {
 });
 
 test('project detail page emits SoftwareApplication JSON-LD from locale-aware project view data', () => {
-  const source = read('apps/website/app/projects/[slug]/page.tsx');
+  const source = read('apps/website/app/(zh)/projects/[slug]/page.tsx');
 
   assert.match(source, /const jsonLd\s*=\s*\{/);
   assert.match(source, /"@context":\s*"https:\/\/schema\.org"/);

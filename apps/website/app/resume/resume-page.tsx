@@ -8,6 +8,7 @@ import {
   resumeProjectSlugs
 } from "../../lib/resume-now";
 import { PrintResumeButton } from "./print-resume-button";
+import { siteIdentity } from "../../lib/site-identity";
 
 type ResumePageProps = {
   locale: Locale;
@@ -37,16 +38,17 @@ export function ResumePage({ locale }: ResumePageProps) {
                 {copy.introduction}
               </p>
               <p className="resume-print-contact mt-4 hidden text-sm leading-6 text-secondary">
-                Meaningful Ink / Oracle0703 · meaningful.ink/contact · github.com/Oracle0703
+                {siteIdentity.personName} · {siteIdentity.brandName} · {siteIdentity.githubHandle}
+                {" · "}meaningful.ink/contact · github.com/Oracle0703
               </p>
             </div>
             <div className="resume-no-print flex flex-wrap gap-3 lg:max-w-64 lg:justify-end">
               <PrintResumeButton label={copy.printAction} />
-              <Link href={getHref("/contact")} className="btn-primary">
+              <Link href={getHref(siteIdentity.contactPath)} className="btn-primary">
                 {copy.contactAction}
               </Link>
               <a
-                href="https://github.com/Oracle0703"
+                href={siteIdentity.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-secondary"
@@ -176,7 +178,7 @@ export function ResumePage({ locale }: ResumePageProps) {
               {copy.updatedLabel}: {profileUpdatedAt}
             </p>
           </div>
-          <Link href={getHref("/contact")} className="resume-no-print btn-primary">
+          <Link href={getHref(siteIdentity.contactPath)} className="resume-no-print btn-primary">
             {copy.collaborationAction}
           </Link>
         </section>

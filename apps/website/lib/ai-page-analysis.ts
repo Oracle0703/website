@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import { lookup } from "node:dns/promises";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+import { isIP, type LookupFunction } from "node:net";
+import { Readable } from "node:stream";
 
 export const ANALYSIS_SCORE_KEYS = [
   "value_proposition",
@@ -16,7 +20,9 @@ export type AnalysisErrorCode =
   | "invalid_url"
   | "input_too_short"
   | "rate_limited"
+  | "server_busy"
   | "submit_failure"
+  | "request_too_large"
   | "url_unreachable"
   | "auth_required_page"
   | "insufficient_page_content"
@@ -77,7 +83,12 @@ export type PageAnalysisResult = {
   source: {
     url: string;
     title: string;
-    captured_at: string;
+    generated_at: string;
+    capture: {
+      performed: boolean;
+      final_url?: string;
+      captured_at?: string;
+    };
   };
   scores: AnalysisScore[];
   issues: AnalysisIssue[];
@@ -89,6 +100,11 @@ export type PageAnalysisResult = {
 export type AnalysisRequestGate = {
   attemptsByIdentity: Map<string, number[]>;
   lastCleanupAt: number;
+};
+
+export type AnalysisConcurrencyGate = {
+  active: number;
+  max: number;
 };
 
 export type PageCaptureSummary = {
@@ -110,6 +126,7 @@ export type AnalysisFetcher = (
     signal?: AbortSignal;
     headers: Record<string, string>;
     redirect: "manual";
+    resolvedAddress: string;
   }
 ) => Promise<AnalysisFetchResponse>;
 
@@ -118,9 +135,11 @@ export type AnalysisResolver = (hostname: string) => Promise<string[]>;
 const FIFTEEN_MINUTES = 15 * 60 * 1000;
 const MAX_ATTEMPTS_PER_WINDOW = 5;
 export const ANALYSIS_GATE_MAX_IDENTITIES = 5_000;
+export const ANALYSIS_MAX_CONCURRENCY = 2;
 const MAX_URL_LENGTH = 2048;
 const MAX_CAPTURE_REDIRECTS = 3;
 const MAX_CAPTURE_HTML_BYTES = 2 * 1024 * 1024;
+const MAX_CAPTURE_TITLE_LENGTH = 240;
 export const ANALYSIS_CAPTURE_TIMEOUT_MS = 10_000;
 const MIN_CAPTURE_TEXT_LENGTH = 120;
 const MAX_BRIEF_LENGTH = {
@@ -135,6 +154,43 @@ const CLOUD_METADATA_HOSTS = new Set([
   "instance-data",
   "169.254.169.254"
 ]);
+
+const CLOUD_METADATA_ADDRESSES = new Set([
+  // Azure WireServer/platform virtual address. Standard metadata endpoints are
+  // link-local and already covered by the ranges below.
+  "168.63.129.16"
+]);
+
+const IPV4_DENY_RANGES: ReadonlyArray<readonly [readonly number[], number]> = [
+  [[0, 0, 0, 0], 8],
+  [[10, 0, 0, 0], 8],
+  [[100, 64, 0, 0], 10],
+  [[127, 0, 0, 0], 8],
+  [[169, 254, 0, 0], 16],
+  [[172, 16, 0, 0], 12],
+  [[192, 0, 0, 0], 24],
+  [[192, 0, 2, 0], 24],
+  [[192, 88, 99, 0], 24],
+  [[192, 168, 0, 0], 16],
+  [[198, 18, 0, 0], 15],
+  [[198, 51, 100, 0], 24],
+  [[203, 0, 113, 0], 24],
+  [[224, 0, 0, 0], 4],
+  [[240, 0, 0, 0], 4]
+];
+
+const IPV6_DENY_RANGES: ReadonlyArray<readonly [readonly number[], number]> = [
+  // IETF protocol assignments, documentation, transition mechanisms, ULA,
+  // link-local, site-local, and multicast are not valid public capture targets.
+  [[0x20, 0x01, 0x00], 23],
+  [[0x20, 0x01, 0x0d, 0xb8], 32],
+  [[0x20, 0x02], 16],
+  [[0x3f, 0xff], 20],
+  [[0xfc], 7],
+  [[0xfe, 0x80], 10],
+  [[0xfe, 0xc0], 10],
+  [[0xff], 8]
+];
 
 function failure(code: AnalysisErrorCode, message: string): { ok: false; error: AnalysisError } {
   return {
@@ -170,7 +226,10 @@ function normalizeBrief(value: unknown): AnalysisBrief | null {
 }
 
 function normalizeHostname(hostname: string) {
-  return hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  return hostname
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.+$/g, "")
+    .toLowerCase();
 }
 
 function parseIpv4(address: string): number[] | null {
@@ -189,48 +248,93 @@ function parseIpv4(address: string): number[] | null {
   return octets;
 }
 
-function isUnsafeIpv4(address: string) {
-  const octets = parseIpv4(address);
-  if (!octets) return false;
+function matchesPrefix(address: readonly number[], network: readonly number[], prefixLength: number) {
+  const wholeBytes = Math.floor(prefixLength / 8);
+  const remainingBits = prefixLength % 8;
 
-  const [first, second] = octets;
+  for (let index = 0; index < wholeBytes; index += 1) {
+    if (address[index] !== network[index]) return false;
+  }
 
-  return (
-    first === 0 ||
-    first === 10 ||
-    first === 127 ||
-    first >= 224 ||
-    (first === 100 && second >= 64 && second <= 127) ||
-    (first === 169 && second === 254) ||
-    (first === 172 && second >= 16 && second <= 31) ||
-    (first === 192 && second === 168) ||
-    (first === 192 && second === 0) ||
-    (first === 198 && (second === 18 || second === 19)) ||
-    (first === 203 && second === 0)
-  );
+  if (remainingBits === 0) return true;
+  const mask = 0xff << (8 - remainingBits);
+  return (address[wholeBytes] & mask) === ((network[wholeBytes] ?? 0) & mask);
 }
 
-function isUnsafeIpv6(address: string) {
-  const normalized = normalizeHostname(address);
+function parseIpv6(address: string): number[] | null {
+  let normalized = normalizeHostname(address);
+  if (normalized.includes("%") || isIP(normalized) !== 6) return null;
 
-  return (
-    normalized === "::1" ||
-    normalized === "0:0:0:0:0:0:0:1" ||
-    normalized === "::" ||
-    normalized.startsWith("fc") ||
-    normalized.startsWith("fd") ||
-    normalized.startsWith("fe80") ||
-    normalized.startsWith("ff")
-  );
+  const ipv4Match = normalized.match(/(?:^|:)(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (ipv4Match) {
+    const ipv4 = parseIpv4(ipv4Match[1]);
+    if (!ipv4) return null;
+    const replacement = `${((ipv4[0] << 8) | ipv4[1]).toString(16)}:${((ipv4[2] << 8) | ipv4[3]).toString(16)}`;
+    normalized = `${normalized.slice(0, -ipv4Match[1].length)}${replacement}`;
+  }
+
+  const halves = normalized.split("::");
+  if (halves.length > 2) return null;
+
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if ((halves.length === 1 && missing !== 0) || (halves.length === 2 && missing < 1)) return null;
+
+  const groups = [...head, ...Array.from({ length: missing }, () => "0"), ...tail];
+  if (groups.length !== 8 || groups.some((group) => !/^[0-9a-f]{1,4}$/i.test(group))) return null;
+
+  return groups.flatMap((group) => {
+    const value = Number.parseInt(group, 16);
+    return [value >> 8, value & 0xff];
+  });
+}
+
+function isPublicIpv4(address: string) {
+  const octets = parseIpv4(address);
+  if (!octets) return false;
+  if (CLOUD_METADATA_ADDRESSES.has(address)) return false;
+
+  return !IPV4_DENY_RANGES.some(([network, prefix]) => matchesPrefix(octets, network, prefix));
+}
+
+function isPublicIpv6(address: string) {
+  const bytes = parseIpv6(address);
+  if (!bytes) return false;
+
+  const ipv4Mapped = matchesPrefix(bytes, Array(10).fill(0).concat([0xff, 0xff]), 96);
+  const ipv4Compatible = matchesPrefix(bytes, Array(12).fill(0), 96);
+  if (ipv4Mapped || ipv4Compatible) {
+    return isPublicIpv4(bytes.slice(12).join("."));
+  }
+
+  // NAT64 and other translation prefixes can obscure the actual IPv4 target.
+  if (matchesPrefix(bytes, [0x00, 0x64, 0xff, 0x9b, 0, 0, 0, 0, 0, 0, 0, 0], 96)) return false;
+  if (matchesPrefix(bytes, [0x00, 0x64, 0xff, 0x9b, 0x00, 0x01], 48)) return false;
+
+  // Be conservative: only globally routable 2000::/3 space is eligible.
+  if (!matchesPrefix(bytes, [0x20], 3)) return false;
+  return !IPV6_DENY_RANGES.some(([network, prefix]) => matchesPrefix(bytes, network, prefix));
+}
+
+export function isPublicAnalysisAddress(address: string) {
+  const normalized = normalizeHostname(address);
+  const version = isIP(normalized);
+
+  if (version === 4) return isPublicIpv4(normalized);
+  if (version === 6) return isPublicIpv6(normalized);
+  return false;
 }
 
 function isUnsafeHostname(hostname: string) {
   const normalized = normalizeHostname(hostname);
+  const version = isIP(normalized);
 
   if (!normalized) return true;
+  if (version !== 0) return !isPublicAnalysisAddress(normalized);
   if (normalized === "localhost" || normalized.endsWith(".localhost")) return true;
+  if (normalized.endsWith(".local") || normalized.endsWith(".internal") || normalized.endsWith(".home.arpa")) return true;
   if (CLOUD_METADATA_HOSTS.has(normalized)) return true;
-  if (isUnsafeIpv4(normalized) || isUnsafeIpv6(normalized)) return true;
 
   return false;
 }
@@ -247,12 +351,16 @@ export function validateAnalysisUrlSafety(
     return failure("invalid_url", "URLs with embedded credentials are not accepted.");
   }
 
+  if (url.port) {
+    return failure("invalid_url", "Only the standard HTTP and HTTPS ports are supported.");
+  }
+
   if (isUnsafeHostname(url.hostname)) {
     return failure("invalid_url", "Private, local, or metadata URLs are not accepted.");
   }
 
   for (const address of options.resolvedAddresses ?? []) {
-    if (isUnsafeHostname(address)) {
+    if (!isPublicAnalysisAddress(address)) {
       return failure("invalid_url", "Resolved private or internal addresses are not accepted.");
     }
   }
@@ -315,6 +423,41 @@ export function createAnalysisRequestGate(): AnalysisRequestGate {
 }
 
 export const analysisRequestGate = createAnalysisRequestGate();
+
+export function createAnalysisConcurrencyGate(max = ANALYSIS_MAX_CONCURRENCY): AnalysisConcurrencyGate {
+  return {
+    active: 0,
+    max: Math.max(1, Math.floor(max))
+  };
+}
+
+const concurrencyGateKey = Symbol.for("meaningful-ink.ai-page-analysis.concurrency-gate");
+const analysisGlobal = globalThis as typeof globalThis & {
+  [concurrencyGateKey]?: AnalysisConcurrencyGate;
+};
+
+export const analysisConcurrencyGate =
+  analysisGlobal[concurrencyGateKey] ?? createAnalysisConcurrencyGate();
+analysisGlobal[concurrencyGateKey] = analysisConcurrencyGate;
+
+export function tryAcquireAnalysisSlot(gate: AnalysisConcurrencyGate): (() => void) | null {
+  if (gate.active >= gate.max) return null;
+
+  gate.active += 1;
+  let released = false;
+
+  return () => {
+    if (released) return;
+    released = true;
+    gate.active = Math.max(0, gate.active - 1);
+  };
+}
+
+export function isAnalysisPublicCaptureEnabled(
+  environment: Readonly<Record<string, string | undefined>> = process.env
+) {
+  return environment.AI_PAGE_ANALYSIS_ENABLE_PUBLIC_CAPTURE === "true";
+}
 
 function cleanupAnalysisRequestGate(
   gate: AnalysisRequestGate,
@@ -495,10 +638,25 @@ function isTimeoutLikeError(error: unknown) {
   );
 }
 
+function rejectOnAbort<T>(operation: Promise<T>, signal: AbortSignal): Promise<T> {
+  if (signal.aborted) {
+    return Promise.reject(new DOMException("Capture aborted", "AbortError"));
+  }
+
+  return new Promise<T>((resolve, reject) => {
+    const handleAbort = () => reject(new DOMException("Capture aborted", "AbortError"));
+    signal.addEventListener("abort", handleAbort, { once: true });
+    operation.then(resolve, reject).finally(() => {
+      signal.removeEventListener("abort", handleAbort);
+    });
+  });
+}
+
 async function resolveAndValidate(
   url: URL,
-  resolver: AnalysisResolver
-): Promise<{ ok: true } | { ok: false; error: AnalysisError }> {
+  resolver: AnalysisResolver,
+  signal: AbortSignal
+): Promise<{ ok: true; value: { addresses: string[] } } | { ok: false; error: AnalysisError }> {
   const safety = validateAnalysisUrlSafety(url);
   if (!safety.ok) {
     return safety;
@@ -506,8 +664,11 @@ async function resolveAndValidate(
 
   let addresses: string[];
   try {
-    addresses = await resolver(url.hostname);
+    addresses = await rejectOnAbort(resolver(url.hostname), signal);
   } catch {
+    if (signal.aborted) {
+      return failure("capture_timeout", "The target page capture timed out during DNS resolution.");
+    }
     return failure("url_unreachable", "The URL host could not be resolved.");
   }
 
@@ -515,19 +676,45 @@ async function resolveAndValidate(
     return failure("url_unreachable", "The URL host did not resolve to an address.");
   }
 
-  return validateAnalysisUrlSafety(url, { resolvedAddresses: addresses });
+  const resolvedSafety = validateAnalysisUrlSafety(url, { resolvedAddresses: addresses });
+  if (!resolvedSafety.ok) {
+    return resolvedSafety;
+  }
+
+  // Only connect to IPv4. A globally scoped IPv6 address can still be an
+  // operator-specific translation prefix whose embedded IPv4 target cannot be
+  // proven from syntax alone. Dual-stack hosts continue through their A record.
+  const ipv4Addresses = addresses.filter(
+    (address) => isIP(normalizeHostname(address)) === 4
+  );
+  if (ipv4Addresses.length === 0) {
+    return failure("invalid_url", "Public capture requires a directly routable IPv4 address.");
+  }
+
+  return {
+    ok: true,
+    value: {
+      addresses: ipv4Addresses
+    }
+  };
 }
 
 async function readCaptureResponseBody(
-  response: AnalysisFetchResponse
+  response: AnalysisFetchResponse,
+  signal: AbortSignal
 ): Promise<{ ok: true; value: string } | { ok: false; error: AnalysisError }> {
   const declaredLength = Number(getHeaderValue(response.headers, "content-length"));
   if (Number.isFinite(declaredLength) && declaredLength > MAX_CAPTURE_HTML_BYTES) {
+    if (response.body) {
+      void response.body
+        .cancel("capture body exceeded declared byte limit")
+        .catch(() => undefined);
+    }
     return failure("page_too_large", "The target page is larger than the D10 capture limit.");
   }
 
   if (!response.body) {
-    const html = await response.text();
+    const html = await rejectOnAbort(response.text(), signal);
     if (Buffer.byteLength(html, "utf8") > MAX_CAPTURE_HTML_BYTES) {
       return failure("page_too_large", "The target page is larger than the D10 capture limit.");
     }
@@ -535,6 +722,10 @@ async function readCaptureResponseBody(
   }
 
   const reader = response.body.getReader();
+  const cancelOnAbort = () => {
+    void reader.cancel("capture timed out").catch(() => undefined);
+  };
+  signal.addEventListener("abort", cancelOnAbort, { once: true });
   const decoder = new TextDecoder();
   let byteLength = 0;
   let html = "";
@@ -558,9 +749,13 @@ async function readCaptureResponseBody(
       html += decoder.decode(value, { stream: true });
     }
 
+    if (signal.aborted) {
+      throw new DOMException("Capture aborted", "AbortError");
+    }
     html += decoder.decode();
     return { ok: true, value: html };
   } finally {
+    signal.removeEventListener("abort", cancelOnAbort);
     reader.releaseLock();
   }
 }
@@ -570,7 +765,8 @@ export function extractPageSummary(
   finalUrl: string
 ): { ok: true; value: PageCaptureSummary } | { ok: false; error: AnalysisError } {
   const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
-  const title = compactText(titleMatch?.[1] ?? new URL(finalUrl).hostname);
+  const title = compactText(titleMatch?.[1] ?? new URL(finalUrl).hostname)
+    .slice(0, MAX_CAPTURE_TITLE_LENGTH);
   const text = compactText(stripHtmlForText(html));
 
   if (detectAuthPage(200, html)) {
@@ -591,16 +787,73 @@ export function extractPageSummary(
   };
 }
 
+export function createPinnedAnalysisLookup(address: string): LookupFunction {
+  const family = isIP(address);
+  if (family !== 4 && family !== 6) {
+    throw new Error("A pinned capture address must be a valid IP address.");
+  }
+
+  return (_hostname, options, callback) => {
+    if (options.all) {
+      callback(null, [{ address, family }]);
+      return;
+    }
+
+    callback(null, address, family);
+  };
+}
+
 export function createDefaultAnalysisFetcher(): AnalysisFetcher {
-  return async (url, init) => fetch(url, {
-    method: "GET",
-    headers: {
-      "accept": "text/html,application/xhtml+xml",
-      "user-agent": "website-ai-page-analysis-capture/1.0",
-      ...init.headers
-    },
-    redirect: init.redirect,
-    signal: init.signal
+  return (url, init) => new Promise((resolve, reject) => {
+    if (
+      isIP(normalizeHostname(init.resolvedAddress)) !== 4 ||
+      !isPublicAnalysisAddress(init.resolvedAddress)
+    ) {
+      reject(new Error("Refusing to connect to an unvalidated capture address."));
+      return;
+    }
+
+    const requester = url.protocol === "https:" ? httpsRequest : httpRequest;
+    const request = requester(url, {
+      method: "GET",
+      headers: {
+        "accept": "text/html,application/xhtml+xml",
+        "accept-encoding": "identity",
+        "user-agent": "website-ai-page-analysis-capture/2.0",
+        ...init.headers
+      },
+      lookup: createPinnedAnalysisLookup(init.resolvedAddress),
+      agent: false,
+      signal: init.signal,
+      ...(url.protocol === "https:" && isIP(normalizeHostname(url.hostname)) === 0
+        ? { servername: normalizeHostname(url.hostname) }
+        : {})
+    }, (response) => {
+      const headers = new Headers();
+      for (const [name, value] of Object.entries(response.headers)) {
+        if (Array.isArray(value)) {
+          for (const item of value) headers.append(name, item);
+        } else if (typeof value === "string") {
+          headers.set(name, value);
+        }
+      }
+
+      resolve({
+        status: response.statusCode ?? 0,
+        headers,
+        body: Readable.toWeb(response) as ReadableStream<Uint8Array>,
+        text: async () => {
+          const chunks: Buffer[] = [];
+          for await (const chunk of response) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          }
+          return Buffer.concat(chunks).toString("utf8");
+        }
+      });
+    });
+
+    request.once("error", reject);
+    request.end();
   });
 }
 
@@ -641,21 +894,23 @@ export async function capturePageForAnalysis(
 
   try {
     for (let redirectCount = 0; redirectCount <= maxRedirects; redirectCount += 1) {
-      const resolved = await resolveAndValidate(currentUrl, resolver);
+      const resolved = await resolveAndValidate(currentUrl, resolver, abortController.signal);
       if (!resolved.ok) {
         return resolved;
       }
 
       let response: AnalysisFetchResponse;
       try {
-        response = await fetcher(currentUrl, {
+        response = await rejectOnAbort(fetcher(currentUrl, {
           headers: {
             "accept": "text/html,application/xhtml+xml",
-            "user-agent": "website-ai-page-analysis-capture/1.0"
+            "accept-encoding": "identity",
+            "user-agent": "website-ai-page-analysis-capture/2.0"
           },
           redirect: "manual",
-          signal: abortController.signal
-        });
+          signal: abortController.signal,
+          resolvedAddress: resolved.value.addresses[0]
+        }), abortController.signal);
       } catch (error) {
         if (isTimeoutLikeError(error)) {
           return failure("capture_timeout", "The target page capture timed out.");
@@ -665,6 +920,11 @@ export async function capturePageForAnalysis(
 
       if (response.status >= 300 && response.status < 400) {
         const location = getHeaderValue(response.headers, "location");
+        try {
+          await response.body?.cancel("redirect response is not consumed");
+        } catch {
+          // Redirect validation remains authoritative if stream cancellation races a close.
+        }
         if (!location) {
           return failure("url_unreachable", "The target page redirected without a location.");
         }
@@ -683,7 +943,7 @@ export async function capturePageForAnalysis(
 
       let bodyResult: Awaited<ReturnType<typeof readCaptureResponseBody>>;
       try {
-        bodyResult = await readCaptureResponseBody(response);
+        bodyResult = await readCaptureResponseBody(response, abortController.signal);
       } catch (error) {
         if (isTimeoutLikeError(error)) {
           return failure("capture_timeout", "The target page capture timed out.");
@@ -710,7 +970,10 @@ export async function capturePageForAnalysis(
 
 export function createMockPageAnalysis(
   input: NormalizedAnalysisRequest,
-  options: { now?: Date; capturedTitle?: string } = {}
+  options: {
+    now?: Date;
+    capture?: Pick<PageCaptureSummary, "finalUrl" | "title">;
+  } = {}
 ): PageAnalysisResult {
   const now = options.now ?? new Date();
   const hostname = new URL(input.input).hostname;
@@ -731,8 +994,17 @@ export function createMockPageAnalysis(
     confidence: 0.82,
     source: {
       url: input.input,
-      title: options.capturedTitle ?? (isEnglish ? `Safe mock capture for ${hostname}` : `${hostname} 的安全 Mock 捕获`),
-      captured_at: now.toISOString()
+      title: options.capture?.title ?? (isEnglish ? `Safe Mock for ${hostname}` : `${hostname} 的 Safe Mock 演示`),
+      generated_at: now.toISOString(),
+      capture: options.capture
+        ? {
+            performed: true,
+            final_url: options.capture.finalUrl,
+            captured_at: now.toISOString()
+          }
+        : {
+            performed: false
+          }
     },
     scores,
     issues: isEnglish
@@ -828,7 +1100,8 @@ export function createMockPageAnalysis(
 
 function statusForError(code: AnalysisErrorCode) {
   if (code === "rate_limited") return 429;
-  if (code === "page_too_large") return 413;
+  if (code === "server_busy") return 503;
+  if (code === "page_too_large" || code === "request_too_large") return 413;
   if (code === "capture_timeout") return 504;
   if (code === "url_unreachable" || code === "auth_required_page" || code === "insufficient_page_content") return 422;
   return 400;
@@ -844,6 +1117,7 @@ export async function analyzePageRequest(
     resolver?: AnalysisResolver;
     fetcher?: AnalysisFetcher;
     capture?: boolean;
+    concurrencyGate?: AnalysisConcurrencyGate;
   } = {}
 ): Promise<
   | { ok: true; httpStatus: 200; value: PageAnalysisResult }
@@ -881,30 +1155,48 @@ export async function analyzePageRequest(
     };
   }
 
-  let capturedTitle: string | undefined;
-  if (options.capture !== false) {
-    const capture = await capturePageForAnalysis(validation.value.input, {
-      resolver: options.resolver,
-      fetcher: options.fetcher
-    });
-
-    if (!capture.ok) {
-      return {
-        ok: false,
-        httpStatus: statusForError(capture.error.code),
-        error: capture.error
-      };
-    }
-
-    capturedTitle = capture.value.title;
+  const releaseSlot = tryAcquireAnalysisSlot(options.concurrencyGate ?? analysisConcurrencyGate);
+  if (!releaseSlot) {
+    return {
+      ok: false,
+      httpStatus: 503,
+      error: {
+        code: "server_busy",
+        message: "The analysis service is at its two-request concurrency limit. Please retry shortly."
+      }
+    };
   }
 
-  return {
-    ok: true,
-    httpStatus: 200,
-    value: createMockPageAnalysis(validation.value, {
-      now: options.now,
-      capturedTitle
-    })
-  };
+  try {
+    let captureSummary: PageCaptureSummary | undefined;
+    // Public URL capture is opt-in. Callers must pass capture: true explicitly;
+    // the route only does so when the server-side feature flag is exactly "true".
+    if (options.capture === true) {
+      const capture = await capturePageForAnalysis(validation.value.input, {
+        resolver: options.resolver,
+        fetcher: options.fetcher
+      });
+
+      if (!capture.ok) {
+        return {
+          ok: false,
+          httpStatus: statusForError(capture.error.code),
+          error: capture.error
+        };
+      }
+
+      captureSummary = capture.value;
+    }
+
+    return {
+      ok: true,
+      httpStatus: 200,
+      value: createMockPageAnalysis(validation.value, {
+        now: options.now,
+        capture: captureSummary
+      })
+    };
+  } finally {
+    releaseSlot();
+  }
 }

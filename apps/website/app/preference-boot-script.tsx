@@ -7,12 +7,7 @@ export function PreferenceBootScript() {
   }
 
   try {
-    var storedLocale = localStorage.getItem("locale") || readCookie("locale");
     var storedTheme = localStorage.getItem("theme") || readCookie("theme");
-
-    if (storedLocale === "zh" || storedLocale === "en") {
-      document.documentElement.lang = storedLocale === "en" ? "en" : "zh-CN";
-    }
 
     if (storedTheme === "dark" || storedTheme === "light") {
       document.documentElement.dataset.theme = storedTheme;

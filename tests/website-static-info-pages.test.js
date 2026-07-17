@@ -11,7 +11,7 @@ function read(relPath) {
 
 test('about and contact pages avoid page-level server cookie reads', () => {
   for (const route of ['about', 'contact']) {
-    const pageSource = read(`apps/website/app/${route}/page.tsx`);
+    const pageSource = read(`apps/website/app/(zh)/${route}/page.tsx`);
     const clientSource = read(`apps/website/app/${route}/${route}-client.tsx`);
 
     assert.doesNotMatch(pageSource, /i18n-server/);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { AIPageAnalysisLandingClient } from "../../components/landing/ai-page-analysis-landing-client";
-import { getLanguageAlternates } from "../../lib/seo";
-import { toAbsoluteUrl } from "../../lib/site-url";
+import { AIPageAnalysisLandingClient } from "../../../components/landing/ai-page-analysis-landing-client";
+import { getLanguageAlternates } from "../../../lib/seo";
+import { toAbsoluteUrl } from "../../../lib/site-url";
 
 export const generateMetadata = (): Metadata => {
   const title = "AI 页面分析与改版方案助手";

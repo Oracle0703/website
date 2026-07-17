@@ -21,9 +21,9 @@ async function importFresh(relPath) {
 
 test('website projects system has the planned files and first project set', () => {
   assert.ok(exists('apps/website/lib/projects.ts'), 'projects data model should exist');
-  assert.ok(exists('apps/website/app/projects/page.tsx'), 'projects list route should exist');
+  assert.ok(exists('apps/website/app/(zh)/projects/page.tsx'), 'projects list route should exist');
   assert.ok(
-    exists('apps/website/app/projects/[slug]/page.tsx'),
+    exists('apps/website/app/(zh)/projects/[slug]/page.tsx'),
     'project detail route should exist'
   );
 
@@ -186,7 +186,7 @@ test('AI project evidence matches the implemented safe capture and Safe Mock bou
   assert.match(aiBlock, /安全 URL 抓取|安全抓取/);
   assert.match(aiBlock, /Safe Mock/);
   assert.doesNotMatch(aiBlock, /后续 V1 会把抓取/);
-  assert.match(mockSource, /Live URL capture \+ Safe Mock output/);
+  assert.match(mockSource, /URL capture is opt-in; Safe Mock output/);
   assert.match(mockSource, /no live model integration/);
   assert.doesNotMatch(mockSource, /live crawling and model integration are not enabled/);
 });

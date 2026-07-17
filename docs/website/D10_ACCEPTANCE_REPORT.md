@@ -1,5 +1,7 @@
 # Website D10 AI Page Analysis Capture Harness Acceptance Report
 
+> Historical acceptance record: current production behavior is default-off, address-pinned capture as documented in `AI_PAGE_ANALYSIS_SECURITY_BOUNDARY.md`. The D10 result below predates that hardening.
+
 ## 1. Scope
 
 | 项目 | 结论 |

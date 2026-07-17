@@ -3,15 +3,16 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
-import type { BlogPost } from "../../../lib/blog";
-import { defaultLocale, getMessages } from "../../../lib/i18n";
-import { getPostBySlug, getPublishedPosts, isPublished } from "../../../lib/blog";
-import { getSeriesByPostSlug } from "../../../lib/blog-series";
-import { getJsonLdLanguage, getLanguageAlternates } from "../../../lib/seo";
-import { toAbsoluteUrl } from "../../../lib/site-url";
-import { mdxComponents } from "../../../components/mdx-components";
-import { extractTocHeadings } from "../../../lib/blog-headings";
-import { BlogDetailClient } from "./blog-detail-client";
+import type { BlogPost } from "../../../../lib/blog";
+import { defaultLocale, getMessages } from "../../../../lib/i18n";
+import { getPostBySlug, getPublishedPosts, isPublished } from "../../../../lib/blog";
+import { getSeriesByPostSlug } from "../../../../lib/blog-series";
+import { getJsonLdLanguage, getLanguageAlternates } from "../../../../lib/seo";
+import { toAbsoluteUrl } from "../../../../lib/site-url";
+import { mdxComponents } from "../../../../components/mdx-components";
+import { extractTocHeadings } from "../../../../lib/blog-headings";
+import { BlogDetailClient } from "../../../blog/[slug]/blog-detail-client";
+import { getAuthorStructuredData, siteIdentity } from "../../../../lib/site-identity";
 
 type PageProps = {
   params: { slug: string };
@@ -164,7 +165,11 @@ export default async function Page({ params }: PageProps) {
     description: description,
     datePublished: post.date,
     dateModified: post.updatedAt,
-    author: { "@type": "Person", name: post.author },
+    author: getAuthorStructuredData(
+      post.author,
+      defaultLocale,
+      toAbsoluteUrl(siteIdentity.profilePath)
+    ),
     url: toAbsoluteUrl(canonicalPath),
     mainEntityOfPage: {
       "@type": "WebPage",

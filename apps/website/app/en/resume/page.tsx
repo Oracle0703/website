@@ -3,11 +3,12 @@ import { ResumePage } from "../../resume/resume-page";
 import type { Locale } from "../../../lib/i18n-core";
 import { getLanguageAlternates } from "../../../lib/seo";
 import { toAbsoluteUrl } from "../../../lib/site-url";
+import { siteIdentity } from "../../../lib/site-identity";
 
 const locale: Locale = "en";
 const title = "Capability Resume";
 const description =
-  "A capability-based resume for Meaningful · Ink, grounded in public AI product, full-stack web, and engineering delivery evidence.";
+  `${siteIdentity.personName}'s capability-based resume, grounded in public AI product, full-stack web, and engineering delivery evidence from ${siteIdentity.brandName}.`;
 
 export const generateMetadata = (): Metadata => ({
   title,

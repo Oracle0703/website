@@ -10,7 +10,7 @@ function read(relPath) {
 }
 
 test('tracker page avoids page-level locale cookie reads', () => {
-  const pageSource = read('apps/website/app/tracker/page.tsx');
+  const pageSource = read('apps/website/app/(zh)/tracker/page.tsx');
   const clientSource = read('apps/website/app/tracker/tracker-client.tsx');
 
   assert.doesNotMatch(pageSource, /i18n-server/);

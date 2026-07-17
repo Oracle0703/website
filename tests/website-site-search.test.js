@@ -136,7 +136,7 @@ test("search index is force-static and the command palette loads it only when op
 test("Explore exposes bilingual static routes and all five product areas", async () => {
   const routes = await importFresh("apps/website/lib/public-routes.mjs");
   const page = read("apps/website/app/explore/explore-page.tsx");
-  const zhRoute = read("apps/website/app/explore/page.tsx");
+  const zhRoute = read("apps/website/app/(zh)/explore/page.tsx");
   const enRoute = read("apps/website/app/en/explore/page.tsx");
 
   for (const route of ["/explore", "/changelog", "/labs/tools", "/tracker", "/resume", "/now"]) {

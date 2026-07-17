@@ -80,7 +80,7 @@ D4 已把 D3 的英文 URL 能力升级为可验收的英文内容能力：Proje
 | route-surface | `/en/projects/ai-page-analysis` / `apps/website/app/en/projects/[slug]/page.tsx` | 0/0 CJK | 硬护栏 |
 | route-surface | `/en/ai-page-analysis` / `apps/website/app/en/ai-page-analysis/page.tsx` | 0/0 CJK | 硬护栏 |
 | localized-source | `apps/website/lib/projects.ts` | 1112/1200 CJK | 源码允许中英共存，英文 ProjectView 另测 |
-| localized-source | `apps/website/components/landing/ai-page-analysis-landing-client.tsx` | 1465/1600 CJK | 源码允许中英共存，英文 route surface 另测 |
+| localized-source | `apps/website/components/landing/ai-page-analysis-landing-client.tsx` | 1744/1800 CJK | 源码允许中英共存，英文 route surface 另测；新增安全抓取边界文案后同步调整预算 |
 | project-view | `/en/projects` / `apps/website/lib/projects.ts` | 0/0 CJK | 硬护栏 |
 | blog-view | `/en/blog` / `apps/website/lib/blog.ts` | 0/0 CJK | 硬护栏 |
 

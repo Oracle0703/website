@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import type { BlogPost } from "../../lib/blog";
-import type { BlogSeries } from "../../lib/blog-series";
-import { getPublishedPosts } from "../../lib/blog";
-import { getPublishedSeries } from "../../lib/blog-series";
-import { defaultLocale, getMessages } from "../../lib/i18n";
-import { getLanguageAlternates } from "../../lib/seo";
-import { toAbsoluteUrl } from "../../lib/site-url";
-import { BlogClient, type BlogListPost, type BlogListSeries } from "./blog-client";
-import { BlogListView } from "./blog-list-view";
+import type { BlogPost } from "../../../lib/blog";
+import type { BlogSeries } from "../../../lib/blog-series";
+import { getPublishedPosts } from "../../../lib/blog";
+import { getPublishedSeries } from "../../../lib/blog-series";
+import { defaultLocale, getMessages } from "../../../lib/i18n";
+import { getLanguageAlternates } from "../../../lib/seo";
+import { toAbsoluteUrl } from "../../../lib/site-url";
+import { BlogClient, type BlogListPost, type BlogListSeries } from "../../blog/blog-client";
+import { BlogListView } from "../../blog/blog-list-view";
 
 export const generateMetadata = (): Metadata => {
   const { seo } = getMessages(defaultLocale);

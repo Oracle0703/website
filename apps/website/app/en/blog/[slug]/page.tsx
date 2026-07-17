@@ -15,6 +15,7 @@ import { toAbsoluteUrl } from "../../../../lib/site-url";
 import { mdxComponents } from "../../../../components/mdx-components";
 import { extractTocHeadings } from "../../../../lib/blog-headings";
 import { BlogDetailClient } from "../../../blog/[slug]/blog-detail-client";
+import { getAuthorStructuredData, siteIdentity } from "../../../../lib/site-identity";
 
 type PageProps = {
   params: { slug: string };
@@ -169,7 +170,11 @@ export default async function Page({ params }: PageProps) {
     description: description,
     datePublished: post.date,
     dateModified: post.updatedAt,
-    author: { "@type": "Person", name: post.author },
+    author: getAuthorStructuredData(
+      post.author,
+      locale,
+      toAbsoluteUrl(`/en${siteIdentity.profilePath}`)
+    ),
     url: toAbsoluteUrl(canonicalPath),
     mainEntityOfPage: {
       "@type": "WebPage",
