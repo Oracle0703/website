@@ -370,6 +370,21 @@ test("language toggle moves between Chinese and English canonical URLs", async (
   await expect(page.locator("#site-mobile-menu")).toHaveCount(0);
 });
 
+test("language toggle falls back only when a blog translation is unavailable", async ({ page }) => {
+  await page.goto("/en/blog/blog-content-model-state-machine");
+  await expect(page.locator('link[rel="alternate"][hreflang="zh-CN"]')).toHaveCount(0);
+  await clickLanguageToggle(page, /切换到中文|Switch to Chinese/);
+  await expect(page).toHaveURL(/\/blog$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+
+  await page.goto("/en/blog/ci-agent-guardrails");
+  await expect(page.locator('link[rel="alternate"][hreflang="zh-CN"]')).toHaveCount(1);
+  await clickLanguageToggle(page, /切换到中文|Switch to Chinese/);
+  await expect(page).toHaveURL(/\/blog\/ci-agent-guardrails$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+  await expectNoBrowserErrors(page);
+});
+
 test("detail routes mark their parent navigation section as current", async ({ page }) => {
   const isMobile = test.info().project.name.includes("mobile");
 
@@ -582,7 +597,6 @@ test("captures a deterministic Timestamp Tool evidence image", async ({ page }, 
   await page.getByLabel("Input timestamp").fill("1700000000");
   await page.getByLabel("Unit").selectOption("seconds");
   await page.getByRole("button", { name: "UTC", exact: true }).click();
-  await page.getByRole("button", { name: "Show local" }).click();
 
   await expect(tool).toContainText("2023-11-14 22:13:20");
   await tool.locator(":scope > div").last().evaluate((element) => {
@@ -594,6 +608,26 @@ test("captures a deterministic Timestamp Tool evidence image", async ({ page }, 
     animations: "disabled"
   });
   await expectNoBrowserErrors(page);
+});
+
+test("Timestamp Tool reports a failed clipboard fallback truthfully", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: undefined
+    });
+    document.execCommand = () => false;
+  });
+
+  await page.goto("/en/labs#timestamp-tool");
+  const tool = page.locator("#timestamp-tool");
+  await expect(tool).toBeVisible();
+  const secondsRow = tool.getByText("Seconds timestamp").locator("..");
+  await expect(secondsRow).toContainText(/\d{10}/);
+  await secondsRow.getByRole("button").click();
+
+  await expect(tool.getByRole("button", { name: "Copy failed" })).toBeVisible();
+  await expect(tool.getByRole("status")).toHaveText("Copy failed");
 });
 
 test("project detail evidence sections are visible", async ({ page }) => {
@@ -609,6 +643,42 @@ test("project detail evidence sections are visible", async ({ page }) => {
     "href",
     "/en/ai-page-analysis"
   );
+});
+
+test("architecture diagrams span the evidence gallery with a full-size affordance", async ({
+  page
+}, testInfo) => {
+  await page.goto("/en/projects/knock");
+
+  const gallery = page.getByTestId("project-asset-gallery-grid");
+  const diagram = page.locator('[data-project-asset-kind="diagram"]');
+  const fullSizeLink = diagram.getByTestId("project-diagram-full-size-link");
+
+  await expect(gallery).toBeVisible();
+  await expect(diagram).toBeVisible();
+  await expect(fullSizeLink).toBeVisible();
+  await expect(fullSizeLink).toHaveAccessibleName("Open full-size diagram");
+  await expect(fullSizeLink).toHaveAttribute("href", "/projects/knock-architecture.svg");
+  await expect(fullSizeLink).toHaveAttribute("target", "_blank");
+  await expect(fullSizeLink).toHaveAttribute("rel", "noreferrer");
+
+  const galleryBox = await gallery.boundingBox();
+  const diagramBox = await diagram.boundingBox();
+  const linkBox = await fullSizeLink.boundingBox();
+
+  expect(galleryBox, `${testInfo.project.name}: gallery has layout bounds`).not.toBeNull();
+  expect(diagramBox, `${testInfo.project.name}: diagram has layout bounds`).not.toBeNull();
+  expect(linkBox, `${testInfo.project.name}: full-size link has layout bounds`).not.toBeNull();
+  expect(
+    diagramBox!.width / galleryBox!.width,
+    `${testInfo.project.name}: diagram spans the gallery width`
+  ).toBeGreaterThan(0.95);
+  expect(
+    linkBox!.height,
+    `${testInfo.project.name}: full-size link is easy to activate`
+  ).toBeGreaterThanOrEqual(40);
+
+  await expectNoBrowserErrors(page);
 });
 
 test("project entries keep unavailable demos honest while exposing source evidence", async ({
@@ -705,7 +775,8 @@ test("Tracker and developer tools remain usable from the bounded offline cache",
       "/ai-page-analysis",
       "/labs/query",
       "/search-index.json",
-      "/rss.xml"
+      "/rss.xml",
+      "/en/rss.xml"
     ]) {
       expect(cachedUrls.some((url) => new URL(url).pathname.includes(forbiddenPath))).toBe(false);
     }

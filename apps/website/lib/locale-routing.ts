@@ -41,6 +41,17 @@ export function getAlternateLocalePath(pathname: string) {
   return getLocalePath(pathname, locale === "en" ? defaultLocale : "en");
 }
 
+export function getLocaleSwitchFallbackPath(
+  pathname: string,
+  targetLocale: Locale,
+  directPath = getLocalePath(pathname, targetLocale)
+) {
+  const segments = stripLocalePrefix(pathname).split("/").filter(Boolean);
+  const isBlogDetail = segments.length === 2 && segments[0] === "blog";
+
+  return isBlogDetail ? getLocalePath("/blog", targetLocale) : directPath;
+}
+
 export function isNavigationPathActive(pathname: string, href: string) {
   const currentPath = stripLocalePrefix(pathname);
   const targetPath = stripLocalePrefix(href);

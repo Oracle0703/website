@@ -26,7 +26,7 @@ test("blog engagement provides RSS, native sharing, and a reliable copy fallback
   const source = read("apps/website/components/blog-engagement.tsx");
 
   assert.match(source, /^"use client";/);
-  assert.match(source, /href="\/rss\.xml"/);
+  assert.match(source, /href=\{getLocalePath\("\/rss\.xml", locale\)\}/);
   assert.match(source, /typeof navigator\.share === "function"/);
   assert.match(source, /navigator\.clipboard\?\.writeText/);
   assert.match(source, /document\.execCommand\("copy"\)/);

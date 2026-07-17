@@ -83,7 +83,11 @@ test("static entrypoint verifier covers public D2 routes and preference restore 
   assert.match(source, /favicon\.ico/);
   assert.match(source, /og\.png/);
   assert.match(source, /rss\.xml/);
+  assert.match(source, /en\/rss\.xml/);
   assert.match(source, /application\\\/rss\\\+xml/);
+  assert.match(source, /verifyRssDiscoveryLink\(route, html\)/);
+  assert.match(source, /verifyRssFeed/);
+  assert.match(source, /blog-content-model-state-machine/);
   assert.match(source, /search-index\.json/);
   assert.match(source, /noindex, nofollow/);
   assert.match(source, /valid bilingual v1 index/);

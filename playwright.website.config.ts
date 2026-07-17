@@ -21,6 +21,7 @@ export default defineConfig({
     baseURL: verifyBaseUrl,
     actionTimeout: 10_000,
     reducedMotion: "reduce",
+    timezoneId: "UTC",
     trace: "retain-on-failure",
     screenshot: "only-on-failure"
   },

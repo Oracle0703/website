@@ -1,5 +1,5 @@
 import { locales, type Locale } from "./i18n";
-import { getLocalePath, stripLocalePrefix } from "./locale-routing";
+import { getLocalePath, getRouteLocale, stripLocalePrefix } from "./locale-routing";
 import { toAbsoluteUrl } from "./site-url";
 
 export function getCanonicalPath(pathname: string, locale: Locale) {
@@ -29,7 +29,9 @@ export function getLanguageAlternates(
     canonical: toAbsoluteUrl(basePath),
     languages,
     types: {
-      "application/rss+xml": toAbsoluteUrl("/rss.xml")
+      "application/rss+xml": toAbsoluteUrl(
+        getLocalePath("/rss.xml", getRouteLocale(pathname))
+      )
     }
   };
 }

@@ -11,6 +11,7 @@ import {
 import {
   getAlternateLocalePath,
   getLocalePath,
+  getLocaleSwitchFallbackPath,
   getRouteLocale
 } from "../lib/locale-routing";
 import {
@@ -27,6 +28,10 @@ type I18nContextValue = {
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+const HREFLANG_BY_LOCALE: Record<Locale, string> = {
+  zh: "zh-CN",
+  en: "en"
+};
 
 const persistLocale = (locale: Locale) => {
   if (typeof document === "undefined") return;
@@ -38,6 +43,33 @@ const persistLocale = (locale: Locale) => {
     // Ignore storage failures in private or restricted browsing contexts.
   }
 };
+
+function getDocumentLocaleAlternatePath(locale: Locale) {
+  if (typeof document === "undefined") return null;
+
+  const alternate = document.querySelector<HTMLLinkElement>(
+    `link[rel="alternate"][hreflang="${HREFLANG_BY_LOCALE[locale]}"]`
+  );
+  if (!alternate?.href) return null;
+
+  try {
+    const url = new URL(alternate.href, window.location.href);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}
+
+function resolveLocaleTargetPath(
+  pathname: string,
+  targetLocale: Locale,
+  directPath: string
+) {
+  return (
+    getDocumentLocaleAlternatePath(targetLocale) ??
+    getLocaleSwitchFallbackPath(pathname, targetLocale, directPath)
+  );
+}
 
 export const LanguageProvider = ({
   initialLocale,
@@ -58,7 +90,11 @@ export const LanguageProvider = ({
   }, [routeLocale]);
 
   const updateLocale = useCallback((nextLocale: Locale) => {
-    const targetPath = getLocalePath(routePathname, nextLocale);
+    const targetPath = resolveLocaleTargetPath(
+      routePathname,
+      nextLocale,
+      getLocalePath(routePathname, nextLocale)
+    );
     if (isOfflinePagePath(routePathname) && isOfflinePagePath(targetPath)) {
       persistLocale(nextLocale);
       window.location.assign(targetPath);
@@ -75,7 +111,11 @@ export const LanguageProvider = ({
 
   const toggleLocale = useCallback(() => {
     const nextLocale = routeLocale === "zh" ? "en" : "zh";
-    const targetPath = getAlternateLocalePath(routePathname);
+    const targetPath = resolveLocaleTargetPath(
+      routePathname,
+      nextLocale,
+      getAlternateLocalePath(routePathname)
+    );
     if (isOfflinePagePath(routePathname) && isOfflinePagePath(targetPath)) {
       persistLocale(nextLocale);
       window.location.assign(targetPath);

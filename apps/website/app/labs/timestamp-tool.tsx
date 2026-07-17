@@ -27,6 +27,7 @@ type Copy = {
   hideLocalLabel: string;
   copyLabel: string;
   copiedLabel: string;
+  copyFailedLabel: string;
   timeToTimestamp: string;
   timeInputLabel: string;
   secondsLabel: string;
@@ -56,6 +57,7 @@ const copyMap = {
     hideLocalLabel: "隐藏本地",
     copyLabel: "复制",
     copiedLabel: "已复制",
+    copyFailedLabel: "复制失败",
     timeToTimestamp: "时间 → 时间戳",
     timeInputLabel: "输入时间",
     secondsLabel: "秒级时间戳",
@@ -83,6 +85,7 @@ const copyMap = {
     hideLocalLabel: "Hide local",
     copyLabel: "Copy",
     copiedLabel: "Copied",
+    copyFailedLabel: "Copy failed",
     timeToTimestamp: "Time → Timestamp",
     timeInputLabel: "Input time",
     secondsLabel: "Seconds timestamp",
@@ -132,7 +135,10 @@ export function TimestampTool() {
   const [now, setNow] = useState<Date | null>(null);
   const [timeZoneMode, setTimeZoneMode] = useState<"local" | "utc">("local");
   const [showUtc, setShowUtc] = useState(false);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copyResult, setCopyResult] = useState<{
+    key: string;
+    status: "copied" | "failed";
+  } | null>(null);
   const copyTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -161,39 +167,40 @@ export function TimestampTool() {
     }
 
     const text = String(value);
-    const setCopied = () => {
-      setCopiedKey(key);
+    const setCopyResultFor = (status: "copied" | "failed") => {
+      setCopyResult({ key, status });
       if (copyTimeoutRef.current) {
         window.clearTimeout(copyTimeoutRef.current);
       }
       copyTimeoutRef.current = window.setTimeout(() => {
-        setCopiedKey(null);
+        setCopyResult(null);
       }, 1500);
     };
 
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
-        setCopied();
+        setCopyResultFor("copied");
         return;
       }
     } catch {
       // Fallback below.
     }
 
+    const textarea = document.createElement("textarea");
     try {
-      const textarea = document.createElement("textarea");
       textarea.value = text;
       textarea.setAttribute("readonly", "true");
       textarea.style.position = "absolute";
       textarea.style.left = "-9999px";
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-      setCopied();
+      const copied = document.execCommand("copy");
+      setCopyResultFor(copied ? "copied" : "failed");
     } catch {
-      // Ignore copy failures.
+      setCopyResultFor("failed");
+    } finally {
+      textarea.remove();
     }
   };
 
@@ -249,7 +256,10 @@ export function TimestampTool() {
   const secondaryTimestampText = timestampResult ? formatDateTime(timestampResult, !isUtc) : null;
   const currentTimeText = now ? formatDateTime(now, isUtc) : null;
   const currentSecondaryTimeText = now ? formatDateTime(now, !isUtc) : null;
-  const copyLabelFor = (key: string) => (copiedKey === key ? copy.copiedLabel : copy.copyLabel);
+  const copyLabelFor = (key: string) => {
+    if (copyResult?.key !== key) return copy.copyLabel;
+    return copyResult.status === "copied" ? copy.copiedLabel : copy.copyFailedLabel;
+  };
   const toggleSecondaryLabel = isUtc
     ? showUtc
       ? copy.hideLocalLabel
@@ -263,6 +273,13 @@ export function TimestampTool() {
       id="timestamp-tool"
       className="scroll-mt-24 rounded-2xl border border-edge bg-surface/70 p-5 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none sm:p-8"
     >
+      <p className="sr-only" role="status" aria-live="polite">
+        {copyResult
+          ? copyResult.status === "copied"
+            ? copy.copiedLabel
+            : copy.copyFailedLabel
+          : ""}
+      </p>
       <div className="space-y-2">
         <p className={EYEBROW_ACCENT}>{copy.eyebrow}</p>
         <h2 className={TITLE_XL}>{copy.title}</h2>
@@ -307,10 +324,11 @@ export function TimestampTool() {
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none">
           <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.timeToTimestamp}</p>
-          <label className={`mt-4 block ${EYEBROW_SECONDARY}`}>
+          <label htmlFor="timestamp-date-input" className={`mt-4 block ${EYEBROW_SECONDARY}`}>
             {copy.timeInputLabel}
           </label>
           <input
+            id="timestamp-date-input"
             type="datetime-local"
             value={dateInput}
             onChange={(event) => setDateInput(event.target.value)}
@@ -352,11 +370,12 @@ export function TimestampTool() {
 
         <div className="rounded-xl border border-edge bg-base/40 p-4 transition duration-200 hover:-translate-y-0.5 hover:border-edge-strong hover:bg-base/70 hover:shadow-lg hover:shadow-accent/10 motion-reduce:transform-none">
           <p className={TEXT_SM_SEMIBOLD_PRIMARY}>{copy.timestampToTime}</p>
-          <label className={`mt-4 block ${EYEBROW_SECONDARY}`}>
+          <label htmlFor="timestamp-value-input" className={`mt-4 block ${EYEBROW_SECONDARY}`}>
             {copy.timestampInputLabel}
           </label>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <input
+              id="timestamp-value-input"
               type="text"
               inputMode="numeric"
               value={timestampInput}
@@ -364,9 +383,10 @@ export function TimestampTool() {
               className="w-full rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-hidden transition focus:border-accent focus:ring-2 focus:ring-accent/20"
               placeholder="1700000000"
             />
-            <label className={`flex items-center gap-2 ${EYEBROW_SECONDARY}`}>
+            <label htmlFor="timestamp-unit-select" className={`flex items-center gap-2 ${EYEBROW_SECONDARY}`}>
               {copy.unitLabel}
               <select
+                id="timestamp-unit-select"
                 value={timestampUnit}
                 onChange={(event) => setTimestampUnit(event.target.value as TimestampUnit)}
                 className="rounded-lg border border-edge bg-base/60 px-3 py-2 text-sm text-primary outline-hidden transition focus:border-accent focus:ring-2 focus:ring-accent/20"

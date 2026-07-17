@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "../lib/i18n";
+import { getLocalePath } from "../lib/locale-routing";
 import { useTheme } from "./theme-provider";
 
 export type BlogDiscussionConfig = {
@@ -269,7 +270,11 @@ export function BlogEngagement({
         <button type="button" className="btn-secondary" onClick={handleShare}>
           {labels.share}
         </button>
-        <a className="btn-secondary" href="/rss.xml" type="application/rss+xml">
+        <a
+          className="btn-secondary"
+          href={getLocalePath("/rss.xml", locale)}
+          type="application/rss+xml"
+        >
           {labels.rss}
         </a>
       </div>

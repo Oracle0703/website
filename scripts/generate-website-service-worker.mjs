@@ -18,7 +18,8 @@ export const NETWORK_ONLY_PATHS = [
   "/labs/query",
   "/en/labs/query",
   "/search-index.json",
-  "/rss.xml"
+  "/rss.xml",
+  "/en/rss.xml"
 ];
 
 export const STABLE_OFFLINE_ASSETS = [

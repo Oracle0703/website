@@ -71,10 +71,9 @@ test("RSS renderer rejects relative item URLs", async () => {
   );
 });
 
-test("RSS route uses default-locale published posts and exposes feed discovery metadata", () => {
+test("Chinese and English RSS routes filter posts and item URLs by locale", () => {
   const routeSource = read("apps/website/app/rss.xml/route.ts");
-  const rootMetadataSource = read("apps/website/lib/root-metadata.ts");
-  const seoSource = read("apps/website/lib/seo.ts");
+  const englishRouteSource = read("apps/website/app/en/rss.xml/route.ts");
 
   assert.match(routeSource, /getPublishedPostsForLocale\(defaultLocale\)\.filter\(/);
   assert.doesNotMatch(routeSource, /getPublishedPosts\(\)/);
@@ -83,8 +82,37 @@ test("RSS route uses default-locale published posts and exposes feed discovery m
   assert.match(routeSource, /categories:\s*post\.category\s*\?\s*\[post\.category\]/);
   assert.match(routeSource, /application\/rss\+xml; charset=utf-8/);
   assert.match(routeSource, /export const dynamic = "force-static"/);
-  assert.match(rootMetadataSource, /"application\/rss\+xml": `\$\{baseUrl\}\/rss\.xml`/);
-  assert.match(seoSource, /"application\/rss\+xml": toAbsoluteUrl\("\/rss\.xml"\)/);
+
+  assert.match(englishRouteSource, /const locale: Locale = "en"/);
+  assert.match(englishRouteSource, /getPublishedPostsForLocale\(locale\)\.filter\(/);
+  assert.doesNotMatch(englishRouteSource, /getPublishedPosts\(\)/);
+  assert.match(englishRouteSource, /siteUrl: toAbsoluteUrl\("\/en"\)/);
+  assert.match(englishRouteSource, /feedUrl: toAbsoluteUrl\("\/en\/rss\.xml"\)/);
+  assert.match(englishRouteSource, /language: "en"/);
+  assert.match(
+    englishRouteSource,
+    /toAbsoluteUrl\(`\/en\/blog\/\$\{encodeURIComponent\(post\.slug\)\}`\)/
+  );
+  assert.match(englishRouteSource, /application\/rss\+xml; charset=utf-8/);
+  assert.match(englishRouteSource, /export const dynamic = "force-static"/);
+});
+
+test("metadata, footer, and article engagement discover the matching locale feed", () => {
+  const rootMetadataSource = read("apps/website/lib/root-metadata.ts");
+  const seoSource = read("apps/website/lib/seo.ts");
+  const shellSource = read("apps/website/lib/i18n-shell.ts");
+  const footerSource = read("apps/website/components/site-footer.tsx");
+  const engagementSource = read("apps/website/components/blog-engagement.tsx");
+
+  assert.match(
+    rootMetadataSource,
+    /"application\/rss\+xml": `\$\{baseUrl\}\$\{getLocalePath\("\/rss\.xml", locale\)\}`/
+  );
+  assert.match(seoSource, /getLocalePath\("\/rss\.xml", getRouteLocale\(pathname\)\)/);
+  assert.match(shellSource, /href: "\/rss\.xml", label: "RSS", localized: false/);
+  assert.match(shellSource, /href: "\/en\/rss\.xml", label: "RSS", localized: false/);
+  assert.match(footerSource, /type=\{item\.href\.endsWith\("\.xml"\)/);
+  assert.match(engagementSource, /href=\{getLocalePath\("\/rss\.xml", locale\)\}/);
 });
 
 test("Chinese RSS cannot include native English-only article URLs", () => {

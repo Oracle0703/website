@@ -479,11 +479,11 @@ export const projects: Project[] = [
     solution:
       "把常用转换、复制反馈和边界提示放在一个轻量页面中，作为实验室中可持续扩展的工具模板。",
     role: ["前端实现", "输入校验", "交互反馈", "Labs 工具整合"],
-    stack: ["React", "TypeScript", "Tailwind CSS", "Intl API"],
+    stack: ["React", "TypeScript", "Tailwind CSS", "JavaScript Date API"],
     highlights: ["直接可用", "交互反馈完整", "适合作为后续工具模板"],
     evidence: [
       { label: "已上线入口", value: "工具已作为 Labs 页面的一部分可直接访问" },
-      { label: "浏览器能力", value: "使用 Intl API 处理日期、时区和本地格式展示" },
+      { label: "浏览器能力", value: "使用 JavaScript Date API 处理日期与本地 / UTC 格式展示" },
       { label: "模板价值", value: "输入、校验、结果和复制反馈可复用于后续小工具" }
     ],
     asset: {
@@ -500,7 +500,7 @@ export const projects: Project[] = [
       }
     ],
     architecture:
-      "工具以客户端组件承载输入、转换、校验和反馈状态，依赖浏览器 Intl API 完成日期和时区格式化，不需要后端服务。",
+      "工具以客户端组件承载输入、转换、校验和反馈状态，依赖 JavaScript Date API 完成日期与本地 / UTC 格式化，不需要后端服务。",
     architectureSteps: [
       { title: "浏览器输入", description: "接收日期时间或数字时间戳，并显式选择秒或毫秒单位。" },
       { title: "Date 转换", description: "在时间与 Unix timestamp 之间转换，并拒绝无效日期或非有限数值。" },
@@ -879,7 +879,7 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
     highlights: ["Immediately usable", "Complete interaction feedback", "Reusable as a future tool template"],
     evidence: [
       { label: "Live entry", value: "The tool is accessible as part of the Labs page" },
-      { label: "Browser capability", value: "Intl API handles date, timezone, and local format display" },
+      { label: "Browser capability", value: "The JavaScript Date API handles date and local / UTC display" },
       { label: "Template value", value: "Input, validation, result, and copy feedback can be reused by future small tools" }
     ],
     asset: {
@@ -896,7 +896,7 @@ const englishProjectContentBySlug: Record<string, LocalizedProjectContent> = {
       }
     ],
     architecture:
-      "The tool uses a client component for input, conversion, validation, and feedback state. It relies on the browser Intl API for date and timezone formatting, with no backend service required.",
+      "The tool uses a client component for input, conversion, validation, and feedback state. It relies on the JavaScript Date API for date and local / UTC formatting, with no backend service required.",
     architectureSteps: [
       { title: "Browser input", description: "Accept a date-time or numeric timestamp with an explicit seconds or milliseconds unit." },
       { title: "Date conversion", description: "Convert between time and Unix timestamps while rejecting invalid dates and non-finite numeric input." },

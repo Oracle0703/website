@@ -122,13 +122,32 @@ function ProjectAssetCard({
     );
   }
 
+  const isDiagram = asset.kind === "diagram";
+
   return (
-    <figure className="feature-surface overflow-hidden p-4 sm:p-5">
+    <figure
+      className={`feature-surface overflow-hidden p-4 sm:p-5 ${isDiagram ? "lg:col-span-2" : ""}`}
+      data-project-asset-kind={asset.kind}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-4">
         <p className="section-kicker">{copy.assetKindLabel}: {assetLabel}</p>
-        <span className="rounded-full border border-edge-strong px-3 py-1 text-xs font-semibold text-secondary">
-          {assetLabel}
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <span className="rounded-full border border-edge-strong px-3 py-1 text-xs font-semibold text-secondary">
+            {assetLabel}
+          </span>
+          {isDiagram ? (
+            <a
+              href={asset.src}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary"
+              data-testid="project-diagram-full-size-link"
+            >
+              {copy.openFullSizeDiagram}
+              <span aria-hidden="true">↗</span>
+            </a>
+          ) : null}
+        </div>
       </div>
       <div className="aspect-[16/9] overflow-hidden rounded-xl border border-edge bg-base/50">
         <Image
@@ -136,7 +155,11 @@ function ProjectAssetCard({
           alt={asset.alt}
           width={1280}
           height={720}
-          sizes="(max-width: 1024px) 100vw, 50vw"
+          sizes={
+            isDiagram
+              ? "(max-width: 1024px) 100vw, 72rem"
+              : "(max-width: 1024px) 100vw, 50vw"
+          }
           className="h-full w-full object-contain"
         />
       </div>
@@ -172,7 +195,10 @@ function ProjectAssetGallery({
           {copy.evidenceGalleryDescription}
         </p>
       </div>
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div
+        className="mt-6 grid gap-5 lg:grid-cols-2"
+        data-testid="project-asset-gallery-grid"
+      >
         {assets.map((asset, index) => {
           const key = asset.kind === "doc"
             ? `${asset.kind}-${asset.href}`

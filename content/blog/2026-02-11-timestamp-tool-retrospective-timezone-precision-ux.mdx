@@ -85,7 +85,7 @@ Each generated value has an adjacent copy action. The component first attempts `
 
 Successful copying changes the button label for 1.5 seconds. The timer is cleared before a new one is created and during unmount, which avoids stale updates after the component leaves the page.
 
-The fallback improves compatibility, but failure is currently silent if both paths fail. A future version should expose a polite live-region message for success and an actionable error when the browser blocks clipboard access.
+The fallback checks the boolean returned by `document.execCommand("copy")` instead of treating every call as success. If both clipboard paths fail, the adjacent action reports “Copy failed”; a polite live region mirrors the result for assistive technology. The feedback remains intentionally short-lived and does not store the copied value.
 
 ## What the implementation gets right
 
@@ -110,14 +110,14 @@ The current version is not a general time platform. Specifically:
 - It does not parse custom date formats.
 - It does not persist history or encode values in the URL.
 - It relies on the browser clock and JavaScript `Date` behavior.
-- It does not present detailed validation or clipboard failure messages.
+- It does not present detailed validation messages beyond the copy success/failure state.
 - The live current-time panel makes a screenshot time-sensitive unless test data is fixed first.
 
 Naming these limits matters because timestamp tools often look more capable than they are. A narrow, explicit contract is safer than adding heuristics that make ambiguous input appear valid.
 
 ## The next useful iteration
 
-The highest-value improvement is not another output format. It is clearer failure feedback. Invalid numeric input, an invalid date, and a blocked clipboard should each produce distinct, accessible messages.
+The highest-value improvement is not another output format. It is clearer input feedback. Invalid numeric input and an invalid date should produce distinct, accessible messages instead of the same unavailable-result marker.
 
 After that, two additions would extend the workflow without changing its local-first boundary:
 
