@@ -194,6 +194,44 @@ test("browser verification captures and uploads deterministic project evidence",
   assert.match(workflow, /test-results\/evidence\/\*\.png/);
 });
 
+test("website CI keeps fast draft gates and defers full browser verification", () => {
+  const workflow = read(".github/workflows/website-ci.yml");
+  const releaseChecklist = read("docs/website/RELEASE_CHECKLIST.md");
+  const fullBrowserCondition =
+    "if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}";
+  const pullRequestTrigger = workflow.slice(
+    workflow.indexOf("  pull_request:"),
+    workflow.indexOf("  push:")
+  );
+  const installStep = workflow.slice(
+    workflow.indexOf("- name: Install Playwright Chromium"),
+    workflow.indexOf("- name: Verify browser interactions and accessibility")
+  );
+  const browserStep = workflow.slice(
+    workflow.indexOf("- name: Verify browser interactions and accessibility"),
+    workflow.indexOf("- name: Upload browser evidence")
+  );
+
+  assert.match(workflow, /workflow_dispatch:/);
+  for (const type of ["opened", "synchronize", "reopened", "ready_for_review"]) {
+    assert.ok(pullRequestTrigger.includes(`- ${type}`));
+  }
+  assert.match(
+    workflow,
+    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name \}\}-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}/
+  );
+  assert.match(workflow, /concurrency:[\s\S]*cancel-in-progress:\s*true/);
+  assert.match(installStep, /playwright install --with-deps chromium/);
+  assert.ok(installStep.includes(fullBrowserCondition));
+  assert.match(browserStep, /npm run verify:website-browser/);
+  assert.ok(browserStep.includes(fullBrowserCondition));
+  assert.match(
+    workflow,
+    /Upload browser evidence[\s\S]*if: \$\{\{ always\(\) && \(github\.event_name != 'pull_request' \|\| github\.event\.pull_request\.draft == false\) \}\}/
+  );
+  assert.match(releaseChecklist, /草稿 PR[\s\S]*workflow_dispatch[\s\S]*ready_for_review/);
+});
+
 test("static rendering document records the browser verifier", () => {
   const source = read("docs/website/STATIC_RENDERING_SPIKE.md");
 

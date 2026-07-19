@@ -1,7 +1,13 @@
 name: website-ci
 
 on:
+  workflow_dispatch:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
   push:
     branches:
       - main
@@ -10,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: website-ci-${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -60,13 +66,15 @@ jobs:
         run: npm run verify:website-static
 
       - name: Install Playwright Chromium
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
         run: npx playwright install --with-deps chromium
 
       - name: Verify browser interactions and accessibility
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
         run: npm run verify:website-browser
 
       - name: Upload browser evidence
-        if: always()
+        if: ${{ always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
         uses: actions/upload-artifact@v4
         with:
           name: website-browser-evidence-${{ github.run_attempt }}

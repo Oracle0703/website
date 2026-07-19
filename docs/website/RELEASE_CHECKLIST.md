@@ -23,6 +23,13 @@
 | D4 英文内容审计 | 参考 | D4 当前验收结论见 `docs/website/D4_ACCEPTANCE_REPORT.md` |
 | D5 视觉与转化验收 | 参考 | D5 当前验收结论见 `docs/website/D5_ACCEPTANCE_REPORT.md` |
 
+## PR 与 CI 策略
+
+- 草稿 PR 的 `website-ci` 每次提交仍执行依赖审计、单元测试、lint、内容校验、生产构建与静态入口验收，但跳过 Chromium 安装和 Playwright 浏览器验收。
+- 准备提交评审前，在 GitHub Actions 中手动运行一次 `website-ci`，并选择当前 PR 的源分支（head branch）；`workflow_dispatch` 会执行包含 Playwright 在内的完整门禁。
+- 将 PR 标记为 Ready 会通过 `ready_for_review` 再跑一次完整门禁；Ready 状态后的新提交以及 `main` 分支提交也始终执行完整浏览器验收。
+- 不要为了修复同一批浏览器定位器而连续推送半完成提交；先在本地或手动预检中收口，再将 PR 标记为 Ready。
+
 ## 2. 每次必跑
 
 | 顺序 | 命令 | 通过标准 | 失败定位 |
