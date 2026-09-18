@@ -236,6 +236,71 @@ test("D10 analyze pipeline can use captured title while preserving safe mock out
   assert.equal(result.value.source.capture.final_url, "https://example.com/pricing");
 });
 
+test("capture rejects upstream errors before reading their bodies", async () => {
+  const { analyzePageRequest, createAnalysisRequestGate } = await importFresh("apps/website/lib/ai-page-analysis.ts");
+
+  for (const status of [401, 403, 404, 429, 500, 503]) {
+    let cancelled = false;
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(enoughHtml));
+      },
+      cancel() { cancelled = true; }
+    });
+    const result = await analyzePageRequest(validPayload(), {
+      capture: true,
+      gate: createAnalysisRequestGate(),
+      resolver: async () => ["93.184.216.34"],
+      fetcher: async () => ({
+        status,
+        body,
+        text: async () => { throw new Error("Error bodies must not be read"); }
+      })
+    });
+
+    assert.equal(result.ok, false, `HTTP ${status} must not produce an analysis`);
+    assert.equal(result.httpStatus, 422);
+    assert.equal(result.error.code, status === 401 || status === 403 ? "auth_required_page" : "url_unreachable");
+    assert.equal(cancelled, true, `HTTP ${status} body must be cancelled`);
+  }
+});
+
+test("capture accepts public pages with login links and authentication discussion", async () => {
+  const { capturePageForAnalysis } = await importFresh("apps/website/lib/ai-page-analysis.ts");
+
+  for (const extra of [
+    '<nav><a href="/login">Sign in</a><a href="/login">Log in</a></nav>',
+    '<p>This tutorial explains the messages login required and authentication required.</p>',
+    '<script>const template = `<form><input type="password"></form>`;</script>',
+    '<!-- <form><input type="password"></form> -->'
+  ]) {
+    const result = await capturePageForAnalysis("https://example.com", {
+      resolver: async () => ["93.184.216.34"],
+      fetcher: async () => htmlResponse(enoughHtml.replace("<main>", `<main>${extra}`))
+    });
+    assert.equal(result.ok, true, extra);
+    assert.equal(result.value.title, "Example Landing Page");
+  }
+});
+
+test("capture still rejects login forms and explicit authentication headings", async () => {
+  const { capturePageForAnalysis } = await importFresh("apps/website/lib/ai-page-analysis.ts");
+
+  for (const html of [
+    '<html><form><input name="password" type = "password"></form></html>',
+    '<html><form><input type=password></form></html>',
+    '<html><h1>Sign <span>in</span></h1><p>Continue with your organization.</p></html>',
+    '<html><title>Authentication required</title><p>Please authenticate.</p></html>'
+  ]) {
+    const result = await capturePageForAnalysis("https://example.com", {
+      resolver: async () => ["93.184.216.34"],
+      fetcher: async () => htmlResponse(html)
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, "auth_required_page", html);
+  }
+});
+
 test("D10 capture docs and release checklist are wired", () => {
   assert.ok(exists("docs/website/D10_ACCEPTANCE_REPORT.md"));
 
