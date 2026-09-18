@@ -613,14 +613,27 @@ function detectAuthPage(status: number, html: string) {
     return true;
   }
 
-  const normalized = html.toLowerCase();
-  return (
-    /<input\b[^>]*type=["']?password/i.test(html) ||
-    normalized.includes("sign in") ||
-    normalized.includes("log in") ||
-    normalized.includes("login required") ||
-    normalized.includes("authentication required")
-  );
+  // Login links and discussion of authentication are common on public pages.
+  // Only inspect active forms and explicit page-level authentication labels.
+  const markup = html
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ");
+  const forms = markup.match(/<form\b[^>]*>[\s\S]*?<\/form>/gi) ?? [];
+  if (forms.some((form) =>
+    /<input\b[^>]*\stype\s*=\s*(?:"password"|'password'|password(?=[\s/>]))/i.test(form)
+  )) {
+    return true;
+  }
+
+  const headings = markup.matchAll(/<(title|h1)\b[^>]*>([\s\S]*?)<\/\1>/gi);
+  for (const heading of headings) {
+    const label = compactText(stripHtmlForText(heading[2]));
+    if (/^(?:sign\s+in|log\s+in|login|login required|authentication required)[.!:]?$/i.test(label)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function isTimeoutLikeError(error: unknown) {
@@ -939,6 +952,17 @@ export async function capturePageForAnalysis(
           return failure("invalid_url", "Redirect target must be a valid URL.");
         }
         continue;
+      }
+
+      if (response.status < 200 || response.status >= 300) {
+        try {
+          await response.body?.cancel("unsuccessful capture response is not consumed");
+        } catch {
+          // Preserve the HTTP failure even if stream cancellation races a close.
+        }
+        return response.status === 401 || response.status === 403
+          ? failure("auth_required_page", "The target page appears to require authentication.")
+          : failure("url_unreachable", "The target page returned an unsuccessful HTTP response.");
       }
 
       let bodyResult: Awaited<ReturnType<typeof readCaptureResponseBody>>;
