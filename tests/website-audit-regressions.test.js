@@ -98,11 +98,13 @@ test("Next workspaces use one patched runtime and production dependencies have a
     rootPackage.scripts["audit:production"],
     "npm audit --omit=dev --audit-level=high"
   );
+  assert.equal(rootPackage.overrides.postcss, "8.5.32");
+  assert.equal(rootPackage.overrides.qs, "6.16.2");
   for (const workspacePackage of [websitePackage, analysisPackage, dashboardPackage]) {
-    assert.equal(workspacePackage.dependencies.next, "15.5.20");
+    assert.equal(workspacePackage.dependencies.next, "15.5.29");
     assert.equal(workspacePackage.dependencies.react, "19.2.7");
     assert.equal(workspacePackage.dependencies["react-dom"], "19.2.7");
-    assert.equal(workspacePackage.devDependencies["eslint-config-next"], "15.5.20");
+    assert.equal(workspacePackage.devDependencies["eslint-config-next"], "15.5.29");
     assert.equal(workspacePackage.devDependencies["@types/react"], "19.2.17");
     assert.equal(
       workspacePackage.scripts.lint,
