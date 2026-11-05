@@ -1,6 +1,6 @@
 # Website 发布手册（Windows 宝塔，小内存服务器）
 
-当前正式发布方式是 **GitHub 在 Windows Runner 预构建，服务器只解压并切换目录**。服务器不再执行 `npm ci`、`npm install` 或 `next build`，因此部署时不会因为内存不足卡死。
+当前正式发布方式是 **GitHub 在 Windows Runner 预构建，成都服务器从同地域 OSS 内网下载发布包，再解压并切换目录**。同一份 zip 与 `.sha256` 仍会上传为 GitHub Artifact，作为 OSS 不可用时的备用通道。服务器不再执行 `npm ci`、`npm install` 或 `next build`，因此部署时不会因为内存不足卡死。
 
 > **端口与流程不可混用：本文的预构建 standalone + 宝塔流程固定使用 `127.0.0.1:3001`。`GO_LIVE_CHECKLIST.md` 保留的旧源码构建 + NSSM 流程使用 `127.0.0.1:3000`。启动命令、部署脚本、健康检查和 Nginx `proxy_pass` 必须全部属于同一套流程，不能从两份文档交叉复制。**
 
@@ -17,16 +17,18 @@ Next.js standalone 会把实际运行所需的 Node 模块收进发布包。为�
 - `NEXT_PUBLIC_SITE_URL=https://www.meaningful.ink`；
 - 当前 Git commit SHA（写入 `release-manifest.json` 和响应头 `X-Release-Sha`）。
 
-构建后工作流会真实启动 standalone 包，检查首页、联系接口、RSS 和本地图片资源，然后才上传 Artifact。
+构建后工作流会真实启动 standalone 包，检查首页、联系接口、RSS 和本地图片资源。非 Pull Request 运行接着上传 GitHub Artifact，成功后再把同一份文件上传到阿里云 OSS。Pull Request 只做构建和验收，不上传 Artifact，也不上传 OSS。
 
 ## 服务器目录
 
 ```text
 C:\services\meaningful-website\
 ├─ current\                 # 宝塔实际运行目录
-├─ incoming\                # 手动上传 zip / sha256
+├─ incoming\                # OSS 拉取或手动放入的 zip / sha256
 ├─ releases\                # 自动保留的旧 current，可回滚
 ├─ deploy-website-prebuilt.ps1
+├─ pull-website-release-from-oss.ps1
+├─ oss.env                  # 服务器本地 OSS 密钥，禁止提交到 Git
 └─ data\contact\            # 联系表单数据，必须在 current 外
 ```
 
@@ -49,19 +51,102 @@ node -p "process.platform + '-' + process.arch + ' ' + process.version"
 
 联系表单目录包含姓名和回复渠道。请在 Windows ACL 中仅保留宝塔 Node 项目的运行账户、`SYSTEM` 与管理员访问权限；不要把该目录共享为静态目录，也不要使用目录联接或符号链接。
 
-从仓库下载 [scripts/deploy-website-prebuilt.ps1](../../scripts/deploy-website-prebuilt.ps1)，保存到：
+从仓库下载这两个脚本，保存到服务器对应路径：
 
-```text
-C:\services\meaningful-website\deploy-website-prebuilt.ps1
-```
+- [scripts/deploy-website-prebuilt.ps1](../../scripts/deploy-website-prebuilt.ps1) → `C:\services\meaningful-website\deploy-website-prebuilt.ps1`
+- [scripts/pull-website-release-from-oss.ps1](../../scripts/pull-website-release-from-oss.ps1) → `C:\services\meaningful-website\pull-website-release-from-oss.ps1`
 
-脚本不包含密码、webhook 或天气服务密钥；这些值只配置在宝塔项目环境变量中。
+脚本不包含密码、webhook、天气服务密钥或 OSS AccessKey。网站运行时密钥只配置在宝塔项目环境变量中。OSS AccessKey 只放在下面的 `oss.env` 或当前管理员会话中，不要放进宝塔 Node 项目的环境变量。
 
 ## 获取发布包
 
 合并到 `main` 后，GitHub Actions 的 `website-windows-release` 会自动运行。也可以在 GitHub → Actions → `website-windows-release` → Run workflow 手动触发。
 
-成功后下载名称类似下面的 Artifact：
+成都服务器的正式路径是从 OSS 内网拉取。GitHub Artifact 保留为备用，默认 14 天。
+
+### GitHub Actions 密钥
+
+在仓库 Settings → Secrets and variables → Actions 中新增两个 Secret，名称必须完全一致：
+
+- `ALIYUN_OSS_ACCESS_KEY_ID`
+- `ALIYUN_OSS_ACCESS_KEY_SECRET`
+
+值使用已经开通的 RAM 用户 `meaningful-website-oss`。该用户只有自定义策略 `MeaningfulWebsiteOssReleases`：对 Bucket `meaningful-website-releases` 的 Put、Get、List、分片上传，以及 GetBucketInfo、GetBucketLocation、HeadObject。不要把 AccessKey 写进仓库、工作流日志、截图、Issue 或发布包。本文不新建云资源。
+
+工作流只在非 Pull Request 运行中读取这两个 Secret，交给官方 ossutil `2.4.1`（Windows x64，校验压缩包 SHA-256 后执行）。命令行不传 AccessKey。GitHub-hosted runner 不在阿里云 VPC 内，所以上传走公网 Endpoint `https://oss-cn-chengdu.aliyuncs.com`，地域 ID 是 `cn-chengdu`。
+
+上传成功后，对象键为：
+
+```text
+releases/<完整 commit SHA>/meaningful-website-windows-x64-<前 12 位>.zip
+releases/<完整 commit SHA>/meaningful-website-windows-x64-<前 12 位>.sha256
+releases/<完整 commit SHA>/release.json
+releases/latest.json
+```
+
+`release.json` 和 `releases/latest.json` 记录 zip 对象键、sha256 对象键、摘要和 commit，不包含密钥。`releases/latest.json` 只在 `main` 的 push，或在 `main` 上手动触发时更新。其他分支的手动运行仍会写入 `releases/<commitSha>/`，但不会移动 `latest.json`。
+
+Bucket 保持私有。对象不单独授予公共读。
+
+### 推荐：服务器从 OSS 内网拉取
+
+在 `C:\services\meaningful-website\oss.env` 写入（文件在 Git 仓库外，不要提交）：
+
+```text
+ALIYUN_OSS_ACCESS_KEY_ID=<RAM 用户 meaningful-website-oss 的 AccessKey ID>
+ALIYUN_OSS_ACCESS_KEY_SECRET=<对应的 AccessKey Secret>
+```
+
+同名进程环境变量优先于文件。需要覆盖 Endpoint 时可以另加一行 `ALIYUN_OSS_ENDPOINT=oss-cn-chengdu-internal.aliyuncs.com`。不要用 `setx /M` 把 AccessKey 写进系统环境，避免宝塔 Node 进程继承密钥。
+
+限制 `oss.env` 只给管理员和 `SYSTEM` 读取：
+
+```powershell
+icacls C:\services\meaningful-website\oss.env /inheritance:r /grant:r "SYSTEM:(R)" "Administrators:(R)"
+```
+
+拉取脚本默认访问内网 Endpoint `oss-cn-chengdu-internal.aliyuncs.com`。成都同地域 ECS 走这个地址不计公网流出流量；改用公网 Endpoint `oss-cn-chengdu.aliyuncs.com` 会按外网流出计费。脚本只接受这两个 Endpoint，并忽略指针文件里的地址字段，避免被改写后的 `latest.json` 带到别的主机。
+
+拉取最新一次 `main` 发布到 `incoming\`：
+
+```powershell
+$root = "C:\services\meaningful-website"
+
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File "$root\pull-website-release-from-oss.ps1"
+```
+
+拉取指定 commit（40 位十六进制 SHA，不必是当前 `latest.json`）：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File "$root\pull-website-release-from-oss.ps1" `
+  -CommitSha "<完整 40 位 commit SHA>"
+```
+
+在非成都 VPC 的机器上临时拉取时显式改走公网：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File "$root\pull-website-release-from-oss.ps1" `
+  -Endpoint "oss-cn-chengdu.aliyuncs.com"
+```
+
+脚本会先下载指针，再下载 zip 与 `.sha256`，核对 SHA-256 后写入 `incoming\`。单个对象超过 1 GiB 时会中止，避免写满小硬盘。默认只下载，不切换 `current`。停止宝塔 Node 项目后可以加 `-Deploy`，由它调用已经放在同一目录的 `deploy-website-prebuilt.ps1`：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File "$root\pull-website-release-from-oss.ps1" `
+  -Deploy `
+  -Port 3001 `
+  -KeepReleases 3
+```
+
+`-Deploy` 不会停止宝塔。端口仍在监听时，部署脚本会拒绝切换。
+
+### 备用：GitHub Artifact
+
+OSS 上传失败或服务器暂时不能访问 Bucket 时，使用同一工作流已经上传的 Artifact。OSS 步骤失败不会撤掉更早上传成功的 Artifact，仍可从该次运行的 Artifact 列表下载。成功后的 Artifact 名称类似：
 
 ```text
 meaningful-website-windows-x64-139dc35abcde
@@ -77,6 +162,8 @@ meaningful-website-windows-x64-139dc35abcde.sha256
 `.sha256` 能发现下载或上传损坏，但不是数字签名；只应使用该仓库 GitHub Actions 产生的 Artifact。Artifact 默认保留 14 天。
 
 ## 每次部署
+
+OSS 拉取已经把文件放进 `incoming\` 时，从第 1 步继续。如果拉取命令带了 `-Deploy`，它会在校验通过后执行第 2 步的部署脚本，第 1 步仍然要先手动完成。
 
 1. 在宝塔中停止当前 Node 项目。停止后再运行脚本，避免 Windows 锁住运行文件。
 2. 在管理员 PowerShell 执行（替换实际文件名）：
@@ -333,7 +420,10 @@ catch {
 ## 常见故障
 
 - **提示端口仍在监听**：宝塔项目还没有完全停止；等待几秒后重试，不要强行覆盖。
-- **提示 checksum mismatch**：重新下载并上传 zip 与同批次 `.sha256`，不要继续部署。
+- **提示 checksum mismatch**：重新从 OSS 拉取或重新下载同一批次的 zip 与 `.sha256`，不要继续部署。
+- **OSS 403 或 RequestTimeTooSkewed**：核对 `oss.env` 里的变量名是否正好是 `ALIYUN_OSS_ACCESS_KEY_ID` 和 `ALIYUN_OSS_ACCESS_KEY_SECRET`，以及 RAM 用户是否为 `meaningful-website-oss`。同步 Windows 时间后再试。不要把密钥打印到终端。
+- **内网 Endpoint 无法解析或超时**：当前机器不在成都同地域 VPC。服务器保持默认内网地址；临时在其他网络拉取时加上 `-Endpoint oss-cn-chengdu.aliyuncs.com`。
+- **找不到 `releases/latest.json` 或指定 commit 的 `release.json`**：对应的非 Pull Request 工作流还没有成功上传。`main` 以外的手动运行不会更新 `latest.json`。可以改用下面的 Artifact 备用路径，或在工作流成功后按完整 commit SHA 拉取。
 - **启动时提示平台或 native module 错误**：确认下载的是 `website-windows-release` 产物，而不是 Linux CI 文件。
 - **首页正常但静态样式 404**：确认包内 `apps\website\.next\static` 存在，宝塔工作目录必须是 `current`。
 - **联系表单无法保存**：检查 `CONTACT_SUBMISSIONS_DIR` 是否指向 `current` 外的可写目录。

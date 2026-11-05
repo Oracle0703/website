@@ -85,3 +85,48 @@ test("Baota runbook documents artifact integrity, health and rollback", () => {
   assert.match(source, /CONTACT_SUBMISSIONS_DIR/);
   assert.match(source, /## 回滚/);
 });
+
+test("Windows release publishes the artifact to Aliyun OSS and documents the internal pull", () => {
+  const workflow = read(".github/workflows/website-windows-release.yml");
+  const upload = read("scripts/upload-website-release-to-oss.ps1");
+  const pull = read("scripts/pull-website-release-from-oss.ps1");
+  const docs = read("docs/website/DEPLOY_WINDOWS_BAOTA.md");
+  const artifactAt = workflow.indexOf("actions/upload-artifact@v4");
+  const ossAt = workflow.indexOf("secrets.ALIYUN_OSS_ACCESS_KEY_ID");
+
+  assert.ok(artifactAt > 0 && ossAt > artifactAt);
+  assert.equal(workflow.match(/if: github\.event_name != 'pull_request'/g).length, 2);
+  assert.match(workflow, /secrets\.ALIYUN_OSS_ACCESS_KEY_ID/);
+  assert.match(workflow, /secrets\.ALIYUN_OSS_ACCESS_KEY_SECRET/);
+  assert.match(workflow, /pull-website-release-from-oss\.ps1 -SelfTest/);
+  assert.match(workflow, /upload-website-release-to-oss\.ps1 -SelfTest/);
+  assert.doesNotMatch(workflow, /access-key-secret:/i);
+  assert.doesNotMatch(workflow, /-k\s+\$\{\{/);
+
+  assert.match(upload, /meaningful-website-releases/);
+  assert.match(upload, /oss-cn-chengdu\.aliyuncs\.com/);
+  assert.match(upload, /06ebec1680ce68b1807393e65a1e3f5f99c3b69c9b47c40578a80187da4462c3/);
+  assert.match(upload, /releases\/latest\.json/);
+  assert.match(upload, /refs\/heads\/main/);
+  assert.doesNotMatch(upload, /--access-key-secret/);
+  assert.doesNotMatch(upload, /-k\b/);
+
+  assert.match(pull, /oss-cn-chengdu-internal\.aliyuncs\.com/);
+  assert.match(pull, /ALIYUN_OSS_ACCESS_KEY_ID/);
+  assert.match(pull, /ALIYUN_OSS_ACCESS_KEY_SECRET/);
+  assert.match(pull, /deploy-website-prebuilt\.ps1/);
+  assert.match(pull, /C:\\services\\meaningful-website/);
+  assert.match(pull, /releases\/latest\.json/);
+
+  for (const source of [workflow, upload, pull, docs]) {
+    assert.doesNotMatch(source, /LTAI[0-9A-Za-z]{8,}/);
+  }
+  assert.match(docs, /pull-website-release-from-oss\.ps1/);
+  assert.match(docs, /ALIYUN_OSS_ACCESS_KEY_ID/);
+  assert.match(docs, /ALIYUN_OSS_ACCESS_KEY_SECRET/);
+  assert.match(docs, /oss-cn-chengdu-internal\.aliyuncs\.com/);
+  assert.match(docs, /meaningful-website-releases/);
+  assert.match(docs, /releases\/latest\.json/);
+  assert.match(docs, /GitHub Artifact/);
+  assert.match(read(".gitignore"), /^oss\.env$/m);
+});

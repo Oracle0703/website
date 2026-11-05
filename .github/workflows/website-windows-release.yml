@@ -16,6 +16,8 @@ on:
       - "scripts/generate-website-service-worker.mjs"
       - "scripts/start-website.cmd"
       - "scripts/verify-website-standalone.ps1"
+      - "scripts/upload-website-release-to-oss.ps1"
+      - "scripts/pull-website-release-from-oss.ps1"
 
 permissions:
   contents: read
@@ -36,6 +38,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Self-test OSS release scripts
+        shell: pwsh
+        run: |
+          ./scripts/pull-website-release-from-oss.ps1 -SelfTest
+          ./scripts/upload-website-release-to-oss.ps1 -SelfTest
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -83,3 +91,16 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
+
+      - name: Upload prebuilt release to Aliyun OSS
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        env:
+          ALIYUN_OSS_ACCESS_KEY_ID: ${{ secrets.ALIYUN_OSS_ACCESS_KEY_ID }}
+          ALIYUN_OSS_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_OSS_ACCESS_KEY_SECRET }}
+        run: >-
+          ./scripts/upload-website-release-to-oss.ps1
+          -ZipPath "${{ steps.package.outputs.zip_path }}"
+          -ChecksumPath "${{ steps.package.outputs.checksum_path }}"
+          -ReleaseName "${{ steps.package.outputs.release_name }}"
+          -CommitSha "${{ github.sha }}"

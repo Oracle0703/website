@@ -41,6 +41,9 @@ playwright-report/
 !.env.example
 .env*.local
 
+# Server-local Aliyun OSS credentials for scripts/pull-website-release-from-oss.ps1
+oss.env
+
 # vercel
 .vercel
 
